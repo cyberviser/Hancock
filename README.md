@@ -100,7 +100,11 @@ python hancock_agent.py --server --port 5000
 ### 5. Build the training dataset
 
 ```bash
-python hancock_pipeline.py
+# v2 dataset (pentest + SOC):
+python hancock_pipeline.py --phase all
+
+# v3 dataset (+ CISA KEV + Atomic Red Team + GitHub Advisories):
+python hancock_pipeline.py --phase 3
 ```
 
 ### 6. Fine-tune Hancock on Mistral 7B
@@ -125,6 +129,8 @@ Start the server: `python hancock_agent.py --server`
 | `POST` | `/v1/triage` | SOC alert triage |
 | `POST` | `/v1/hunt` | Threat hunting query generator |
 | `POST` | `/v1/respond` | PICERL incident response playbook |
+| `POST` | `/v1/code` | Security code generation (YARA/Sigma/KQL) |
+| `POST` | `/v1/webhook` | Ingest alerts from Splunk/Elastic/SIEM |
 
 ### Examples
 
@@ -172,7 +178,7 @@ curl -X POST http://localhost:5000/v1/chat \
 
 ## 🤖 Fine-Tuning
 
-Hancock uses **LoRA fine-tuning** on Mistral 7B — 1,375 training samples (MITRE ATT&CK + NVD CVEs + SOC/Pentest KB).
+Hancock uses **LoRA fine-tuning** on Mistral 7B — trained on a multi-source cybersecurity dataset (MITRE ATT&CK + NVD CVEs + SOC/Pentest KB + CISA KEV + Atomic Red Team + GitHub Security Advisories).
 
 ### ⚡ One-Click: Google Colab (Free T4)
 
@@ -205,16 +211,22 @@ ollama run hancock
 ```
 data/
 ├── hancock_pentest_v1.jsonl    # Pentest training data (MITRE + CVE + KB)
-└── hancock_v2.jsonl            # v2 dataset — 1,375 samples (pentest + SOC)
+├── hancock_v2.jsonl            # v2 dataset — pentest + SOC
+└── hancock_v3.jsonl            # v3 dataset — + CISA KEV + Atomic Red Team + GHSA (build with --phase 3)
 
 collectors/
 ├── mitre_collector.py          # Fetches MITRE ATT&CK TTPs
 ├── nvd_collector.py            # Fetches NVD/CVE vulnerability data
 ├── pentest_kb.py               # Pentest knowledge base Q&A
-└── soc_collector.py / soc_kb.py
+├── soc_collector.py / soc_kb.py
+├── cisa_kev_collector.py       # CISA Known Exploited Vulnerabilities
+├── atomic_collector.py         # Atomic Red Team test cases
+└── ghsa_collector.py           # GitHub Security Advisories
 
 formatter/
-└── to_mistral_jsonl.py         # Converts to Mistral instruct format
+├── to_mistral_jsonl.py         # v1 formatter
+├── to_mistral_jsonl_v2.py      # v2 formatter
+└── formatter_v3.py             # v3 formatter — merges all sources
 ```
 
 ---
@@ -223,8 +235,8 @@ formatter/
 
 | Phase | Focus | Status |
 |-------|-------|--------|
-| **Phase 1** | Pentest Specialist + SOC REST API | 🔨 Building |
-| **Phase 2** | SOC deep specialization + detection engineering | 📋 Planned |
+| **Phase 1** | Pentest Specialist + SOC REST API | ✅ Live |
+| **Phase 2** | SOC deep specialization + v3 dataset (KEV/Atomic/GHSA) | ✅ Live |
 | **Phase 3** | CISO strategy + compliance automation | 📋 Planned |
 | **Phase 4** | Enterprise platform + SIEM/SOAR integrations | 📋 Planned |
 
