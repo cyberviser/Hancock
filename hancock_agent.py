@@ -89,12 +89,49 @@ You always:
 You are Hancock. Built by CyberViser."""
 
 SYSTEMS = {"pentest": PENTEST_SYSTEM, "soc": SOC_SYSTEM, "auto": AUTO_SYSTEM}
+
+CODE_SYSTEM = """You are Hancock Code, CyberViser's expert security code assistant powered by Qwen 2.5 Coder 32B.
+
+You write production-quality security tooling code in Python, Bash, PowerShell, and Go.
+
+Your specialties:
+- Security automation: scanners, parsers, log analyzers, alert enrichers
+- Exploit PoC code (authorized research only — always add warnings)
+- SIEM query writing: Splunk SPL, Elastic KQL, Sentinel KQL, Sigma YAML
+- Detection scripts: YARA rules, Suricata/Snort rules, custom IDS signatures
+- Pentest helpers: recon scripts, payload generators, C2 scaffolding (authorized only)
+- Secure code review: identify vulns (OWASP Top 10, CWE), suggest fixes with examples
+- CTF solvers: rev, pwn, web, crypto — with explanations
+
+You always:
+1. Add authorization/legal warnings to offensive tooling
+2. Include error handling, type hints, and docstrings
+3. Explain what the code does and any security implications
+4. Suggest safer alternatives when relevant
+
+You are Hancock Code. Precision over verbosity. Ship working code."""
+
+SYSTEMS = {
+    "pentest": PENTEST_SYSTEM,
+    "soc":     SOC_SYSTEM,
+    "auto":    AUTO_SYSTEM,
+    "code":    CODE_SYSTEM,
+}
 DEFAULT_MODE = "auto"
 # Keep backward-compatible alias
 HANCOCK_SYSTEM = AUTO_SYSTEM
 
-NIM_BASE_URL = "https://integrate.api.nvidia.com/v1"
-DEFAULT_MODEL = "mistralai/mistral-7b-instruct-v0.3"
+NIM_BASE_URL    = "https://integrate.api.nvidia.com/v1"
+DEFAULT_MODEL   = "mistralai/mistral-7b-instruct-v0.3"
+CODER_MODEL     = "qwen/qwen2.5-coder-32b-instruct"
+
+# ── Available models ──────────────────────────────────────────────────────────
+MODELS = {
+    "mistral-7b":   "mistralai/mistral-7b-instruct-v0.3",
+    "qwen-coder":   "qwen/qwen2.5-coder-32b-instruct",
+    "llama-8b":     "meta/llama-3.1-8b-instruct",
+    "mixtral-8x7b": "mistralai/mixtral-8x7b-instruct-v0.1",
+}
 
 BANNER = """
 ╔══════════════════════════════════════════════════════════╗
@@ -104,10 +141,12 @@ BANNER = """
 ║  ██╔══██║██╔══██║██║╚██╗██║██║     ██║   ██║██║     ██╚╗║
 ║  ██║  ██║██║  ██║██║ ╚████║╚██████╗╚██████╔╝╚██████╗╚═╝║║
 ║  ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═════╝  ╚═════╝   ║
-║          CyberViser — Pentest + SOC Specialist           ║
-║            Powered by NVIDIA NIM · Mistral 7B             ║
+║          CyberViser — Pentest + SOC + Code               ║
+║   Mistral 7B · Qwen 2.5 Coder 32B · NVIDIA NIM          ║
 ╚══════════════════════════════════════════════════════════╝
-  Commands: /mode pentest|soc|auto  /clear  /history  /model <id>  /exit
+  Modes : /mode pentest | soc | auto | code
+  Models: /model mistral-7b | qwen-coder | llama-8b | mixtral-8x7b
+  Other : /clear  /history  /exit
 """
 
 
@@ -189,14 +228,24 @@ def run_cli(client: OpenAI, model: str):
             if len(parts) == 2 and parts[1] in SYSTEMS:
                 current_mode = parts[1]
                 history.clear()
-                label = {"pentest": "Pentest Specialist 🔴", "soc": "SOC Analyst 🔵", "auto": "Auto (Pentest+SOC) ⚡"}
+                # Auto-switch to coder model when entering code mode
+                if current_mode == "code" and model == DEFAULT_MODEL:
+                    model = CODER_MODEL
+                    print(f"[Hancock] Auto-switched to {CODER_MODEL} for code mode.")
+                label = {
+                    "pentest": "Pentest Specialist 🔴",
+                    "soc":     "SOC Analyst 🔵",
+                    "auto":    "Auto (Pentest+SOC) ⚡",
+                    "code":    "Code Assistant 💻 (Qwen 2.5 Coder 32B)",
+                }
                 print(f"[Hancock] Switched to {label[current_mode]} — history cleared.")
             else:
-                print("[Hancock] Usage: /mode pentest | /mode soc | /mode auto")
+                print("[Hancock] Usage: /mode pentest | /mode soc | /mode auto | /mode code")
             continue
 
         if user_input.startswith("/model "):
-            model = user_input[7:].strip()
+            alias = user_input[7:].strip()
+            model = MODELS.get(alias, alias)  # resolve alias or use raw model ID
             print(f"[Hancock] Switched to model: {model}")
             continue
 
@@ -253,8 +302,10 @@ def run_server(client: OpenAI, model: str, port: int):
         return jsonify({
             "status": "ok", "agent": "Hancock",
             "model": model, "company": "CyberViser",
-            "modes": ["pentest", "soc", "auto"],
-            "endpoints": ["/v1/chat", "/v1/ask", "/v1/triage", "/v1/hunt", "/v1/respond"],
+            "modes": ["pentest", "soc", "auto", "code"],
+            "models_available": MODELS,
+            "endpoints": ["/v1/chat", "/v1/ask", "/v1/triage",
+                          "/v1/hunt", "/v1/respond", "/v1/code"],
         })
 
     @app.route("/v1/chat", methods=["POST"])
@@ -399,12 +450,44 @@ def run_server(client: OpenAI, model: str, port: int):
         )
         return jsonify({"playbook": resp.choices[0].message.content, "incident": incident_type, "model": model})
 
+    @app.route("/v1/code", methods=["POST"])
+    def code_endpoint():
+        """Security code generation — uses Qwen 2.5 Coder 32B for best results."""
+        ok, err = _check_auth_and_rate()
+        if not ok:
+            return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
+        data     = request.get_json(force=True)
+        task     = data.get("task", "")       # e.g. "write a Splunk query for kerberoasting"
+        language = data.get("language", "")   # optional: python, bash, kql, spl, yara, sigma
+        if not task:
+            return jsonify({"error": "task required"}), 400
+
+        lang_hint = f" Write the solution in {language}." if language else ""
+        prompt = f"{task}{lang_hint}\nProvide working, production-ready code with comments."
+        messages = [
+            {"role": "system", "content": CODE_SYSTEM},
+            {"role": "user",   "content": prompt},
+        ]
+        # Prefer the coder model; fall back to whatever is configured
+        code_model = os.getenv("HANCOCK_CODER_MODEL", CODER_MODEL)
+        resp = client.chat.completions.create(
+            model=code_model, messages=messages, max_tokens=2048,
+            temperature=0.2, top_p=0.7,
+        )
+        return jsonify({
+            "code":     resp.choices[0].message.content,
+            "model":    code_model,
+            "language": language or "auto",
+            "task":     task,
+        })
+
     print(f"\n[CyberViser] Hancock API server starting on port {port}")
-    print(f"  POST http://localhost:{port}/v1/chat     — conversational (mode: auto|pentest|soc)")
+    print(f"  POST http://localhost:{port}/v1/chat     — conversational (mode: auto|pentest|soc|code)")
     print(f"  POST http://localhost:{port}/v1/ask      — single question")
     print(f"  POST http://localhost:{port}/v1/triage   — SOC alert triage")
     print(f"  POST http://localhost:{port}/v1/hunt     — threat hunting query generator")
     print(f"  POST http://localhost:{port}/v1/respond  — IR playbook (PICERL)")
+    print(f"  POST http://localhost:{port}/v1/code     — security code gen (Qwen 2.5 Coder 32B)")
     print(f"  GET  http://localhost:{port}/health      — status check\n")
     app.run(host="0.0.0.0", port=port, debug=False)
 
