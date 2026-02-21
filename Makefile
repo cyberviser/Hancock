@@ -3,7 +3,7 @@
 PYTHON        := .venv/bin/python
 PIP           := .venv/bin/pip
 
-.PHONY: help setup install dev-install run server pipeline finetune lint clean docker docker-up client-python client-node
+.PHONY: help setup install dev-install run server pipeline finetune lint test clean docker docker-up client-python client-node
 
 help:
 	@echo ""
@@ -73,6 +73,9 @@ finetune:
 lint:
 	.venv/bin/flake8 . --count --select=E9,F63,F7,F82 \
 	  --exclude=.venv,__pycache__,data,docs --show-source --statistics
+
+test:
+	.venv/bin/pytest tests/ -v --tb=short
 
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true

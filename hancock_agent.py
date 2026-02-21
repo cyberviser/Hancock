@@ -261,7 +261,8 @@ def run_cli(client: OpenAI, model: str):
 
 
 # ── REST API server mode ──────────────────────────────────────────────────────
-def run_server(client: OpenAI, model: str, port: int):
+def build_app(client, model: str):
+    """Build and return the Flask app (used by both run_server and tests)."""
     try:
         from flask import Flask, request, jsonify, Response, stream_with_context
     except ImportError:
@@ -305,7 +306,7 @@ def run_server(client: OpenAI, model: str, port: int):
             "modes": ["pentest", "soc", "auto", "code"],
             "models_available": MODELS,
             "endpoints": ["/v1/chat", "/v1/ask", "/v1/triage",
-                          "/v1/hunt", "/v1/respond", "/v1/code"],
+                          "/v1/hunt", "/v1/respond", "/v1/code", "/v1/webhook"],
         })
 
     @app.route("/v1/chat", methods=["POST"])
@@ -481,6 +482,95 @@ def run_server(client: OpenAI, model: str, port: int):
             "task":     task,
         })
 
+    @app.route("/v1/webhook", methods=["POST"])
+    def webhook_endpoint():
+        """SIEM/EDR push webhook — auto-triage incoming alerts, optionally notify Slack/Teams."""
+        ok, err = _check_auth_and_rate()
+        if not ok:
+            return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
+        data     = request.get_json(force=True)
+        alert    = data.get("alert", "")
+        source   = data.get("source", "unknown")   # splunk | elastic | sentinel | crowdstrike | etc.
+        severity = data.get("severity", "unknown")
+        if not alert:
+            return jsonify({"error": "alert required"}), 400
+
+        prompt = (
+            f"[WEBHOOK ALERT from {source.upper()} | Reported severity: {severity.upper()}]\n\n"
+            f"Triage this alert. Classify severity (Critical/High/Medium/Low), "
+            f"map to MITRE ATT&CK TTP(s), determine True Positive vs False Positive likelihood, "
+            f"list immediate containment actions, and recommend next steps.\n\nAlert:\n{alert}"
+        )
+        messages = [
+            {"role": "system", "content": SOC_SYSTEM},
+            {"role": "user",   "content": prompt},
+        ]
+        resp = client.chat.completions.create(
+            model=model, messages=messages, max_tokens=1200,
+            temperature=0.4, top_p=0.95,
+        )
+        triage_text = resp.choices[0].message.content
+
+        # ── Optional Slack/Teams notification ─────────────────────────────────
+        _send_notification(source, severity, alert, triage_text)
+
+        return jsonify({
+            "status":   "triaged",
+            "source":   source,
+            "severity": severity,
+            "triage":   triage_text,
+            "model":    model,
+        })
+
+    return app  # ← returned for testing
+
+
+def _send_notification(source: str, severity: str, alert: str, triage: str):
+    """Send triage result to Slack or Teams webhook (if configured via env vars)."""
+    import urllib.request, urllib.error
+
+    slack_url = os.getenv("HANCOCK_SLACK_WEBHOOK", "")
+    teams_url = os.getenv("HANCOCK_TEAMS_WEBHOOK", "")
+    summary   = triage[:400] + "..." if len(triage) > 400 else triage
+
+    if slack_url:
+        color = {"critical": "#ff3366", "high": "#ff9900", "medium": "#ffcc00"}.get(
+            severity.lower(), "#36a64f")
+        payload = json.dumps({
+            "attachments": [{
+                "color": color,
+                "title": f"🔔 Hancock Alert — {source.upper()} [{severity.upper()}]",
+                "text":  f"*Alert:* {alert[:200]}\n\n*Triage:* {summary}",
+                "footer": "CyberViser Hancock",
+            }]
+        }).encode()
+        try:
+            req = urllib.request.Request(slack_url, data=payload,
+                                         headers={"Content-Type": "application/json"})
+            urllib.request.urlopen(req, timeout=5)
+        except urllib.error.URLError:
+            pass  # non-fatal
+
+    if teams_url:
+        payload = json.dumps({
+            "@type": "MessageCard",
+            "@context": "https://schema.org/extensions",
+            "summary": f"Hancock Alert [{severity.upper()}]",
+            "themeColor": "FF3366",
+            "title": f"🔔 Hancock Alert — {source.upper()} [{severity.upper()}]",
+            "text": f"**Alert:** {alert[:200]}\n\n**Triage:** {summary}",
+        }).encode()
+        try:
+            req = urllib.request.Request(teams_url, data=payload,
+                                         headers={"Content-Type": "application/json"})
+            urllib.request.urlopen(req, timeout=5)
+        except urllib.error.URLError:
+            pass  # non-fatal
+
+
+def run_server(client, model: str, port: int):
+    """Start the Hancock REST API server."""
+    app = build_app(client, model)
     print(f"\n[CyberViser] Hancock API server starting on port {port}")
     print(f"  POST http://localhost:{port}/v1/chat     — conversational (mode: auto|pentest|soc|code)")
     print(f"  POST http://localhost:{port}/v1/ask      — single question")
@@ -488,6 +578,7 @@ def run_server(client: OpenAI, model: str, port: int):
     print(f"  POST http://localhost:{port}/v1/hunt     — threat hunting query generator")
     print(f"  POST http://localhost:{port}/v1/respond  — IR playbook (PICERL)")
     print(f"  POST http://localhost:{port}/v1/code     — security code gen (Qwen 2.5 Coder 32B)")
+    print(f"  POST http://localhost:{port}/v1/webhook  — SIEM push webhook + Slack/Teams notify")
     print(f"  GET  http://localhost:{port}/health      — status check\n")
     app.run(host="0.0.0.0", port=port, debug=False)
 
