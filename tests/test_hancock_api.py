@@ -173,6 +173,56 @@ class TestCode:
         assert r.status_code == 400
 
 
+# ── /v1/ciso ─────────────────────────────────────────────────────────────────
+
+class TestCISO:
+    def test_ciso_returns_advice(self, client):
+        r = client.post("/v1/ciso",
+                        data=json.dumps({"question": "What is NIST CSF 2.0?"}),
+                        content_type="application/json")
+        assert r.status_code == 200
+        d = r.get_json()
+        assert "advice" in d
+        assert "model" in d
+        assert d["output"] == "advice"
+
+    def test_ciso_message_alias(self, client):
+        """Accepts 'message' field as alias for 'question'."""
+        r = client.post("/v1/ciso",
+                        data=json.dumps({"message": "Explain SOC 2 Type II"}),
+                        content_type="application/json")
+        assert r.status_code == 200
+        assert "advice" in r.get_json()
+
+    def test_ciso_output_types(self, client):
+        for output in ["advice", "report", "gap-analysis", "board-summary"]:
+            r = client.post("/v1/ciso",
+                            data=json.dumps({
+                                "question": "ISO 27001 gap analysis",
+                                "output": output,
+                            }),
+                            content_type="application/json")
+            assert r.status_code == 200, f"output='{output}' should succeed"
+            assert r.get_json()["output"] == output
+
+    def test_ciso_with_context(self, client):
+        r = client.post("/v1/ciso",
+                        data=json.dumps({
+                            "question": "What controls should we prioritise?",
+                            "context": "50-person SaaS, AWS, no certifications",
+                            "output": "gap-analysis",
+                        }),
+                        content_type="application/json")
+        assert r.status_code == 200
+
+    def test_ciso_missing_question_returns_400(self, client):
+        r = client.post("/v1/ciso",
+                        data=json.dumps({}),
+                        content_type="application/json")
+        assert r.status_code == 400
+        assert "error" in r.get_json()
+
+
 # ── /v1/webhook ───────────────────────────────────────────────────────────────
 
 class TestWebhook:

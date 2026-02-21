@@ -122,6 +122,7 @@
   <a href="#hunt"><span class="method-tag tag-post">POST</span>/v1/hunt</a>
   <a href="#respond"><span class="method-tag tag-post">POST</span>/v1/respond</a>
   <a href="#code"><span class="method-tag tag-post">POST</span>/v1/code</a>
+  <a href="#ciso"><span class="method-tag tag-post">POST</span>/v1/ciso</a>
   <a href="#webhook"><span class="method-tag tag-post">POST</span>/v1/webhook</a>
   <div class="nav-section">Clients</div>
   <a href="#client-python">Python SDK</a>
@@ -297,6 +298,33 @@
     <tr><td><code>task</code></td><td class="type">string</td><td class="req">required</td><td>What to build (e.g. "KQL query for Pass-the-Hash", "YARA rule for Cobalt Strike")</td></tr>
     <tr><td><code>language</code></td><td class="type">string</td><td class="opt">optional</td><td><code>python</code>, <code>bash</code>, <code>powershell</code>, <code>go</code>, <code>kql</code>, <code>spl</code>, <code>yara</code>, <code>sigma</code></td></tr>
   </table>
+
+  <!-- POST /v1/ciso -->
+  <h2 id="ciso">POST /v1/ciso</h2>
+  <p>AI CISO advisor — risk management, compliance (ISO 27001, SOC 2, NIST CSF, PCI-DSS), board reporting, gap analysis, and security strategy. Use <code>output</code> to control the response format.</p>
+  <div class="ep-header">
+    <span class="method method-post">POST</span>
+    <span class="ep-path">/v1/ciso</span>
+    <span class="ep-badge">CISO mode</span>
+  </div>
+  <div class="code-block">
+    <span class="t-prompt">$ </span>curl -X POST http://localhost:5000/v1/ciso \<br/>
+    &nbsp;&nbsp;-H <span class="t-str">"Content-Type: application/json"</span> \<br/>
+    &nbsp;&nbsp;-d <span class="t-str">'{"question":"What controls should we prioritise for ISO 27001 certification?","output":"gap-analysis","context":"50-person SaaS company, AWS, no current certifications"}'</span><br/><br/>
+    <span class="t-cmt">// Response</span><br/>
+    {<br/>
+    &nbsp;&nbsp;<span class="t-key">"advice"</span>: <span class="t-str">"| Control | Current State | Target State | Gap | Priority |\n..."</span>,<br/>
+    &nbsp;&nbsp;<span class="t-key">"output"</span>: <span class="t-str">"gap-analysis"</span>,<br/>
+    &nbsp;&nbsp;<span class="t-key">"model"</span>: <span class="t-str">"mistralai/mistral-7b-instruct-v0.3"</span><br/>
+    }
+  </div>
+  <table class="params">
+    <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    <tr><td><code>question</code></td><td class="type">string</td><td class="req">required</td><td>Risk or compliance question. Also accepts <code>query</code> or <code>message</code> aliases.</td></tr>
+    <tr><td><code>output</code></td><td class="type">string</td><td class="opt">optional</td><td><code>advice</code> (default) · <code>report</code> · <code>gap-analysis</code> · <code>board-summary</code></td></tr>
+    <tr><td><code>context</code></td><td class="type">string</td><td class="opt">optional</td><td>Organisation context: size, industry, current frameworks, cloud provider, etc.</td></tr>
+  </table>
+  <div class="alert alert-info">Use <code>output: "board-summary"</code> to get a concise ≤300-word executive-ready summary, or <code>"gap-analysis"</code> for a structured control gap table.</div>
 
   <!-- POST /v1/webhook -->
   <h2 id="webhook">POST /v1/webhook</h2>
