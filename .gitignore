@@ -27,6 +27,10 @@ hancock-adapter/
 # Raw data (fetched at runtime)
 data/raw_*.json
 
+# Large training datasets
+data/*.jsonl
+data/*.json
+
 # OS
 .DS_Store
 Thumbs.db
