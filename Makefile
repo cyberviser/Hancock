@@ -3,7 +3,7 @@
 PYTHON        := .venv/bin/python
 PIP           := .venv/bin/pip
 
-.PHONY: help setup install dev-install run server pipeline finetune lint test clean docker docker-up client-python client-node
+.PHONY: help setup install dev-install run server pipeline pipeline-v3 finetune lint test test-cov clean docker docker-up fly-deploy client-python client-node
 
 help:
 	@echo ""
@@ -25,7 +25,8 @@ help:
 	@echo "  Run:"
 	@echo "    run            Start Hancock CLI (interactive)"
 	@echo "    server         Start Hancock REST API server (port 5000)"
-	@echo "    pipeline       Run data collection pipeline"
+	@echo "    pipeline       Run data collection pipeline (all phases)"
+	@echo "    pipeline-v3    Run v3 data collection only (KEV + Atomic + GHSA)"
 	@echo "    finetune       Run LoRA fine-tuning on Mistral 7B"
 	@echo ""
 	@echo "  Clients:"
@@ -34,11 +35,16 @@ help:
 	@echo ""
 	@echo "  Dev:"
 	@echo "    lint           Run flake8 linter"
+	@echo "    test           Run test suite"
+	@echo "    test-cov       Run test suite with HTML coverage report"
 	@echo "    clean          Remove build artifacts and cache"
 	@echo ""
 	@echo "  Docker:"
 	@echo "    docker         Build Docker image"
 	@echo "    docker-up      Start with docker-compose"
+	@echo ""
+	@echo "  Deploy:"
+	@echo "    fly-deploy     Deploy to Fly.io (requires flyctl + fly auth login)"
 	@echo ""
 
 # ─── Setup ───────────────────────────────────────────────────
@@ -64,7 +70,10 @@ server:
 	$(PYTHON) hancock_agent.py --server --port 5000
 
 pipeline:
-	$(PYTHON) hancock_pipeline.py
+	$(PYTHON) hancock_pipeline.py --phase all
+
+pipeline-v3:
+	$(PYTHON) hancock_pipeline.py --phase 3
 
 finetune:
 	$(PYTHON) hancock_finetune.py
@@ -76,6 +85,11 @@ lint:
 
 test:
 	.venv/bin/pytest tests/ -v --tb=short
+
+test-cov:
+	.venv/bin/pytest tests/ -v --tb=short --cov=. --cov-report=html --cov-report=term-missing \
+	  --cov-omit=".venv/*,data/*,docs/*,tests/*"
+	@echo "[Hancock] Coverage report: htmlcov/index.html"
 
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
@@ -90,6 +104,11 @@ docker:
 
 docker-up:
 	docker-compose up -d
+
+# ─── Deploy ──────────────────────────────────────────────────
+fly-deploy:
+	@which flyctl >/dev/null 2>&1 || (echo "[Hancock] Install flyctl: curl -L https://fly.io/install.sh | sh" && exit 1)
+	flyctl deploy --config fly.toml
 
 # ─── Clients ─────────────────────────────────────────────────
 client-python:

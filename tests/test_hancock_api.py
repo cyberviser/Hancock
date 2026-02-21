@@ -424,3 +424,36 @@ class TestOpenAIFallback:
                 hancock_agent.chat(nim_client, msgs,
                                    "mistralai/mistral-7b-instruct-v0.3",
                                    stream=False)
+
+
+# ── /metrics ──────────────────────────────────────────────────────────────────
+
+class TestMetrics:
+    def test_metrics_returns_plaintext(self, client):
+        r = client.get("/metrics")
+        assert r.status_code == 200
+        assert b"hancock_requests_total" in r.data
+        assert b"hancock_errors_total" in r.data
+
+    def test_metrics_increments_after_request(self, client):
+        """Counter increments after a successful API call."""
+        client.post("/v1/chat",
+                    data=json.dumps({"message": "test metric increment"}),
+                    content_type="application/json")
+        r = client.get("/metrics")
+        assert r.status_code == 200
+        text = r.data.decode()
+        # requests_total should be > 0
+        for line in text.splitlines():
+            if line.startswith("hancock_requests_total "):
+                count = int(line.split()[-1])
+                assert count >= 1
+                break
+
+    def test_metrics_by_endpoint_label(self, client):
+        """/metrics includes endpoint labels after a /v1/ask call."""
+        client.post("/v1/ask",
+                    data=json.dumps({"question": "test"}),
+                    content_type="application/json")
+        r = client.get("/metrics")
+        assert b'/v1/ask' in r.data

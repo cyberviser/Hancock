@@ -310,6 +310,23 @@ def build_app(client, model: str):
 
     app = Flask("hancock")
 
+    # ── Metrics counters ──────────────────────────────────────────────────────
+    import threading
+    _metrics_lock = threading.Lock()
+    _metrics: dict = {
+        "requests_total": 0,
+        "errors_total": 0,
+        "requests_by_endpoint": {},
+        "requests_by_mode": {},
+    }
+
+    def _inc(key: str, label: str = ""):
+        with _metrics_lock:
+            if label:
+                _metrics[key][label] = _metrics[key].get(label, 0) + 1
+            else:
+                _metrics[key] += 1
+
     # ── Auth + rate limiting ───────────────────────────────────────────────────
     _HANCOCK_API_KEY = os.getenv("HANCOCK_API_KEY", "")
     _rate_counts: dict = {}  # ip → [timestamp, ...]
@@ -352,14 +369,46 @@ def build_app(client, model: str):
             "models_available": MODELS,
             "endpoints": ["/v1/chat", "/v1/ask", "/v1/triage",
                           "/v1/hunt", "/v1/respond", "/v1/code",
-                          "/v1/ciso", "/v1/webhook"],
+                          "/v1/ciso", "/v1/webhook", "/metrics"],
         })
+
+    @app.route("/metrics", methods=["GET"])
+    def metrics_endpoint():
+        """Prometheus-compatible plain-text metrics."""
+        with _metrics_lock:
+            snap = {
+                "requests_total": _metrics["requests_total"],
+                "errors_total":   _metrics["errors_total"],
+                "by_endpoint":    dict(_metrics["requests_by_endpoint"]),
+                "by_mode":        dict(_metrics["requests_by_mode"]),
+            }
+        lines = [
+            "# HELP hancock_requests_total Total API requests",
+            "# TYPE hancock_requests_total counter",
+            f'hancock_requests_total {snap["requests_total"]}',
+            "# HELP hancock_errors_total Total 4xx/5xx errors",
+            "# TYPE hancock_errors_total counter",
+            f'hancock_errors_total {snap["errors_total"]}',
+            "# HELP hancock_requests_by_endpoint Requests per endpoint",
+            "# TYPE hancock_requests_by_endpoint counter",
+        ]
+        for ep, cnt in snap["by_endpoint"].items():
+            lines.append(f'hancock_requests_by_endpoint{{endpoint="{ep}"}} {cnt}')
+        lines += [
+            "# HELP hancock_requests_by_mode Requests per mode",
+            "# TYPE hancock_requests_by_mode counter",
+        ]
+        for m, cnt in snap["by_mode"].items():
+            lines.append(f'hancock_requests_by_mode{{mode="{m}"}} {cnt}')
+        return Response("\n".join(lines) + "\n", mimetype="text/plain; version=0.0.4")
 
     @app.route("/v1/chat", methods=["POST"])
     def chat_endpoint():
         ok, err = _check_auth_and_rate()
         if not ok:
+            _inc("errors_total")
             return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
+        _inc("requests_total"); _inc("requests_by_endpoint", "/v1/chat")
         data = request.get_json(force=True)
         user_msg = data.get("message", "")
         history  = data.get("history", [])
@@ -367,11 +416,13 @@ def build_app(client, model: str):
         mode     = data.get("mode", "auto")
 
         if not user_msg:
-            return jsonify({"error": "message required"}), 400
+            _inc("errors_total"); return jsonify({"error": "message required"}), 400
         if mode not in SYSTEMS and mode != "auto":
-            return jsonify({"error": f"invalid mode '{mode}'; valid: {list(SYSTEMS.keys())}"}), 400
+            _inc("errors_total"); return jsonify({"error": f"invalid mode '{mode}'; valid: {list(SYSTEMS.keys())}"}), 400
         if not isinstance(history, list):
-            return jsonify({"error": "history must be a list"}), 400
+            _inc("errors_total"); return jsonify({"error": "history must be a list"}), 400
+
+        _inc("requests_by_mode", mode)
 
         system = SYSTEMS.get(mode, AUTO_SYSTEM)
         history.append({"role": "user", "content": user_msg})
@@ -406,12 +457,13 @@ def build_app(client, model: str):
         """Simple single-shot endpoint — no history needed."""
         ok, err = _check_auth_and_rate()
         if not ok:
-            return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
+            _inc("errors_total"); return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
+        _inc("requests_total"); _inc("requests_by_endpoint", "/v1/ask")
         data = request.get_json(force=True)
         question = data.get("question", "")
         mode     = data.get("mode", "auto")
         if not question:
-            return jsonify({"error": "question required"}), 400
+            _inc("errors_total"); return jsonify({"error": "question required"}), 400
 
         system = SYSTEMS.get(mode, AUTO_SYSTEM)
         messages = [
@@ -429,11 +481,12 @@ def build_app(client, model: str):
         """SOC alert triage — classify and prioritize a security alert."""
         ok, err = _check_auth_and_rate()
         if not ok:
-            return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
+            _inc("errors_total"); return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
+        _inc("requests_total"); _inc("requests_by_endpoint", "/v1/triage"); _inc("requests_by_mode", "soc")
         data  = request.get_json(force=True)
         alert = data.get("alert", "")
         if not alert:
-            return jsonify({"error": "alert required"}), 400
+            _inc("errors_total"); return jsonify({"error": "alert required"}), 400
 
         prompt = (
             f"Triage the following security alert. Classify severity (Critical/High/Medium/Low/Info), "
@@ -455,12 +508,13 @@ def build_app(client, model: str):
         """Threat hunting query generator — generate SIEM queries for a given TTP."""
         ok, err = _check_auth_and_rate()
         if not ok:
-            return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
+            _inc("errors_total"); return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
+        _inc("requests_total"); _inc("requests_by_endpoint", "/v1/hunt"); _inc("requests_by_mode", "soc")
         data   = request.get_json(force=True)
-        target = data.get("target", "")   # e.g. "lateral movement with PsExec"
-        siem   = data.get("siem", "splunk")  # splunk | elastic | sentinel
+        target = data.get("target", "")
+        siem   = data.get("siem", "splunk")
         if not target:
-            return jsonify({"error": "target required"}), 400
+            _inc("errors_total"); return jsonify({"error": "target required"}), 400
 
         prompt = (
             f"Generate a {siem.upper()} threat hunting query for: {target}\n"
@@ -482,11 +536,12 @@ def build_app(client, model: str):
         """Incident response guidance — PICERL playbook for an incident type."""
         ok, err = _check_auth_and_rate()
         if not ok:
-            return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
+            _inc("errors_total"); return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
+        _inc("requests_total"); _inc("requests_by_endpoint", "/v1/respond"); _inc("requests_by_mode", "soc")
         data          = request.get_json(force=True)
-        incident_type = data.get("incident", "")   # e.g. "ransomware", "BEC", "data exfiltration"
+        incident_type = data.get("incident", "")
         if not incident_type:
-            return jsonify({"error": "incident required"}), 400
+            _inc("errors_total"); return jsonify({"error": "incident required"}), 400
 
         prompt = (
             f"Provide a detailed PICERL incident response playbook for: {incident_type}\n"
@@ -508,12 +563,13 @@ def build_app(client, model: str):
         """Security code generation — uses Qwen 2.5 Coder 32B for best results."""
         ok, err = _check_auth_and_rate()
         if not ok:
-            return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
+            _inc("errors_total"); return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
+        _inc("requests_total"); _inc("requests_by_endpoint", "/v1/code"); _inc("requests_by_mode", "code")
         data     = request.get_json(force=True)
-        task     = data.get("task", "")       # e.g. "write a Splunk query for kerberoasting"
-        language = data.get("language", "")   # optional: python, bash, kql, spl, yara, sigma
+        task     = data.get("task", "")
+        language = data.get("language", "")
         if not task:
-            return jsonify({"error": "task required"}), 400
+            _inc("errors_total"); return jsonify({"error": "task required"}), 400
 
         lang_hint = f" Write the solution in {language}." if language else ""
         prompt = f"{task}{lang_hint}\nProvide working, production-ready code with comments."
@@ -539,13 +595,14 @@ def build_app(client, model: str):
         """CISO advisor — risk, compliance, board reporting, framework guidance."""
         ok, err = _check_auth_and_rate()
         if not ok:
-            return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
+            _inc("errors_total"); return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
+        _inc("requests_total"); _inc("requests_by_endpoint", "/v1/ciso"); _inc("requests_by_mode", "ciso")
         data     = request.get_json(force=True)
         question = data.get("question", "") or data.get("query", "") or data.get("message", "")
-        context  = data.get("context", "")      # optional: org size, industry, current frameworks
-        output   = data.get("output", "advice") # advice | report | gap-analysis | board-summary
+        context  = data.get("context", "")
+        output   = data.get("output", "advice")
         if not question:
-            return jsonify({"error": "question required"}), 400
+            _inc("errors_total"); return jsonify({"error": "question required"}), 400
 
         output_hints = {
             "report":        "Format your response as a structured risk report with Executive Summary, Findings, Risk Ratings, and Recommendations.",
@@ -567,7 +624,7 @@ def build_app(client, model: str):
         )
         answer = resp.choices[0].message.content
         if not answer:
-            return jsonify({"error": "model returned empty response"}), 502
+            _inc("errors_total"); return jsonify({"error": "model returned empty response"}), 502
         return jsonify({"advice": answer, "output": output, "model": model})
 
     @app.route("/v1/webhook", methods=["POST"])
@@ -575,13 +632,14 @@ def build_app(client, model: str):
         """SIEM/EDR push webhook — auto-triage incoming alerts, optionally notify Slack/Teams."""
         ok, err = _check_auth_and_rate()
         if not ok:
-            return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
+            _inc("errors_total"); return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
+        _inc("requests_total"); _inc("requests_by_endpoint", "/v1/webhook"); _inc("requests_by_mode", "soc")
         data     = request.get_json(force=True)
         alert    = data.get("alert", "")
-        source   = data.get("source", "unknown")   # splunk | elastic | sentinel | crowdstrike | etc.
+        source   = data.get("source", "unknown")
         severity = data.get("severity", "unknown")
         if not alert:
-            return jsonify({"error": "alert required"}), 400
+            _inc("errors_total"); return jsonify({"error": "alert required"}), 400
 
         prompt = (
             f"[WEBHOOK ALERT from {source.upper()} | Reported severity: {severity.upper()}]\n\n"
