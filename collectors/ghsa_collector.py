@@ -72,7 +72,10 @@ def parse_advisory(adv: dict) -> dict | None:
         "packages":   packages[:5],
         "ecosystem":  adv.get("vulnerabilities", [{}])[0].get("package", {}).get("ecosystem", ""),
         "published":  adv.get("published_at", ""),
-        "references": [r.get("url", "") for r in adv.get("references", [])[:3]],
+        "references": [
+            r if isinstance(r, str) else r.get("url", "")
+            for r in adv.get("references", [])[:3]
+        ],
     }
 
 
