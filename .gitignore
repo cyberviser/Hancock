@@ -1,6 +1,32 @@
+# Secrets
 .env
+
+# Virtual environments
 .venv/
-data/raw_*.json
-hancock-adapter/
+venv/
+env/
+
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Model artifacts
+hancock-adapter/
+*.bin
+*.safetensors
+
+# Raw data (fetched at runtime)
+data/raw_*.json
+
+# OS
+.DS_Store
+Thumbs.db

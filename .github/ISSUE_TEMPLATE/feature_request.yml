@@ -1,0 +1,47 @@
+name: Feature Request
+description: Suggest a new feature or improvement for Hancock
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Got an idea to make Hancock more powerful? Let's hear it.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Pentest Mode
+        - SOC Analyst Mode
+        - CISO Mode (Phase 3)
+        - REST API
+        - Fine-tuning / Training Data
+        - Integration (Burp Suite, SIEM, etc.)
+        - Website / Docs
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / Motivation
+      placeholder: What problem does this solve? Why is it needed?
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      placeholder: Describe the feature and how it should work.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      placeholder: Any other approaches you considered?

@@ -1,0 +1,58 @@
+name: Bug Report
+description: Report a bug or unexpected behavior in Hancock
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the details below.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - CLI (hancock_agent.py)
+        - REST API server
+        - Fine-tuning pipeline
+        - Data collectors
+        - Website (docs/)
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      placeholder: Describe what happened and what you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      placeholder: |
+        1. Run `python hancock_agent.py --server`
+        2. POST to /v1/triage with...
+        3. See error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: |
+        - OS: Ubuntu 22.04
+        - Python: 3.11.4
+        - Model: mistralai/mistral-7b-instruct-v0.3
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Output / Logs
+      render: shell

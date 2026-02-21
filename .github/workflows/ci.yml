@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    name: Lint & Validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install flake8
+
+      - name: Lint with flake8
+        run: |
+          # Stop on syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics \
+            --exclude=.venv,__pycache__,data,docs
+
+      - name: Check for secrets in code
+        run: |
+          # Fail if any nvapi- keys are hardcoded (outside .env)
+          if grep -r "nvapi-" --include="*.py" --include="*.sh" .; then
+            echo "ERROR: NVIDIA API key found in source code!"
+            exit 1
+          fi
+          echo "✓ No hardcoded secrets found"
+
+      - name: Validate Python imports
+        run: |
+          python -c "import hancock_agent" && echo "✓ hancock_agent imports OK"
+          python -c "import hancock_pipeline" && echo "✓ hancock_pipeline imports OK"
+        env:
+          NVIDIA_API_KEY: "nvapi-placeholder"
