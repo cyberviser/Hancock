@@ -22,7 +22,7 @@ from pathlib import Path
 BANNER = """
 ╔═══════════════════════════════════════════════════════╗
 ║           CyberViser — Hancock AI Agent               ║
-║        Phase 1: Pentest Dataset Pipeline              ║
+║        Dataset Pipeline  (v1 / v2 / v3)               ║
 ╚═══════════════════════════════════════════════════════╝
 """
 
@@ -110,8 +110,8 @@ def main():
     parser.add_argument("--kb-only",    action="store_true", help="Only build static KBs (no internet needed)")
     parser.add_argument("--skip-nvd",   action="store_true", help="Skip NVD CVE collection")
     parser.add_argument("--skip-mitre", action="store_true", help="Skip MITRE ATT&CK collection")
-    parser.add_argument("--phase",      choices=["1", "2", "all"], default="all",
-                        help="1=Pentest only, 2=SOC only, all=both (default)")
+    parser.add_argument("--phase",      choices=["1", "2", "3", "all"], default="all",
+                        help="1=Pentest only, 2=SOC only, 3=v3 enrichment, all=all (default)")
     args = parser.parse_args()
 
     data_dir = Path(__file__).parent / "data"
@@ -119,6 +119,7 @@ def main():
 
     phase1 = args.phase in ("1", "all")
     phase2 = args.phase in ("2", "all")
+    phase3 = args.phase in ("3", "all")
     start  = time.time()
     results = {}
 
@@ -134,9 +135,16 @@ def main():
                 results["mitre"] = run_mitre(data_dir)
             if not args.skip_nvd:
                 results["nvd"] = run_nvd(data_dir)
+        if phase3:
+            results["cisa-kev"] = run_kev(data_dir)
+            results["atomic"]   = run_atomic(data_dir)
+            results["ghsa"]     = run_ghsa(data_dir)
 
     v2 = phase2  # use v2 formatter when SOC data present
-    results["formatter"] = run_formatter(v2=v2)
+    if phase3:
+        results["formatter"] = run_formatter_v3()
+    else:
+        results["formatter"] = run_formatter(v2=v2)
 
     elapsed = time.time() - start
 
@@ -149,7 +157,9 @@ def main():
         print(f"  {status_icons.get(ok, '?')}  {step}")
     print(f"\n  ⏱  Completed in {elapsed:.1f}s")
 
-    output = Path(__file__).parent / "data" / "hancock_v2.jsonl"
+    output = Path(__file__).parent / "data" / "hancock_v3.jsonl"
+    if not output.exists():
+        output = Path(__file__).parent / "data" / "hancock_v2.jsonl"
     if not output.exists():
         output = Path(__file__).parent / "data" / "hancock_pentest_v1.jsonl"
     if output.exists():

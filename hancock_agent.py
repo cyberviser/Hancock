@@ -304,7 +304,7 @@ def build_app(client, model: str):
             if token != _HANCOCK_API_KEY:
                 return False, "Unauthorized: provide Authorization: Bearer <HANCOCK_API_KEY>"
 
-        # Simple in-memory rate limiter (per source IP)
+        # In-memory rate limiter (per source IP) — evicts stale entries to prevent memory leak
         now = time.time()
         ip  = request.remote_addr or "unknown"
         timestamps = _rate_counts.get(ip, [])
@@ -313,6 +313,11 @@ def build_app(client, model: str):
             return False, f"Rate limit exceeded: {_RATE_LIMIT} requests/min"
         timestamps.append(now)
         _rate_counts[ip] = timestamps
+        # Evict IPs with no recent requests (keep dict bounded)
+        if len(_rate_counts) > 10_000:
+            stale = [k for k, v in _rate_counts.items() if not v]
+            for k in stale:
+                del _rate_counts[k]
         return True, ""
 
     @app.route("/health", methods=["GET"])
@@ -339,6 +344,10 @@ def build_app(client, model: str):
 
         if not user_msg:
             return jsonify({"error": "message required"}), 400
+        if mode not in SYSTEMS and mode != "auto":
+            return jsonify({"error": f"invalid mode '{mode}'; valid: {list(SYSTEMS.keys())}"}), 400
+        if not isinstance(history, list):
+            return jsonify({"error": "history must be a list"}), 400
 
         system = SYSTEMS.get(mode, AUTO_SYSTEM)
         history.append({"role": "user", "content": user_msg})
@@ -364,6 +373,8 @@ def build_app(client, model: str):
             temperature=0.7, top_p=0.95,
         )
         response_text = resp.choices[0].message.content
+        if not response_text:
+            return jsonify({"error": "model returned empty response"}), 502
         return jsonify({"response": response_text, "model": model, "mode": mode})
 
     @app.route("/v1/ask", methods=["POST"])

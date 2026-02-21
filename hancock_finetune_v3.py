@@ -33,8 +33,8 @@ from pathlib import Path
 MODEL_NAME    = "mistralai/Mistral-7B-Instruct-v0.3"
 OUTPUT_DIR    = Path("hancock-adapter-v3")
 HF_REPO       = "cyberviser/hancock-v3"
-DATASET_URL   = "https://raw.githubusercontent.com/cyberviser/Hancock/main/data/hancock_v2.jsonl"
-DATASET_LOCAL = Path("data/hancock_v2.jsonl")
+DATASET_URL   = "https://raw.githubusercontent.com/cyberviser/Hancock/main/data/hancock_v3.jsonl"
+DATASET_LOCAL = Path("data/hancock_v3.jsonl")
 MAX_SEQ_LEN   = 4096
 
 
