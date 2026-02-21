@@ -167,3 +167,48 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# ── v3 pipeline additions ─────────────────────────────────────────────────────
+def run_kev(data_dir: Path) -> bool:
+    print("\n[kev] Fetching CISA Known Exploited Vulnerabilities...")
+    try:
+        from collectors.cisa_kev_collector import collect
+        collect(enrich=True, max_enrich=200)
+        return True
+    except Exception as e:
+        print(f"[kev] ERROR: {e}")
+        return False
+
+
+def run_atomic(data_dir: Path) -> bool:
+    print("\n[atomic] Fetching Atomic Red Team test cases...")
+    try:
+        from collectors.atomic_collector import collect
+        collect()
+        return True
+    except Exception as e:
+        print(f"[atomic] ERROR: {e}")
+        return False
+
+
+def run_ghsa(data_dir: Path) -> bool:
+    print("\n[ghsa] Fetching GitHub Security Advisories...")
+    try:
+        from collectors.ghsa_collector import collect
+        collect()
+        return True
+    except Exception as e:
+        print(f"[ghsa] ERROR: {e}")
+        return False
+
+
+def run_formatter_v3() -> bool:
+    print("\n[formatter-v3] Building hancock_v3.jsonl from all sources...")
+    try:
+        from collectors.formatter_v3 import format_all
+        samples = format_all()
+        return bool(samples)
+    except Exception as e:
+        print(f"[formatter-v3] ERROR: {e}")
+        return False
