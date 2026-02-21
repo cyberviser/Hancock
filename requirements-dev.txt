@@ -1,0 +1,5 @@
+# Development dependencies (not required to run Hancock)
+flake8>=7.0.0
+pytest>=8.0.0
+pytest-mock>=3.12.0
+black>=24.0.0

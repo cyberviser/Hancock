@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hancock API Docs — CyberViser</title>
+  <meta name="description" content="Hancock REST API reference — triage, threat hunting, incident response, and conversational security AI." />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green: #00ff88; --cyan: #00e5ff; --red: #ff3366;
+      --dark: #080c10; --card: #0d1117; --border: #1a2332;
+      --text: #c9d1d9; --muted: #586069;
+    }
+    body { font-family: 'Courier New', monospace; background: var(--dark); color: var(--text); }
+    body::before {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 9999;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,136,0.012) 2px, rgba(0,255,136,0.012) 4px);
+    }
+    ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-thumb { background: var(--green); }
+
+    /* Layout */
+    .layout { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      width: 240px; min-height: 100vh; background: var(--card);
+      border-right: 1px solid var(--border); padding: 1.5rem 0;
+      position: fixed; top: 0; left: 0; overflow-y: auto;
+    }
+    .sidebar-logo { padding: 0 1.5rem 1.5rem; border-bottom: 1px solid var(--border); margin-bottom: 1rem; }
+    .sidebar-logo a { color: var(--green); text-decoration: none; font-size: 1rem; font-weight: bold; letter-spacing: 0.1em; }
+    .sidebar-logo span { color: var(--cyan); }
+    .sidebar-logo .version { font-size: 0.65rem; color: var(--muted); margin-top: 0.2rem; }
+    .nav-section { padding: 0.5rem 1.5rem 0.3rem; font-size: 0.65rem; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; }
+    .sidebar a { display: block; padding: 0.4rem 1.5rem; font-size: 0.82rem; color: var(--muted); text-decoration: none; transition: color 0.15s, background 0.15s; }
+    .sidebar a:hover, .sidebar a.active { color: var(--green); background: rgba(0,255,136,0.05); }
+    .sidebar .method-tag { font-size: 0.65rem; padding: 0.1rem 0.4rem; border-radius: 3px; margin-right: 0.4rem; font-weight: bold; }
+    .tag-post { background: rgba(0,255,136,0.15); color: var(--green); }
+    .tag-get  { background: rgba(0,229,255,0.15); color: var(--cyan); }
+
+    /* Main */
+    .main { margin-left: 240px; padding: 3rem; max-width: 860px; width: 100%; }
+
+    h1 { font-size: 2rem; color: var(--green); margin-bottom: 0.4rem; }
+    .tagline { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+    h2 { font-size: 1.3rem; color: var(--text); margin: 3rem 0 0.6rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1rem; color: var(--green); margin: 1.5rem 0 0.5rem; }
+    p  { font-size: 0.88rem; color: var(--muted); line-height: 1.7; margin-bottom: 0.8rem; }
+
+    /* Endpoint header */
+    .ep-header {
+      display: flex; align-items: center; gap: 1rem;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 6px 6px 0 0; padding: 0.8rem 1.2rem;
+    }
+    .method { font-weight: bold; font-size: 0.8rem; padding: 0.2rem 0.7rem; border-radius: 4px; }
+    .method-post { background: rgba(0,255,136,0.15); color: var(--green); }
+    .method-get  { background: rgba(0,229,255,0.15); color: var(--cyan); }
+    .ep-path { font-size: 1rem; color: var(--text); }
+    .ep-badge { margin-left: auto; font-size: 0.65rem; padding: 0.15rem 0.6rem; border-radius: 20px; background: rgba(0,255,136,0.1); color: var(--green); border: 1px solid rgba(0,255,136,0.2); }
+
+    /* Code blocks */
+    .code-block {
+      background: #010409; border: 1px solid var(--border); border-top: none;
+      border-radius: 0 0 6px 6px; padding: 1.2rem 1.5rem;
+      font-size: 0.8rem; line-height: 1.8; overflow-x: auto;
+    }
+    .code-block.standalone { border-radius: 6px; border-top: 1px solid var(--border); margin-top: 0.6rem; }
+    .t-key    { color: var(--cyan); }
+    .t-str    { color: #a8ff78; }
+    .t-num    { color: #f97316; }
+    .t-bool   { color: #ff6b9d; }
+    .t-cmt    { color: var(--muted); }
+    .t-ok     { color: var(--green); }
+    .t-warn   { color: #ffbd2e; }
+    .t-prompt { color: var(--green); }
+
+    /* Params table */
+    .params { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.82rem; }
+    .params th { text-align: left; padding: 0.5rem 0.8rem; background: #161b22; color: var(--muted); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; }
+    .params td { padding: 0.6rem 0.8rem; border-bottom: 1px solid var(--border); color: var(--text); }
+    .params tr:last-child td { border-bottom: none; }
+    .req  { color: var(--red); font-size: 0.65rem; }
+    .opt  { color: var(--muted); font-size: 0.65rem; }
+    .type { color: var(--cyan); font-size: 0.75rem; }
+    code  { background: rgba(0,229,255,0.08); color: var(--cyan); padding: 0.1rem 0.35rem; border-radius: 3px; font-family: inherit; font-size: 0.85em; }
+
+    /* Alert boxes */
+    .alert { padding: 0.8rem 1rem; border-radius: 5px; margin: 1rem 0; font-size: 0.83rem; }
+    .alert-info    { background: rgba(0,229,255,0.07); border-left: 3px solid var(--cyan); color: var(--text); }
+    .alert-warning { background: rgba(255,189,46,0.07); border-left: 3px solid #ffbd2e; color: var(--text); }
+
+    /* Back link */
+    .back { display: inline-block; color: var(--muted); text-decoration: none; font-size: 0.8rem; margin-bottom: 2rem; }
+    .back:hover { color: var(--green); }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">CYBER<span>VISER</span></a>
+    <div class="version">Hancock v0.1.0 API</div>
+  </div>
+  <div class="nav-section">Overview</div>
+  <a href="#intro">Introduction</a>
+  <a href="#auth">Base URL</a>
+  <div class="nav-section">Endpoints</div>
+  <a href="#health"><span class="method-tag tag-get">GET</span>/health</a>
+  <a href="#chat"><span class="method-tag tag-post">POST</span>/v1/chat</a>
+  <a href="#ask"><span class="method-tag tag-post">POST</span>/v1/ask</a>
+  <a href="#triage"><span class="method-tag tag-post">POST</span>/v1/triage</a>
+  <a href="#hunt"><span class="method-tag tag-post">POST</span>/v1/hunt</a>
+  <a href="#respond"><span class="method-tag tag-post">POST</span>/v1/respond</a>
+  <div class="nav-section">Guides</div>
+  <a href="#modes">Specialist Modes</a>
+  <a href="#errors">Error Handling</a>
+  <a href="index.html">← Back to Site</a>
+</nav>
+
+<!-- Main -->
+<main class="main">
+  <a href="index.html" class="back">← Back to cyberviser.github.io/Hancock</a>
+
+  <h1 id="intro">Hancock API</h1>
+  <p class="tagline">REST API reference for the CyberViser Hancock AI Security Agent</p>
+
+  <div class="alert alert-info">
+    Start the server with <code>python hancock_agent.py --server</code> or <code>make server</code>. Requires a valid <code>NVIDIA_API_KEY</code> in your <code>.env</code>.
+  </div>
+
+  <!-- Base URL -->
+  <h2 id="auth">Base URL</h2>
+  <div class="code-block standalone">
+    <span class="t-cmt"># Default local</span><br/>
+    http://localhost:5000<br/><br/>
+    <span class="t-cmt"># Docker</span><br/>
+    http://your-server:5000
+  </div>
+  <p>All endpoints accept and return <code>application/json</code>. No authentication is required on the local server — add your own reverse proxy + auth for production.</p>
+
+  <!-- GET /health -->
+  <h2 id="health">GET /health</h2>
+  <p>Returns the agent status, loaded model, and available endpoints.</p>
+  <div class="ep-header">
+    <span class="method method-get">GET</span>
+    <span class="ep-path">/health</span>
+    <span class="ep-badge">No params</span>
+  </div>
+  <div class="code-block">
+    <span class="t-prompt">$ </span>curl http://localhost:5000/health<br/><br/>
+    {<br/>
+    &nbsp;&nbsp;<span class="t-key">"status"</span>: <span class="t-str">"ok"</span>,<br/>
+    &nbsp;&nbsp;<span class="t-key">"agent"</span>: <span class="t-str">"Hancock"</span>,<br/>
+    &nbsp;&nbsp;<span class="t-key">"model"</span>: <span class="t-str">"mistralai/mistral-7b-instruct-v0.3"</span>,<br/>
+    &nbsp;&nbsp;<span class="t-key">"company"</span>: <span class="t-str">"CyberViser"</span>,<br/>
+    &nbsp;&nbsp;<span class="t-key">"modes"</span>: [<span class="t-str">"pentest"</span>, <span class="t-str">"soc"</span>, <span class="t-str">"auto"</span>],<br/>
+    &nbsp;&nbsp;<span class="t-key">"endpoints"</span>: [<span class="t-str">"/v1/chat"</span>, <span class="t-str">"/v1/ask"</span>, <span class="t-str">"/v1/triage"</span>, <span class="t-str">"/v1/hunt"</span>, <span class="t-str">"/v1/respond"</span>]<br/>
+    }
+  </div>
+
+  <!-- POST /v1/chat -->
+  <h2 id="chat">POST /v1/chat</h2>
+  <p>Conversational AI with multi-turn history. Choose a specialist mode per request.</p>
+  <div class="ep-header">
+    <span class="method method-post">POST</span>
+    <span class="ep-path">/v1/chat</span>
+    <span class="ep-badge">Supports streaming</span>
+  </div>
+  <div class="code-block">
+    <span class="t-cmt">// Request body</span><br/>
+    {<br/>
+    &nbsp;&nbsp;<span class="t-key">"message"</span>: <span class="t-str">"How do I enumerate SMB shares on a target?"</span>,<br/>
+    &nbsp;&nbsp;<span class="t-key">"mode"</span>: <span class="t-str">"pentest"</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-cmt">// "auto" | "pentest" | "soc"</span><br/>
+    &nbsp;&nbsp;<span class="t-key">"history"</span>: [],&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-cmt">// array of {role, content} pairs</span><br/>
+    &nbsp;&nbsp;<span class="t-key">"stream"</span>: <span class="t-bool">false</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-cmt">// true for SSE streaming</span><br/>
+    }
+  </div>
+  <table class="params">
+    <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    <tr><td><code>message</code></td><td class="type">string</td><td class="req">required</td><td>User's message</td></tr>
+    <tr><td><code>mode</code></td><td class="type">string</td><td class="opt">optional</td><td><code>auto</code> (default), <code>pentest</code>, or <code>soc</code></td></tr>
+    <tr><td><code>history</code></td><td class="type">array</td><td class="opt">optional</td><td>Previous conversation turns</td></tr>
+    <tr><td><code>stream</code></td><td class="type">boolean</td><td class="opt">optional</td><td>Enable SSE streaming (default: false)</td></tr>
+  </table>
+
+  <!-- POST /v1/ask -->
+  <h2 id="ask">POST /v1/ask</h2>
+  <p>Single-shot question — no history, fastest response time.</p>
+  <div class="ep-header">
+    <span class="method method-post">POST</span>
+    <span class="ep-path">/v1/ask</span>
+  </div>
+  <div class="code-block">
+    <span class="t-prompt">$ </span>curl -s -X POST http://localhost:5000/v1/ask \<br/>
+    &nbsp;&nbsp;-H <span class="t-str">"Content-Type: application/json"</span> \<br/>
+    &nbsp;&nbsp;-d <span class="t-str">'{"question": "What is CVE-2021-44228?", "mode": "pentest"}'</span>
+  </div>
+
+  <!-- POST /v1/triage -->
+  <h2 id="triage">POST /v1/triage</h2>
+  <p>Submit a raw security alert. Hancock returns severity classification, MITRE ATT&CK mapping, TP/FP verdict, and immediate containment actions.</p>
+  <div class="ep-header">
+    <span class="method method-post">POST</span>
+    <span class="ep-path">/v1/triage</span>
+    <span class="ep-badge">SOC mode</span>
+  </div>
+  <div class="code-block">
+    <span class="t-prompt">$ </span>curl -X POST http://localhost:5000/v1/triage \<br/>
+    &nbsp;&nbsp;-H <span class="t-str">"Content-Type: application/json"</span> \<br/>
+    &nbsp;&nbsp;-d <span class="t-str">'{"alert": "Mimikatz.exe detected on DC01 at 03:14 UTC. Process: lsass dump."}'</span><br/><br/>
+    <span class="t-cmt">// Response</span><br/>
+    {<br/>
+    &nbsp;&nbsp;<span class="t-key">"triage"</span>: <span class="t-str">"**Severity: CRITICAL**\n\nMITRE: T1003 (OS Credential Dumping)..."</span>,<br/>
+    &nbsp;&nbsp;<span class="t-key">"model"</span>: <span class="t-str">"mistralai/mistral-7b-instruct-v0.3"</span><br/>
+    }
+  </div>
+  <table class="params">
+    <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    <tr><td><code>alert</code></td><td class="type">string</td><td class="req">required</td><td>Raw alert text from SIEM, EDR, or IDS/IPS</td></tr>
+  </table>
+
+  <!-- POST /v1/hunt -->
+  <h2 id="hunt">POST /v1/hunt</h2>
+  <p>Generate production-ready threat hunting queries for Splunk, Elastic, or Microsoft Sentinel.</p>
+  <div class="ep-header">
+    <span class="method method-post">POST</span>
+    <span class="ep-path">/v1/hunt</span>
+    <span class="ep-badge">SOC mode</span>
+  </div>
+  <div class="code-block">
+    <span class="t-prompt">$ </span>curl -X POST http://localhost:5000/v1/hunt \<br/>
+    &nbsp;&nbsp;-H <span class="t-str">"Content-Type: application/json"</span> \<br/>
+    &nbsp;&nbsp;-d <span class="t-str">'{"target": "lateral movement via PsExec", "siem": "splunk"}'</span>
+  </div>
+  <table class="params">
+    <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    <tr><td><code>target</code></td><td class="type">string</td><td class="req">required</td><td>TTP or behavior to hunt (e.g. "Kerberoasting", "DNS tunneling")</td></tr>
+    <tr><td><code>siem</code></td><td class="type">string</td><td class="opt">optional</td><td><code>splunk</code> (default), <code>elastic</code>, or <code>sentinel</code></td></tr>
+  </table>
+
+  <!-- POST /v1/respond -->
+  <h2 id="respond">POST /v1/respond</h2>
+  <p>Generate a full PICERL incident response playbook for any incident type.</p>
+  <div class="ep-header">
+    <span class="method method-post">POST</span>
+    <span class="ep-path">/v1/respond</span>
+    <span class="ep-badge">SOC mode</span>
+  </div>
+  <div class="code-block">
+    <span class="t-prompt">$ </span>curl -X POST http://localhost:5000/v1/respond \<br/>
+    &nbsp;&nbsp;-H <span class="t-str">"Content-Type: application/json"</span> \<br/>
+    &nbsp;&nbsp;-d <span class="t-str">'{"incident": "ransomware"}'</span><br/><br/>
+    <span class="t-cmt">// Returns full PICERL playbook:</span><br/>
+    <span class="t-ok">// Prepare → Identify → Contain → Eradicate → Recover → Lessons Learned</span>
+  </div>
+  <table class="params">
+    <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    <tr><td><code>incident</code></td><td class="type">string</td><td class="req">required</td><td>Incident type (e.g. <code>ransomware</code>, <code>BEC</code>, <code>data exfiltration</code>)</td></tr>
+  </table>
+
+  <!-- Modes -->
+  <h2 id="modes">Specialist Modes</h2>
+  <table class="params">
+    <tr><th>Mode</th><th>Best For</th><th>Persona</th></tr>
+    <tr><td><code>pentest</code></td><td>Offensive security, recon, exploitation, CVE research</td><td>Elite red team operator</td></tr>
+    <tr><td><code>soc</code></td><td>Alert triage, SIEM queries, IR, threat hunting</td><td>SOC Tier-2/3 analyst</td></tr>
+    <tr><td><code>auto</code></td><td>Mixed tasks — auto-detects context</td><td>Combined persona</td></tr>
+  </table>
+
+  <!-- Errors -->
+  <h2 id="errors">Error Handling</h2>
+  <div class="alert alert-warning">All endpoints return HTTP 400 for missing required fields and HTTP 500 for upstream model errors.</div>
+  <div class="code-block standalone">
+    <span class="t-cmt">// 400 Bad Request</span><br/>
+    { <span class="t-key">"error"</span>: <span class="t-str">"message required"</span> }<br/><br/>
+    <span class="t-cmt">// 500 Internal Server Error (model/API issue)</span><br/>
+    { <span class="t-key">"error"</span>: <span class="t-str">"upstream model error: ..."</span> }
+  </div>
+
+</main>
+</div>
+</body>
+</html>
