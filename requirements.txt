@@ -1,0 +1,10 @@
+stix2>=3.0.0
+libtaxii>=1.1.119
+requests>=2.32.0
+tqdm>=4.67.0
+# Fine-tuning (install separately if GPU available)
+# unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git
+# trl>=0.8.0
+# transformers>=4.40.0
+# torch>=2.0.0
+# datasets>=2.18.0

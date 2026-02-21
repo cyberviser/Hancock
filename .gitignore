@@ -1,0 +1,6 @@
+.env
+.venv/
+data/raw_*.json
+hancock-adapter/
+__pycache__/
+*.pyc

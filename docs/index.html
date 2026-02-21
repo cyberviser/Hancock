@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hancock — CyberViser AI Security Platform</title>
+  <meta name="description" content="Hancock is CyberViser's AI-powered cybersecurity agent — automating pentesting, SOC analysis, and CISO strategy through specialized LLMs." />
+  <style>
+    /* ─── Reset & Base ───────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:  #00ff88;
+      --cyan:   #00e5ff;
+      --red:    #ff3366;
+      --dark:   #080c10;
+      --card:   #0d1117;
+      --border: #1a2332;
+      --text:   #c9d1d9;
+      --muted:  #586069;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Courier New', Courier, monospace;
+      background: var(--dark);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* ─── Scanlines overlay ──────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,255,136,0.015) 2px,
+        rgba(0,255,136,0.015) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ─── Scrollbar ──────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--dark); }
+    ::-webkit-scrollbar-thumb { background: var(--green); border-radius: 3px; }
+
+    /* ─── Nav ────────────────────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 3rem;
+      background: rgba(8,12,16,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--green);
+      letter-spacing: 0.15em;
+      text-decoration: none;
+    }
+
+    .nav-logo span { color: var(--cyan); }
+
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--green); }
+
+    .nav-cta {
+      padding: 0.45rem 1.2rem;
+      border: 1px solid var(--green);
+      color: var(--green) !important;
+      border-radius: 4px;
+      transition: background 0.2s, color 0.2s !important;
+    }
+
+    .nav-cta:hover { background: var(--green) !important; color: var(--dark) !important; }
+
+    /* ─── Hero ───────────────────────────────────────────────── */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 6rem 2rem 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,255,136,0.07) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 80% 80%, rgba(0,229,255,0.05) 0%, transparent 60%);
+    }
+
+    .hero-badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      letter-spacing: 0.2em;
+      color: var(--green);
+      border: 1px solid rgba(0,255,136,0.3);
+      padding: 0.3rem 0.9rem;
+      border-radius: 20px;
+      margin-bottom: 1.8rem;
+      text-transform: uppercase;
+    }
+
+    .hero-ascii {
+      font-size: clamp(0.45rem, 1.2vw, 0.75rem);
+      line-height: 1.15;
+      color: var(--green);
+      text-shadow: 0 0 8px rgba(0,255,136,0.6);
+      margin-bottom: 2rem;
+      white-space: pre;
+      letter-spacing: 0.05em;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      line-height: 1.1;
+      margin-bottom: 1.2rem;
+      letter-spacing: -0.02em;
+    }
+
+    h1 .accent-green { color: var(--green); text-shadow: 0 0 20px rgba(0,255,136,0.4); }
+    h1 .accent-cyan  { color: var(--cyan);  text-shadow: 0 0 20px rgba(0,229,255,0.4); }
+
+    .hero-sub {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 580px;
+      line-height: 1.7;
+      margin-bottom: 2.5rem;
+    }
+
+    .hero-sub strong { color: var(--text); }
+
+    .btn-group { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+
+    .btn {
+      padding: 0.75rem 1.8rem;
+      font-family: inherit;
+      font-size: 0.9rem;
+      letter-spacing: 0.08em;
+      text-decoration: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--green);
+      color: var(--dark);
+      font-weight: bold;
+    }
+
+    .btn-primary:hover { box-shadow: 0 0 20px rgba(0,255,136,0.5); transform: translateY(-2px); }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--cyan);
+      border: 1px solid var(--cyan);
+    }
+
+    .btn-outline:hover { background: rgba(0,229,255,0.1); transform: translateY(-2px); }
+
+    .terminal-bar {
+      margin-top: 3.5rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      width: min(700px, 95vw);
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(0,255,136,0.07);
+    }
+
+    .terminal-header {
+      background: #161b22;
+      padding: 0.6rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-red    { background: #ff5f57; }
+    .dot-yellow { background: #ffbd2e; }
+    .dot-green  { background: #28c840; }
+
+    .terminal-title { color: var(--muted); font-size: 0.75rem; margin-left: auto; margin-right: auto; }
+
+    .terminal-body { padding: 1.2rem 1.5rem; font-size: 0.82rem; line-height: 1.8; }
+
+    .t-prompt { color: var(--green); }
+    .t-cmd    { color: var(--text); }
+    .t-out    { color: var(--cyan); }
+    .t-warn   { color: #ffbd2e; }
+    .t-ok     { color: var(--green); }
+
+    /* ─── Sections ───────────────────────────────────────────── */
+    section { padding: 6rem 2rem; }
+
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    .section-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.2em;
+      color: var(--green);
+      text-transform: uppercase;
+      margin-bottom: 0.6rem;
+    }
+
+    .section-title {
+      font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+
+    .section-sub {
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.7;
+      max-width: 600px;
+      margin-bottom: 3rem;
+    }
+
+    /* ─── Cards ──────────────────────────────────────────────── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.8rem;
+      transition: border-color 0.25s, box-shadow 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      border-color: var(--green);
+      box-shadow: 0 0 20px rgba(0,255,136,0.08);
+    }
+
+    .card-icon {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+
+    .card h3 {
+      font-size: 1rem;
+      color: var(--green);
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.05em;
+    }
+
+    .card p {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .card-tag {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      padding: 0.15rem 0.6rem;
+      border-radius: 20px;
+      text-transform: uppercase;
+    }
+
+    .tag-live    { background: rgba(0,255,136,0.12); color: var(--green); border: 1px solid rgba(0,255,136,0.25); }
+    .tag-planned { background: rgba(0,229,255,0.1);  color: var(--cyan);  border: 1px solid rgba(0,229,255,0.2);  }
+    .tag-soon    { background: rgba(255,189,46,0.1); color: #ffbd2e;     border: 1px solid rgba(255,189,46,0.2);  }
+
+    /* ─── Roadmap ─────────────────────────────────────────────── */
+    .roadmap {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+      padding-left: 2rem;
+    }
+
+    .roadmap::before {
+      content: '';
+      position: absolute;
+      left: 0.6rem;
+      top: 0; bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--green), var(--cyan), rgba(0,229,255,0.1));
+    }
+
+    .roadmap-item {
+      position: relative;
+      padding: 1.5rem 0 1.5rem 2rem;
+    }
+
+    .roadmap-dot {
+      position: absolute;
+      left: -1.63rem;
+      top: 1.85rem;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      border: 2px solid var(--green);
+      background: var(--dark);
+    }
+
+    .roadmap-dot.active { background: var(--green); box-shadow: 0 0 10px rgba(0,255,136,0.6); }
+    .roadmap-dot.planned { border-color: var(--cyan); }
+    .roadmap-dot.future  { border-color: var(--muted); }
+
+    .roadmap-phase {
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      color: var(--green);
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+    }
+
+    .roadmap-item h3 { font-size: 1.1rem; margin-bottom: 0.4rem; }
+    .roadmap-item p  { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+
+    /* ─── API endpoints ──────────────────────────────────────── */
+    .endpoint-list { display: flex; flex-direction: column; gap: 0.8rem; }
+
+    .endpoint {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem 1.2rem;
+      font-size: 0.82rem;
+      transition: border-color 0.2s;
+    }
+
+    .endpoint:hover { border-color: rgba(0,229,255,0.4); }
+
+    .method {
+      font-weight: bold;
+      min-width: 3.5rem;
+      padding: 0.1rem 0.5rem;
+      border-radius: 3px;
+      text-align: center;
+      font-size: 0.75rem;
+    }
+
+    .method-post { background: rgba(0,255,136,0.15); color: var(--green); }
+    .method-get  { background: rgba(0,229,255,0.15); color: var(--cyan);  }
+
+    .ep-path { color: var(--text); font-family: inherit; }
+    .ep-desc { color: var(--muted); margin-left: auto; font-size: 0.78rem; }
+
+    /* ─── Stats ───────────────────────────────────────────────── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+
+    .stat {
+      text-align: center;
+      padding: 2rem 1rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .stat-num {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: var(--green);
+      text-shadow: 0 0 15px rgba(0,255,136,0.4);
+      display: block;
+    }
+
+    .stat-label { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 0.3rem; }
+
+    /* ─── CTA ─────────────────────────────────────────────────── */
+    #cta {
+      text-align: center;
+      background: linear-gradient(135deg, rgba(0,255,136,0.04) 0%, rgba(0,229,255,0.04) 100%);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    #cta h2 { font-size: clamp(1.8rem, 4vw, 2.8rem); margin-bottom: 1rem; }
+    #cta p  { color: var(--muted); margin-bottom: 2rem; font-size: 0.95rem; }
+
+    /* ─── Footer ─────────────────────────────────────────────── */
+    footer {
+      padding: 2rem 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--border);
+      font-size: 0.78rem;
+      color: var(--muted);
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    footer a { color: var(--green); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ─── Glow divider ───────────────────────────────────────── */
+    .glow-line {
+      width: 60px; height: 2px;
+      background: linear-gradient(to right, var(--green), var(--cyan));
+      border-radius: 1px;
+      margin-bottom: 2rem;
+      box-shadow: 0 0 10px rgba(0,255,136,0.5);
+    }
+
+    /* ─── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      .ep-desc { display: none; }
+      .hero-ascii { display: none; }
+    }
+
+    /* ─── Blink cursor ───────────────────────────────────────── */
+    .cursor::after {
+      content: '█';
+      animation: blink 1s step-end infinite;
+      color: var(--green);
+    }
+
+    @keyframes blink { 0%,100%{ opacity:1; } 50%{ opacity:0; } }
+  </style>
+</head>
+<body>
+
+<!-- ── Nav ──────────────────────────────────────────────────────────────── -->
+<nav>
+  <a href="#hero" class="nav-logo">CYBER<span>VISER</span></a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#api">API</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="https://github.com/cyberviser/Hancock" target="_blank" class="nav-cta">GitHub ↗</a></li>
+  </ul>
+</nav>
+
+<!-- ── Hero ─────────────────────────────────────────────────────────────── -->
+<section id="hero">
+  <div class="hero-badge">[ AI-Powered Cybersecurity ]</div>
+
+  <pre class="hero-ascii">
+ ██╗  ██╗ █████╗ ███╗   ██╗ ██████╗ ██████╗  ██████╗██╗  ██╗
+ ██║  ██║██╔══██╗████╗  ██║██╔════╝██╔═══██╗██╔════╝██║ ██╔╝
+ ███████║███████║██╔██╗ ██║██║     ██║   ██║██║     █████╔╝
+ ██╔══██║██╔══██║██║╚██╗██║██║     ██║   ██║██║     ██╔═██╗
+ ██║  ██║██║  ██║██║ ╚████║╚██████╗╚██████╔╝╚██████╗██║  ██╗
+ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═════╝  ╚═════╝╚═╝  ╚═╝</pre>
+
+  <h1>
+    Your AI <span class="accent-green">Cybersecurity</span><br />
+    Co-Pilot — <span class="accent-cyan">Built for Operators</span>
+  </h1>
+  <p class="hero-sub">
+    Hancock is <strong>CyberViser's</strong> elite AI security agent — fine-tuned on Mistral 7B with MITRE ATT&CK, NVD/CVE, and real-world pentest knowledge. Automate pentesting, SOC analysis, and incident response with a single API.
+  </p>
+
+  <div class="btn-group">
+    <a href="https://github.com/cyberviser/Hancock" target="_blank" class="btn btn-primary">⚡ Star on GitHub</a>
+    <a href="#api" class="btn btn-outline">View API Docs</a>
+  </div>
+
+  <div class="terminal-bar">
+    <div class="terminal-header">
+      <span class="dot dot-red"></span>
+      <span class="dot dot-yellow"></span>
+      <span class="dot dot-green"></span>
+      <span class="terminal-title">hancock — bash</span>
+    </div>
+    <div class="terminal-body">
+      <div><span class="t-prompt">$ </span><span class="t-cmd">python hancock_agent.py --server</span></div>
+      <div><span class="t-out">[CyberViser] Hancock API starting on port 5000</span></div>
+      <div><span class="t-out">  POST /v1/chat     — conversational (pentest|soc|auto)</span></div>
+      <div><span class="t-out">  POST /v1/triage   — SOC alert triage</span></div>
+      <div><span class="t-out">  POST /v1/hunt     — threat hunting query generator</span></div>
+      <div><span class="t-out">  POST /v1/respond  — IR playbook (PICERL)</span></div>
+      <div><span class="t-ok">  ✓ Hancock online. Model: mistralai/mistral-7b-instruct-v0.3</span></div>
+      <div><span class="t-prompt">$ </span><span class="cursor"></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Features ──────────────────────────────────────────────────────────── -->
+<section id="features">
+  <div class="container">
+    <div class="section-label">// capabilities</div>
+    <h2 class="section-title">Two Specialists. One Agent.</h2>
+    <p class="section-sub">Hancock switches modes on command — red team or blue team, it adapts to your mission.</p>
+    <div class="glow-line"></div>
+
+    <div class="card-grid">
+      <div class="card">
+        <span class="card-tag tag-live">🔴 Live</span>
+        <div class="card-icon">⚔️</div>
+        <h3>Pentest Specialist</h3>
+        <p>Recon, exploitation, post-exploitation, CVE research, and professional report writing. Built on MITRE ATT&CK and NVD. Knows Metasploit, Burp Suite, nmap, sqlmap, and 50+ tools.</p>
+      </div>
+
+      <div class="card">
+        <span class="card-tag tag-live">🔵 Live</span>
+        <div class="card-icon">🛡️</div>
+        <h3>SOC Analyst (Tier 2/3)</h3>
+        <p>Alert triage, SIEM queries (Splunk SPL, Elastic KQL, Sentinel KQL), PICERL incident response, Sigma/YARA rule generation, IOC analysis, and threat hunting.</p>
+      </div>
+
+      <div class="card">
+        <span class="card-tag tag-live">⚡ Live</span>
+        <div class="card-icon">🤖</div>
+        <h3>Fine-Tuned on Mistral 7B</h3>
+        <p>LoRA fine-tuned on curated cybersecurity datasets — MITRE ATT&CK TTPs, CVE/NVD data, and real pentest Q&A. Runs locally or via NVIDIA NIM inference.</p>
+      </div>
+
+      <div class="card">
+        <span class="card-tag tag-live">🔌 Live</span>
+        <div class="card-icon">🌐</div>
+        <h3>REST API Ready</h3>
+        <p>Drop Hancock into any workflow. Five endpoints: <code style="color:var(--green)">/v1/chat</code>, <code style="color:var(--green)">/v1/ask</code>, <code style="color:var(--green)">/v1/triage</code>, <code style="color:var(--green)">/v1/hunt</code>, <code style="color:var(--green)">/v1/respond</code>. JSON in, answers out.</p>
+      </div>
+
+      <div class="card">
+        <span class="card-tag tag-soon">🟡 Soon</span>
+        <div class="card-icon">👔</div>
+        <h3>CISO Strategy Mode</h3>
+        <p>Board-level risk reporting, compliance gap analysis (SOC2, ISO 27001, NIST CSF), security program roadmaps, and executive summaries — coming in Phase 3.</p>
+      </div>
+
+      <div class="card">
+        <span class="card-tag tag-planned">📋 Planned</span>
+        <div class="card-icon">🔗</div>
+        <h3>Burp Suite Integration</h3>
+        <p>Native Burp Suite extension for real-time AI analysis of web app findings, automated report generation, and payload suggestion during active engagements.</p>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat">
+        <span class="stat-num">7B</span>
+        <span class="stat-label">Mistral Parameters</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">3</span>
+        <span class="stat-label">Specialist Modes</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">5</span>
+        <span class="stat-label">API Endpoints</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">100%</span>
+        <span class="stat-label">Open Source</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── API ───────────────────────────────────────────────────────────────── -->
+<section id="api" style="background: rgba(13,17,23,0.6);">
+  <div class="container">
+    <div class="section-label">// api reference</div>
+    <h2 class="section-title">Simple, Powerful API</h2>
+    <p class="section-sub">Start the server with <code style="color:var(--green)">python hancock_agent.py --server</code> and hit these endpoints.</p>
+    <div class="glow-line"></div>
+
+    <div class="endpoint-list">
+      <div class="endpoint">
+        <span class="method method-get">GET</span>
+        <span class="ep-path">/health</span>
+        <span class="ep-desc">Agent status &amp; capabilities check</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-post">POST</span>
+        <span class="ep-path">/v1/chat</span>
+        <span class="ep-desc">Conversational AI with history (mode: auto|pentest|soc)</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-post">POST</span>
+        <span class="ep-path">/v1/ask</span>
+        <span class="ep-desc">Single-shot question, no history needed</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-post">POST</span>
+        <span class="ep-path">/v1/triage</span>
+        <span class="ep-desc">SOC alert triage — severity, MITRE mapping, containment steps</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-post">POST</span>
+        <span class="ep-path">/v1/hunt</span>
+        <span class="ep-desc">Generate Splunk/Elastic/Sentinel threat hunting queries</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-post">POST</span>
+        <span class="ep-path">/v1/respond</span>
+        <span class="ep-desc">Full PICERL incident response playbook generation</span>
+      </div>
+    </div>
+
+    <div style="margin-top: 2rem;">
+      <div class="terminal-bar">
+        <div class="terminal-header">
+          <span class="dot dot-red"></span>
+          <span class="dot dot-yellow"></span>
+          <span class="dot dot-green"></span>
+          <span class="terminal-title">example — /v1/triage</span>
+        </div>
+        <div class="terminal-body" style="font-size:0.78rem;">
+          <div><span class="t-prompt">$ </span><span class="t-cmd">curl -X POST http://localhost:5000/v1/triage \</span></div>
+          <div><span class="t-cmd">&nbsp;&nbsp;-H "Content-Type: application/json" \</span></div>
+          <div><span class="t-cmd">&nbsp;&nbsp;-d '{"alert": "Mimikatz detected on DC01 at 03:14 UTC"}'</span></div>
+          <br />
+          <div><span class="t-warn">→ Severity: CRITICAL</span></div>
+          <div><span class="t-out">→ MITRE: T1003 (OS Credential Dumping) / T1078 (Valid Accounts)</span></div>
+          <div><span class="t-out">→ Verdict: TRUE POSITIVE — isolate DC01 immediately</span></div>
+          <div><span class="t-ok">→ Actions: [isolate, collect memory dump, reset krbtgt x2, audit]</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Roadmap ───────────────────────────────────────────────────────────── -->
+<section id="roadmap">
+  <div class="container">
+    <div class="section-label">// roadmap</div>
+    <h2 class="section-title">Building the Full Security Stack</h2>
+    <p class="section-sub">Three phases. One mission: automate cybersecurity from red team to the boardroom.</p>
+    <div class="glow-line"></div>
+
+    <div class="roadmap">
+      <div class="roadmap-item">
+        <div class="roadmap-dot active"></div>
+        <div class="roadmap-phase">Phase 1 — 🔨 Building</div>
+        <h3>Pentest Specialist</h3>
+        <p>Fine-tuned Mistral 7B on MITRE ATT&CK, NVD/CVE, and pentest knowledge bases. CLI + REST API with Pentest and SOC modes. NVIDIA NIM inference backend.</p>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot planned"></div>
+        <div class="roadmap-phase">Phase 2 — Planned</div>
+        <h3>SOC Analyst Deep Specialization</h3>
+        <p>Expanded fine-tuning on detection engineering, threat intel feeds (MISP/TAXII/STIX), UEBA patterns, and automated Sigma/YARA rule generation pipelines.</p>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot future"></div>
+        <div class="roadmap-phase">Phase 3 — Planned</div>
+        <h3>CISO Strategy &amp; Compliance</h3>
+        <p>Executive reporting, compliance automation (SOC2, ISO 27001, NIST CSF), risk scoring, security program KPIs, and board-ready presentation generation.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ───────────────────────────────────────────────────────────────── -->
+<section id="cta">
+  <div class="container">
+    <h2>Deploy Hancock Today</h2>
+    <p>Open source. Runs locally or in the cloud via NVIDIA NIM. MIT licensed.</p>
+    <div class="btn-group" style="justify-content:center;">
+      <a href="https://github.com/cyberviser/Hancock" target="_blank" class="btn btn-primary">⭐ View on GitHub</a>
+      <a href="https://github.com/cyberviser/Hancock/blob/main/README.md" target="_blank" class="btn btn-outline">Read the Docs</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ────────────────────────────────────────────────────────────── -->
+<footer>
+  <span>© 2025 <a href="https://github.com/cyberviser">CyberViser</a> — All rights reserved.</span>
+  <span>Built with ⚡ NVIDIA NIM · Mistral 7B · LoRA · Flask</span>
+  <span>
+    <a href="https://github.com/cyberviser/Hancock" target="_blank">GitHub</a> ·
+    <a href="https://github.com/cyberviser/Hancock/blob/main/BUSINESS_PROPOSAL.md" target="_blank">Business Proposal</a>
+  </span>
+</footer>
+
+</body>
+</html>
