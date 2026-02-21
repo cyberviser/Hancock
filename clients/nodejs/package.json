@@ -1,0 +1,15 @@
+{
+  "name": "hancock-client",
+  "version": "1.0.0",
+  "description": "Hancock AI Security Agent — Node.js client (NVIDIA NIM backend)",
+  "type": "module",
+  "main": "hancock.js",
+  "scripts": {
+    "start": "node hancock.js",
+    "chat": "node hancock.js --mode chat",
+    "code": "node hancock.js --mode code"
+  },
+  "dependencies": {
+    "openai": "^4.0.0"
+  }
+}
