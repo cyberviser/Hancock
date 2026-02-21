@@ -33,10 +33,10 @@ app = modal.App("hancock-finetune")
 image = (
     modal.Image.debian_slim(python_version="3.11")
     .pip_install([
-        "unsloth==2024.12.4",
-        "trl", "transformers", "accelerate", "datasets",
-        "peft", "bitsandbytes", "sentencepiece",
-        "requests", "tqdm", "huggingface_hub",
+        "unsloth[colab-new]",
+        "trl>=0.8.0", "transformers>=4.40.0", "accelerate",
+        "datasets>=2.18.0", "peft", "bitsandbytes",
+        "sentencepiece", "requests", "tqdm", "huggingface_hub",
     ])
 )
 
@@ -74,19 +74,22 @@ def train(dry_run: bool = False, push_hub: bool = False):
 
     # ── Build dataset ─────────────────────────────────────────────────
     print("\n[1/4] Building training dataset...")
-    import hancock_pipeline  # noqa — runs pipeline as import side-effect
-    from hancock_pipeline import run_kb, run_soc, run_mitre, run_nvd, run_formatter
     from pathlib import Path as P
-
-    data_dir = P("data")
+    data_dir     = P("data")
     data_dir.mkdir(exist_ok=True)
-    run_kb(data_dir)
-    run_soc(data_dir)
-    run_mitre(data_dir)
-    run_nvd(data_dir)
-    run_formatter(data_dir)
-
     dataset_path = data_dir / "hancock_v2.jsonl"
+
+    if not dataset_path.exists():
+        # Run full pipeline if dataset not already present
+        from hancock_pipeline import run_kb, run_soc_kb, run_mitre, run_nvd, run_formatter
+        run_kb(data_dir)
+        run_soc_kb(data_dir)
+        run_mitre(data_dir)
+        run_nvd(data_dir)
+        run_formatter(v2=True)
+    else:
+        print(f"  Using existing dataset: {dataset_path}")
+
     samples = dataset_path.read_text().strip().splitlines()
     print(f"  ✅ Dataset: {len(samples):,} samples")
 
