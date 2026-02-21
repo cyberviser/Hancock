@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 CyberViser. All Rights Reserved.
+# Licensed under the CyberViser Proprietary License — see LICENSE for details.
+# Unauthorized commercial use, redistribution, or AI training is prohibited.
 """
 Hancock Agent — NVIDIA NIM Inference Backend
 CyberViser | hancock_agent.py

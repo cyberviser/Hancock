@@ -4,7 +4,7 @@
 
 ![Hancock Banner](https://img.shields.io/badge/CyberViser-Hancock-00ff88?style=for-the-badge&logo=hackthebox&logoColor=black)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)](https://python.org)
 [![Model](https://img.shields.io/badge/Model-Mistral%207B-orange?logo=huggingface)](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3)
 [![NVIDIA NIM](https://img.shields.io/badge/NVIDIA-NIM-76b900?logo=nvidia)](https://build.nvidia.com)
@@ -217,10 +217,18 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
 
 ## 📄 License
 
-MIT License — see [LICENSE](LICENSE) for details.
+**CyberViser Proprietary License** — see [LICENSE](LICENSE) for full terms.
 
-> Hancock operates strictly within authorized scope and legal boundaries.
-> All training data is sourced from public, legal cybersecurity knowledge bases.
+- ✅ View and study the code
+- ✅ Run locally for personal/research use
+- ✅ Submit contributions (assigned to CyberViser)
+- ❌ Commercial use without a written license agreement
+- ❌ Redistribution or reselling
+- ❌ Building competing products or services
+- ❌ Training AI/ML models on the code or datasets
+- ❌ White-labeling or removing CyberViser branding
+
+**For commercial licensing:** contact@cyberviser.ai
 
 ---
 
