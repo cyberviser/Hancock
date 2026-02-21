@@ -172,12 +172,40 @@ curl -X POST http://localhost:5000/v1/chat \
 
 ## 🤖 Fine-Tuning
 
-Hancock uses **LoRA fine-tuning** on Mistral 7B via NVIDIA NIM.
+Hancock uses **LoRA fine-tuning** on Mistral 7B — 1,375 training samples (MITRE ATT&CK + NVD CVEs + SOC/Pentest KB).
+
+### ⚡ One-Click: Google Colab (Free T4)
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cyberviser/Hancock/blob/main/Hancock_Colab_Finetune_v3.ipynb)
+
+1. Click the badge above
+2. **Runtime → Change runtime type → T4 GPU**
+3. **Runtime → Run all** (~50 min)
+4. Downloads GGUF Q4_K_M at end — run locally with Ollama
+
+### Other GPU Options
+
+| Platform | GPU | Cost | Script |
+|----------|-----|------|--------|
+| Google Colab | T4 16GB | Free (15 hr/day) | `Hancock_Colab_Finetune_v3.ipynb` |
+| Kaggle | T4 16GB | Free (30 hr/week) | `Hancock_Kaggle_Finetune.ipynb` |
+| Modal.com | T4/A10G | Free $30/mo | `modal run train_modal.py` |
+| Any GPU server | Any | Varies | `python hancock_finetune_gpu.py` |
+
+### After Training — Run Locally
+
+```bash
+# Load fine-tuned model in Ollama
+ollama create hancock -f Modelfile.hancock-finetuned
+ollama run hancock
+```
+
+### Training Data
 
 ```
 data/
 ├── hancock_pentest_v1.jsonl    # Pentest training data (MITRE + CVE + KB)
-└── hancock_v2.jsonl            # v2 dataset (pentest + SOC combined)
+└── hancock_v2.jsonl            # v2 dataset — 1,375 samples (pentest + SOC)
 
 collectors/
 ├── mitre_collector.py          # Fetches MITRE ATT&CK TTPs
@@ -188,8 +216,6 @@ collectors/
 formatter/
 └── to_mistral_jsonl.py         # Converts to Mistral instruct format
 ```
-
-See [`Hancock_CyberViser_Finetune.ipynb`](Hancock_CyberViser_Finetune.ipynb) for the full fine-tuning notebook.
 
 ---
 
