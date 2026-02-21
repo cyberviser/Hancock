@@ -351,7 +351,8 @@ def build_app(client, model: str):
             "modes": ["pentest", "soc", "auto", "code", "ciso"],
             "models_available": MODELS,
             "endpoints": ["/v1/chat", "/v1/ask", "/v1/triage",
-                          "/v1/hunt", "/v1/respond", "/v1/code", "/v1/webhook"],
+                          "/v1/hunt", "/v1/respond", "/v1/code",
+                          "/v1/ciso", "/v1/webhook"],
         })
 
     @app.route("/v1/chat", methods=["POST"])
@@ -532,6 +533,42 @@ def build_app(client, model: str):
             "language": language or "auto",
             "task":     task,
         })
+
+    @app.route("/v1/ciso", methods=["POST"])
+    def ciso_endpoint():
+        """CISO advisor — risk, compliance, board reporting, framework guidance."""
+        ok, err = _check_auth_and_rate()
+        if not ok:
+            return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
+        data     = request.get_json(force=True)
+        question = data.get("question", "") or data.get("query", "") or data.get("message", "")
+        context  = data.get("context", "")      # optional: org size, industry, current frameworks
+        output   = data.get("output", "advice") # advice | report | gap-analysis | board-summary
+        if not question:
+            return jsonify({"error": "question required"}), 400
+
+        output_hints = {
+            "report":        "Format your response as a structured risk report with Executive Summary, Findings, Risk Ratings, and Recommendations.",
+            "gap-analysis":  "Format your response as a gap analysis table: Control | Current State | Target State | Gap | Priority.",
+            "board-summary": "Format your response as a concise board-ready executive summary (max 300 words, no jargon, business impact focus).",
+            "advice":        "",
+        }
+        hint     = output_hints.get(output, "")
+        ctx_line = f"\n\nOrganisation context: {context}" if context else ""
+        prompt   = f"{question}{ctx_line}\n\n{hint}".strip()
+
+        messages = [
+            {"role": "system", "content": CISO_SYSTEM},
+            {"role": "user",   "content": prompt},
+        ]
+        resp = client.chat.completions.create(
+            model=model, messages=messages, max_tokens=2048,
+            temperature=0.3, top_p=0.95,
+        )
+        answer = resp.choices[0].message.content
+        if not answer:
+            return jsonify({"error": "model returned empty response"}), 502
+        return jsonify({"advice": answer, "output": output, "model": model})
 
     @app.route("/v1/webhook", methods=["POST"])
     def webhook_endpoint():

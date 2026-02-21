@@ -77,20 +77,27 @@ def train(dry_run: bool = False, push_hub: bool = False):
     from pathlib import Path as P
     data_dir     = P("data")
     data_dir.mkdir(exist_ok=True)
-    dataset_path = data_dir / "hancock_v2.jsonl"
+    dataset_path = data_dir / "hancock_v3.jsonl"
+    dataset_fallback = data_dir / "hancock_v2.jsonl"
 
     if not dataset_path.exists():
-        # Run full pipeline if dataset not already present
+        # Run v3 pipeline; fall back to v2 if it fails
+        from hancock_pipeline import run_kev, run_atomic, run_ghsa, run_formatter_v3
+        run_kev(data_dir)
+        run_atomic(data_dir)
+        run_ghsa(data_dir)
+        run_formatter_v3()
+    if not dataset_path.exists() and not dataset_fallback.exists():
         from hancock_pipeline import run_kb, run_soc_kb, run_mitre, run_nvd, run_formatter
-        run_kb(data_dir)
-        run_soc_kb(data_dir)
-        run_mitre(data_dir)
-        run_nvd(data_dir)
-        run_formatter(v2=True)
+        run_kb(data_dir); run_soc_kb(data_dir); run_mitre(data_dir)
+        run_nvd(data_dir); run_formatter(v2=True)
+    active = dataset_path if dataset_path.exists() else dataset_fallback
+    if not active.exists():
+        sys.exit(f"❌  Dataset missing — run: python hancock_pipeline.py --phase 3")
     else:
-        print(f"  Using existing dataset: {dataset_path}")
+        print(f"  Using existing dataset: {active}")
 
-    samples = dataset_path.read_text().strip().splitlines()
+    samples = active.read_text().strip().splitlines()
     print(f"  ✅ Dataset: {len(samples):,} samples")
 
     if dry_run:

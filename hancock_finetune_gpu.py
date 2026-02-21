@@ -16,7 +16,8 @@ import os, sys, json, argparse
 from pathlib import Path
 
 BASE_MODEL   = os.getenv("HANCOCK_MODEL_ID", "mistralai/Mistral-7B-Instruct-v0.3")
-DATASET_PATH = Path("data/hancock_v2.jsonl")
+DATASET_PATH = Path("data/hancock_v3.jsonl")
+DATASET_PATH_FALLBACK = Path("data/hancock_v2.jsonl")
 OUTPUT_DIR   = Path("models/hancock_lora")
 GGUF_DIR     = Path("models/hancock_gguf")
 HF_REPO      = "cyberviser/hancock-mistral-7b"
@@ -41,14 +42,15 @@ def check_gpu():
     return vram
 
 def load_dataset():
-    if not DATASET_PATH.exists():
-        print(f"  Dataset not found at {DATASET_PATH}")
-        print("  Running pipeline to generate training data...")
-        os.system("python hancock_pipeline.py")
-    if not DATASET_PATH.exists():
+    path = DATASET_PATH if DATASET_PATH.exists() else DATASET_PATH_FALLBACK
+    if not path.exists():
+        print(f"  Dataset not found — building v3 dataset...")
+        os.system("python hancock_pipeline.py --phase 3")
+        path = DATASET_PATH if DATASET_PATH.exists() else DATASET_PATH_FALLBACK
+    if not path.exists():
         sys.exit(f"❌  Dataset missing: {DATASET_PATH}")
-    lines = DATASET_PATH.read_text().strip().splitlines()
-    print(f"  ✅ Dataset: {len(lines):,} samples from {DATASET_PATH}")
+    lines = path.read_text().strip().splitlines()
+    print(f"  ✅ Dataset: {len(lines):,} samples from {path}")
     return [json.loads(l) for l in lines]
 
 # ── Training ──────────────────────────────────────────────────────────────────

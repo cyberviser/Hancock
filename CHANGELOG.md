@@ -7,6 +7,54 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [Unreleased] — v0.4.0
+
+### Added
+- **CISO mode** (`/mode ciso`) — AI Chief Information Security Officer advisor: risk management,
+  ISO 27001/SOC 2/NIST CSF/PCI-DSS compliance, board reporting, TPRM, FAIR risk analysis
+- **`/v1/ciso` REST endpoint** — dedicated CISO advisor endpoint with `output` param:
+  `advice` | `report` | `gap-analysis` | `board-summary`
+- **v3 training dataset** (`data/hancock_v3.jsonl`) — 3,442 samples (2.5× v2):
+  - 1,526 CISA Known Exploited Vulnerabilities (enriched with NVD CVSS)
+  - 485 Atomic Red Team TTP test cases (36 MITRE techniques)
+  - 119 GitHub Security Advisories (npm, pip, go, maven, nuget)
+  - 1,375 pentest + SOC v2 samples (base)
+- **CISA KEV collector** (`collectors/cisa_kev_collector.py`) — CISA Known Exploited Vulns API
+- **Atomic Red Team collector** (`collectors/atomic_collector.py`) — 40 ATT&CK techniques
+- **GitHub Security Advisories collector** (`collectors/ghsa_collector.py`) — 7 ecosystems
+- **v3 formatter** (`collectors/formatter_v3.py`) — merges all sources, deduplicates
+- **`hancock_pipeline.py --phase 3`** — builds full v3 dataset end-to-end
+- **`hancock_finetune_v3.py`** — universal GPU fine-tuner: auto-detects VRAM, scales LoRA rank,
+  GGUF export, HuggingFace Hub push, dry-run mode, resume support
+- **`Hancock_Colab_Finetune_v3.ipynb`** — 10-cell Colab notebook, auto-falls back to v2
+- **OpenAI fallback backend** — auto-failover from NVIDIA NIM to OpenAI GPT-4o-mini on error;
+  `HANCOCK_LLM_BACKEND`, `OPENAI_API_KEY`, `OPENAI_ORG_ID`, `OPENAI_MODEL` env vars
+- **`oracle-cloud-setup.sh`** — full Oracle Cloud Always-Free VM setup: Docker, Nginx,
+  systemd `hancock.service` (auto-start on reboot), firewall (UFW + iptables), HTTPS-ready
+- **42 tests** (was 31): auth (401/429), rate-limit TTL, input validation (400/502),
+  OpenAI fallback path, streaming, webhook
+
+### Fixed
+- `hancock_pipeline.py` — v3 functions defined after `if __name__ == "__main__"` caused
+  `NameError` when called from `main()`. Moved `__main__` block to end of file.
+- `collectors/ghsa_collector.py` — `references` field is plain URL strings in GitHub API
+  response (not `{"url": ...}` dicts). Fixed `parse_advisory()` to handle both.
+- `hancock_agent.py` — `_rate_counts` dict grew unbounded on long-running servers.
+  Now evicts stale IPs when dict exceeds 10,000 entries.
+- `.env.example` — duplicate `HANCOCK_CODER_MODEL` entry removed.
+- All fine-tune scripts now target `hancock_v3.jsonl` (fall back to v2 if absent):
+  `hancock_finetune_v3.py`, `hancock_finetune_gpu.py`, `train_modal.py`,
+  `Hancock_Kaggle_Finetune.ipynb`
+
+### Changed
+- `hancock_agent.py` — input validation: `400` on unknown `mode`, non-list `history`;
+  `502` on empty model response; `/health` lists `ciso` in modes; CLI banner updated
+- `hancock_pipeline.py` — `--phase` now accepts `1|2|3|all`; banner updated
+- `README.md` — all 8 endpoints documented; v3 dataset tree; correct pipeline commands;
+  roadmap Phase 1+2 marked live
+
+---
+
 ## [0.3.0] — 2026-02-21
 
 ### Added
@@ -86,19 +134,14 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ---
 
-## [Unreleased]
-
-### Planned (Phase 2)
-- [ ] Expanded SOC fine-tuning dataset
-- [ ] Detection engineering (Sigma/YARA rule generation pipeline)
-- [ ] Threat intelligence feed integration (MISP/TAXII/STIX)
-- [ ] Burp Suite extension (Python)
-- [ ] Docker image on Docker Hub
+## [Unreleased] — Planned
 
 ### Planned (Phase 3)
-- [ ] CISO Strategy mode
-- [ ] Compliance automation (SOC2, ISO 27001, NIST CSF)
-- [ ] Executive report generator
+- [ ] Burp Suite Python extension
+- [ ] Docker image on Docker Hub (`docker pull cyberviser/hancock`)
+- [ ] Threat intelligence integration (MISP/TAXII/STIX live feeds)
+- [ ] HuggingFace Space demo
+- [ ] SIEM native connectors (Splunk app, Elastic integration)
 
 ---
 
