@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>404 — Page Not Found | CyberViser Hancock</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Courier New', monospace;
+      background: #080c10;
+      color: #c9d1d9;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: 100vh; text-align: center; padding: 2rem;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0; pointer-events: none;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,136,0.015) 2px, rgba(0,255,136,0.015) 4px);
+    }
+    .code { font-size: clamp(5rem, 20vw, 10rem); color: #00ff88; font-weight: bold; text-shadow: 0 0 40px rgba(0,255,136,0.4); line-height: 1; }
+    h1 { font-size: 1.2rem; color: #c9d1d9; margin: 1rem 0 0.5rem; letter-spacing: 0.1em; }
+    p  { color: #586069; font-size: 0.85rem; margin-bottom: 2rem; }
+    a  {
+      display: inline-block; padding: 0.7rem 1.8rem;
+      background: #00ff88; color: #080c10; font-family: inherit;
+      font-weight: bold; text-decoration: none; border-radius: 5px;
+      font-size: 0.9rem; letter-spacing: 0.05em;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    a:hover { box-shadow: 0 0 20px rgba(0,255,136,0.5); transform: translateY(-2px); }
+    .terminal {
+      margin-top: 3rem; background: #0d1117; border: 1px solid #1a2332;
+      border-radius: 8px; padding: 1.2rem 1.5rem; font-size: 0.8rem;
+      line-height: 1.8; text-align: left; width: min(480px, 95vw);
+    }
+    .g { color: #00ff88; } .c { color: #00e5ff; } .m { color: #586069; }
+  </style>
+</head>
+<body>
+  <div class="code">404</div>
+  <h1>TARGET NOT FOUND</h1>
+  <p>This page doesn't exist. Maybe you took a wrong turn during recon.</p>
+  <a href="/">← Return to Base</a>
+  <div class="terminal">
+    <div><span class="g">$ </span>curl -I https://cyberviser.github.io/Hancock<span class="m">/this-page</span></div>
+    <div><span class="c">HTTP/2 404</span></div>
+    <div><span class="m">x-error: target not found on this server</span></div>
+    <div><span class="g">$ </span>cd / &amp;&amp; ./go-home<span class="g">_</span></div>
+  </div>
+</body>
+</html>
