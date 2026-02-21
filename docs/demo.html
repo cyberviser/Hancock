@@ -74,6 +74,15 @@
     /* ── CTA strip ── */
     .cta-strip { text-align: center; padding: 1.5rem; border-top: 1px solid var(--border); background: #0a0f14; }
     .cta-strip p { color: var(--muted); font-size: .85rem; margin-bottom: .8rem; }
+    .api-config { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center; margin-bottom: .8rem; }
+    .api-config input { background: var(--card); border: 1px solid var(--border); color: var(--text); font-family: inherit; font-size: .8rem; padding: .4rem .8rem; border-radius: 4px; width: 220px; outline: none; }
+    .api-config input:focus { border-color: var(--cyan); }
+    .api-config button { background: var(--cyan); color: var(--dark); border: none; padding: .4rem .9rem; border-radius: 4px; font-family: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }
+    #configStatus { font-size: .8rem; align-self: center; }
+    .status-live   { color: var(--green); }
+    .status-off    { color: var(--muted); }
+    .status-err    { color: var(--red); }
+    .live-badge { display:none; background:rgba(0,255,136,.1); border:1px solid var(--green); color:var(--green); font-size:.7rem; padding:.15rem .6rem; border-radius:20px; margin-left:.6rem; vertical-align:middle; }
     .btn { display: inline-block; padding: .5rem 1.4rem; border-radius: 4px; font-family: inherit; font-size: .85rem; font-weight: 700; text-decoration: none; margin: 0 .4rem; }
     .btn-primary { background: var(--green); color: var(--dark); }
     .btn-outline  { border: 1px solid var(--green); color: var(--green); }
@@ -116,6 +125,7 @@
     <div class="term-header">
       <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
       <span class="term-title">hancock@cyberviser:~$ — demo mode</span>
+      <span class="live-badge" id="liveBadge">● LIVE</span>
     </div>
     <div class="term-body" id="termBody">
       <div class="line system">Hancock v0.2.0 — CyberViser AI Security Agent</div>
@@ -132,9 +142,17 @@
 </div>
 
 <div class="cta-strip">
-  <p>This demo uses pre-loaded responses. Deploy Hancock with your NVIDIA API key to get full live AI responses.</p>
-  <a href="pricing.html" class="btn btn-primary">⚡ Get Full Access</a>
-  <a href="https://github.com/cyberviser/Hancock" target="_blank" class="btn btn-outline">View on GitHub</a>
+  <p>This demo uses pre-loaded responses. Point it at your own Hancock instance for live AI:</p>
+  <div class="api-config" id="apiConfig">
+    <input id="apiUrl"   type="text"     placeholder="http://localhost:5000" value="" />
+    <input id="apiKey"   type="password" placeholder="HANCOCK_API_KEY (optional)" value="" />
+    <button onclick="saveConfig()">Connect ↵</button>
+    <span id="configStatus"></span>
+  </div>
+  <div style="margin-top:.8rem">
+    <a href="pricing.html" class="btn btn-primary">⚡ Get Full Access</a>
+    <a href="https://github.com/cyberviser/Hancock" target="_blank" class="btn btn-outline">Self-Host Free</a>
+  </div>
 </div>
 
 <script>
@@ -422,6 +440,64 @@ Try one of the suggested topics, or:
 → https://github.com/cyberviser/Hancock   to self-host`;
 }
 
+// ── Live API config ────────────────────────────────────────────────────────
+let liveUrl = localStorage.getItem('hancock_url') || '';
+let liveKey = localStorage.getItem('hancock_key') || '';
+
+function saveConfig() {
+  liveUrl = document.getElementById('apiUrl').value.trim().replace(/\/$/, '');
+  liveKey = document.getElementById('apiKey').value.trim();
+  if (!liveUrl) { setStatus('Enter a Hancock server URL', 'status-err'); return; }
+  localStorage.setItem('hancock_url', liveUrl);
+  localStorage.setItem('hancock_key', liveKey);
+  testConnection();
+}
+
+async function testConnection() {
+  setStatus('Connecting...', 'status-off');
+  try {
+    const res = await fetch(liveUrl + '/health', { signal: AbortSignal.timeout(4000) });
+    if (res.ok) {
+      const d = await res.json();
+      setStatus('● Live: ' + (d.model || 'connected'), 'status-live');
+      document.getElementById('liveBadge').style.display = 'inline-block';
+      addLine('[connected] Live Hancock at ' + liveUrl, 'system');
+    } else {
+      setStatus('Server returned ' + res.status, 'status-err');
+    }
+  } catch(e) {
+    setStatus('Could not reach server — using pre-loaded responses', 'status-err');
+    document.getElementById('liveBadge').style.display = 'none';
+  }
+}
+
+function setStatus(msg, cls) {
+  const el = document.getElementById('configStatus');
+  el.textContent = msg;
+  el.className = cls;
+}
+
+// Restore saved config on load
+if (liveUrl) {
+  document.getElementById('apiUrl').value = liveUrl;
+  document.getElementById('apiKey').value = liveKey;
+  testConnection();
+}
+
+async function liveAsk(question) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (liveKey) headers['Authorization'] = 'Bearer ' + liveKey;
+  const res = await fetch(liveUrl + '/v1/ask', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ question, mode: 'auto' }),
+    signal: AbortSignal.timeout(30000),
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const d = await res.json();
+  return d.answer || d.response || JSON.stringify(d);
+}
+
 // ── Terminal UI ────────────────────────────────────────────────────────────
 const body  = document.getElementById('termBody');
 const input = document.getElementById('userInput');
@@ -459,11 +535,24 @@ async function submitQuery() {
   addLine('❯ ' + q, 'user');
 
   const thinking = addLine('hancock@cyberviser:~$ ▋', 'prompt typing-indicator');
-  await new Promise(r => setTimeout(r, 600 + Math.random() * 600));
-  thinking.remove();
 
+  let answer;
+  if (liveUrl && document.getElementById('configStatus').className === 'status-live') {
+    // ── Live API path ──────────────────────────────────────────────────────
+    try {
+      answer = await liveAsk(q);
+    } catch(e) {
+      answer = '[API error: ' + e.message + ']\nFalling back to pre-loaded response:\n\n' + getResponse(q);
+    }
+  } else {
+    // ── Pre-loaded fallback ────────────────────────────────────────────────
+    await new Promise(r => setTimeout(r, 600 + Math.random() * 600));
+    answer = getResponse(q);
+  }
+
+  thinking.remove();
   const respEl = addLine('', 'response');
-  await typeText(respEl, getResponse(q));
+  await typeText(respEl, answer);
   addLine('', 'system');
 
   btn.disabled = false;
@@ -471,7 +560,6 @@ async function submitQuery() {
 }
 
 function ask(q) { input.value = q; submitQuery(); }
-
 input.addEventListener('keydown', e => { if (e.key === 'Enter') submitQuery(); });
 
 // Welcome cursor
