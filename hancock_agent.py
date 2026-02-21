@@ -96,6 +96,10 @@ HANCOCK_SYSTEM = AUTO_SYSTEM
 NIM_BASE_URL = "https://integrate.api.nvidia.com/v1"
 DEFAULT_MODEL = "mistralai/mistral-7b-instruct-v0.3"
 
+# ── OpenAI fallback ───────────────────────────────────────────────────────────
+OPENAI_MODEL      = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+OPENAI_CODER_MODEL = os.getenv("OPENAI_CODER_MODEL", "gpt-4o")
+
 BANNER = """
 ╔══════════════════════════════════════════════════════════╗
 ║  ██╗  ██╗ █████╗ ███╗   ██╗ ██████╗ ██████╗  ██████╗██╗ ║
@@ -115,20 +119,37 @@ def make_client(api_key: str) -> OpenAI:
     return OpenAI(base_url=NIM_BASE_URL, api_key=api_key)
 
 
+def make_openai_client() -> OpenAI | None:
+    """Returns an OpenAI client if credentials are available, else None."""
+    key = os.getenv("OPENAI_API_KEY", "")
+    org = os.getenv("OPENAI_ORG_ID", "")
+    if not key or key.startswith("sk-your"):
+        return None
+    return OpenAI(api_key=key, organization=org or None)
+
+
 def chat(client: OpenAI, history: list[dict], model: str, stream: bool = True,
          system_prompt: str | None = None) -> str:
     system = system_prompt or HANCOCK_SYSTEM
     messages = [{"role": "system", "content": system}] + history
+    try:
+        return _do_chat(client, messages, model, stream)
+    except Exception as nim_err:
+        # Auto-fallback to OpenAI if NIM fails
+        fallback = make_openai_client()
+        if fallback:
+            print(f"\n[Hancock] NIM error ({nim_err}) — falling back to OpenAI {OPENAI_MODEL}...")
+            return _do_chat(fallback, messages, OPENAI_MODEL, stream)
+        raise
+
+
+def _do_chat(client: OpenAI, messages: list[dict], model: str, stream: bool) -> str:
     if stream:
         response_text = ""
         print("\n\033[1;32mHancock:\033[0m ", end="", flush=True)
         stream_resp = client.chat.completions.create(
-            model=model,
-            messages=messages,
-            max_tokens=1024,
-            temperature=0.7,
-            top_p=0.95,
-            stream=True,
+            model=model, messages=messages, max_tokens=1024,
+            temperature=0.7, top_p=0.95, stream=True,
         )
         for chunk in stream_resp:
             if chunk.choices and chunk.choices[0].delta.content:
@@ -137,15 +158,11 @@ def chat(client: OpenAI, history: list[dict], model: str, stream: bool = True,
                 response_text += delta
         print()
         return response_text
-    else:
-        resp = client.chat.completions.create(
-            model=model,
-            messages=messages,
-            max_tokens=1024,
-            temperature=0.7,
-            top_p=0.95,
-        )
-        return resp.choices[0].message.content
+    resp = client.chat.completions.create(
+        model=model, messages=messages, max_tokens=1024,
+        temperature=0.7, top_p=0.95,
+    )
+    return resp.choices[0].message.content
 
 
 # ── CLI mode ──────────────────────────────────────────────────────────────────
@@ -411,22 +428,29 @@ def run_server(client: OpenAI, model: str, port: int):
 
 # ── Entry point ───────────────────────────────────────────────────────────────
 def main():
-    parser = argparse.ArgumentParser(description="Hancock — CyberViser Pentest AI (NVIDIA NIM)")
-    parser.add_argument("--api-key", default=os.getenv("NVIDIA_API_KEY"), help="NVIDIA API key")
-    parser.add_argument("--model",   default=DEFAULT_MODEL, help="NIM model ID")
+    parser = argparse.ArgumentParser(description="Hancock — CyberViser AI Agent")
+    parser.add_argument("--api-key", default=os.getenv("NVIDIA_API_KEY"), help="NVIDIA NIM API key")
+    parser.add_argument("--model",   default=DEFAULT_MODEL, help="Model ID")
     parser.add_argument("--server",  action="store_true", help="Run as REST API server")
-    parser.add_argument("--port",    type=int, default=5000, help="Server port (default: 5000)")
+    parser.add_argument("--port",    type=int, default=int(os.getenv("HANCOCK_PORT", "5000")))
     args = parser.parse_args()
 
-    if not args.api_key:
-        sys.exit("ERROR: Set NVIDIA_API_KEY env var or pass --api-key")
+    backend = os.getenv("HANCOCK_LLM_BACKEND", "nvidia").lower()
 
-    client = make_client(args.api_key)
+    if backend == "openai" or not args.api_key:
+        client = make_openai_client()
+        if not client:
+            sys.exit("ERROR: Set NVIDIA_API_KEY (NIM) or OPENAI_API_KEY (fallback)")
+        model = OPENAI_MODEL
+        print("[Hancock] Using OpenAI backend.")
+    else:
+        client = make_client(args.api_key)
+        model  = args.model
 
     if args.server:
-        run_server(client, args.model, args.port)
+        run_server(client, model, args.port)
     else:
-        run_cli(client, args.model)
+        run_cli(client, model)
 
 
 if __name__ == "__main__":
