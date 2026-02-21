@@ -574,7 +574,21 @@
         <span class="card-tag tag-live">🔌 Live</span>
         <div class="card-icon">🌐</div>
         <h3>REST API Ready</h3>
-        <p>Drop Hancock into any workflow. Five endpoints: <code style="color:var(--green)">/v1/chat</code>, <code style="color:var(--green)">/v1/ask</code>, <code style="color:var(--green)">/v1/triage</code>, <code style="color:var(--green)">/v1/hunt</code>, <code style="color:var(--green)">/v1/respond</code>. JSON in, answers out.</p>
+        <p>Drop Hancock into any workflow. Seven endpoints: <code style="color:var(--green)">/v1/chat</code>, <code style="color:var(--green)">/v1/ask</code>, <code style="color:var(--green)">/v1/triage</code>, <code style="color:var(--green)">/v1/hunt</code>, <code style="color:var(--green)">/v1/respond</code>, <code style="color:var(--green)">/v1/code</code>, <code style="color:var(--green)">/v1/webhook</code>. JSON in, answers out.</p>
+      </div>
+
+      <div class="card">
+        <span class="card-tag tag-live">🟢 Live</span>
+        <div class="card-icon">🐍</div>
+        <h3>Python &amp; Node.js SDKs</h3>
+        <p>Official clients in <code style="color:var(--cyan)">clients/python/</code> and <code style="color:var(--cyan)">clients/nodejs/</code>. One-line install, all 7 endpoints, interactive CLI, streaming output, model alias switching.</p>
+      </div>
+
+      <div class="card">
+        <span class="card-tag tag-live">🔔 Live</span>
+        <div class="card-icon">📡</div>
+        <h3>SIEM Webhook Integration</h3>
+        <p>Push alerts from Splunk, Elastic, Sentinel, or CrowdStrike to <code style="color:var(--green)">/v1/webhook</code> — auto-triage with MITRE mapping and instant Slack or Teams notification.</p>
       </div>
 
       <div class="card">
@@ -598,11 +612,11 @@
         <span class="stat-label">Mistral Parameters</span>
       </div>
       <div class="stat">
-        <span class="stat-num">3</span>
+        <span class="stat-num">4</span>
         <span class="stat-label">Specialist Modes</span>
       </div>
       <div class="stat">
-        <span class="stat-num">5</span>
+        <span class="stat-num">7</span>
         <span class="stat-label">API Endpoints</span>
       </div>
       <div class="stat">
@@ -652,7 +666,16 @@
         <span class="ep-path">/v1/respond</span>
         <span class="ep-desc">Full PICERL incident response playbook generation</span>
       </div>
-    </div>
+      <div class="endpoint">
+        <span class="method method-post">POST</span>
+        <span class="ep-path">/v1/code</span>
+        <span class="ep-desc">Security code gen via Qwen 2.5 Coder 32B — YARA, Sigma, KQL, SPL, exploits</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-post">POST</span>
+        <span class="ep-path">/v1/webhook</span>
+        <span class="ep-desc">SIEM push webhook — auto-triage + optional Slack/Teams notification</span>
+      </div>
 
     <div style="margin-top: 2rem;">
       <div class="terminal-bar">
@@ -722,7 +745,7 @@
 
 <!-- ── Footer ────────────────────────────────────────────────────────────── -->
 <footer>
-  <span>© 2025 <a href="https://github.com/cyberviser">CyberViser</a> — All rights reserved.</span>
+  <span>© 2026 <a href="https://github.com/cyberviser">CyberViser</a> — All rights reserved.</span>
   <span>Built with ⚡ NVIDIA NIM · Mistral 7B · LoRA · Flask</span>
   <span>
     <a href="https://github.com/cyberviser/Hancock" target="_blank">GitHub</a> ·
