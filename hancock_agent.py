@@ -220,6 +220,34 @@ def run_server(client: OpenAI, model: str, port: int):
 
     app = Flask("hancock")
 
+    # ── Auth + rate limiting ───────────────────────────────────────────────────
+    _HANCOCK_API_KEY = os.getenv("HANCOCK_API_KEY", "")
+    _rate_counts: dict = {}  # ip → [timestamp, ...]
+    _RATE_LIMIT  = int(os.getenv("HANCOCK_RATE_LIMIT", "60"))   # requests/min
+    _RATE_WINDOW = 60  # seconds
+
+    def _check_auth_and_rate() -> "tuple[bool, str]":
+        """Returns (ok, error_message). Empty HANCOCK_API_KEY disables auth."""
+        import time
+
+        # Auth check (skip if key not configured)
+        if _HANCOCK_API_KEY:
+            auth = request.headers.get("Authorization", "")
+            token = auth.removeprefix("Bearer ").strip()
+            if token != _HANCOCK_API_KEY:
+                return False, "Unauthorized: provide Authorization: Bearer <HANCOCK_API_KEY>"
+
+        # Simple in-memory rate limiter (per source IP)
+        now = time.time()
+        ip  = request.remote_addr or "unknown"
+        timestamps = _rate_counts.get(ip, [])
+        timestamps = [t for t in timestamps if now - t < _RATE_WINDOW]
+        if len(timestamps) >= _RATE_LIMIT:
+            return False, f"Rate limit exceeded: {_RATE_LIMIT} requests/min"
+        timestamps.append(now)
+        _rate_counts[ip] = timestamps
+        return True, ""
+
     @app.route("/health", methods=["GET"])
     def health():
         return jsonify({
@@ -231,6 +259,9 @@ def run_server(client: OpenAI, model: str, port: int):
 
     @app.route("/v1/chat", methods=["POST"])
     def chat_endpoint():
+        ok, err = _check_auth_and_rate()
+        if not ok:
+            return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
         data = request.get_json(force=True)
         user_msg = data.get("message", "")
         history  = data.get("history", [])
@@ -269,6 +300,9 @@ def run_server(client: OpenAI, model: str, port: int):
     @app.route("/v1/ask", methods=["POST"])
     def ask_endpoint():
         """Simple single-shot endpoint — no history needed."""
+        ok, err = _check_auth_and_rate()
+        if not ok:
+            return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
         data = request.get_json(force=True)
         question = data.get("question", "")
         mode     = data.get("mode", "auto")
@@ -289,6 +323,9 @@ def run_server(client: OpenAI, model: str, port: int):
     @app.route("/v1/triage", methods=["POST"])
     def triage_endpoint():
         """SOC alert triage — classify and prioritize a security alert."""
+        ok, err = _check_auth_and_rate()
+        if not ok:
+            return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
         data  = request.get_json(force=True)
         alert = data.get("alert", "")
         if not alert:
@@ -312,6 +349,9 @@ def run_server(client: OpenAI, model: str, port: int):
     @app.route("/v1/hunt", methods=["POST"])
     def hunt_endpoint():
         """Threat hunting query generator — generate SIEM queries for a given TTP."""
+        ok, err = _check_auth_and_rate()
+        if not ok:
+            return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
         data   = request.get_json(force=True)
         target = data.get("target", "")   # e.g. "lateral movement with PsExec"
         siem   = data.get("siem", "splunk")  # splunk | elastic | sentinel
@@ -336,6 +376,9 @@ def run_server(client: OpenAI, model: str, port: int):
     @app.route("/v1/respond", methods=["POST"])
     def respond_endpoint():
         """Incident response guidance — PICERL playbook for an incident type."""
+        ok, err = _check_auth_and_rate()
+        if not ok:
+            return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
         data          = request.get_json(force=True)
         incident_type = data.get("incident", "")   # e.g. "ransomware", "BEC", "data exfiltration"
         if not incident_type:

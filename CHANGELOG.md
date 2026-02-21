@@ -7,6 +7,29 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [0.2.0] — 2026-02-21
+
+### Added
+- **API authentication** — Bearer token auth on all `/v1/*` endpoints via `HANCOCK_API_KEY` env var
+- **Rate limiting** — configurable per-IP request throttle (`HANCOCK_RATE_LIMIT`, default 60 req/min)
+- **Netlify auto-deploy workflow** (`.github/workflows/deploy.yml`) — pushes to `docs/` auto-deploy to `cyberviser.netlify.app`
+- **Pricing page** (`docs/pricing.html`) — 4-tier plan: Community / Pro $299/mo / Enterprise / API $0.008/req
+- **Contact/lead form** (`docs/contact.html`) — lead capture form via Formspree → cyberviser@proton.me
+- **Fine-tuning v2** (`hancock_finetune_v2.py`) — dedup, LoRA r=32, resume from checkpoint, HuggingFace Hub push
+- **Outreach templates** (`OUTREACH_TEMPLATES.md`) — 5 ready-to-send cold email/DM templates + target list
+
+### Changed
+- `.env.example` — documents `HANCOCK_API_KEY` and `HANCOCK_RATE_LIMIT`
+- `docs/index.html` — updated nav and hero CTA to point to Pricing page
+- `docs/_redirects` — added `/pricing` and `/contact` Netlify routes
+
+### Security
+- All API endpoints now return `401 Unauthorized` without valid Bearer token (when auth is configured)
+- `429 Too Many Requests` on rate limit breach
+- Auth disabled by default for local dev (set `HANCOCK_API_KEY` in production)
+
+---
+
 ## [0.1.0] — 2025-02-21
 
 ### Added
