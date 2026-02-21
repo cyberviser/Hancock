@@ -124,6 +124,7 @@
   <a href="#code"><span class="method-tag tag-post">POST</span>/v1/code</a>
   <a href="#ciso"><span class="method-tag tag-post">POST</span>/v1/ciso</a>
   <a href="#sigma"><span class="method-tag tag-post">POST</span>/v1/sigma</a>
+  <a href="#yara"><span class="method-tag tag-post">POST</span>/v1/yara</a>
   <a href="#webhook"><span class="method-tag tag-post">POST</span>/v1/webhook</a>
   <div class="nav-section">Clients</div>
   <a href="#client-python">Python SDK</a>
@@ -354,6 +355,33 @@
     <tr><td><code>technique</code></td><td class="type">string</td><td class="opt">optional</td><td>MITRE ATT&amp;CK technique ID — e.g. <code>T1059.001</code>. Auto-added to Sigma <code>tags</code> field.</td></tr>
   </table>
   <div class="alert alert-info">The response includes the full Sigma YAML rule followed by an explanation of what it detects and tuning recommendations to reduce false positives.</div>
+
+  <!-- POST /v1/yara -->
+  <h2 id="yara">POST /v1/yara</h2>
+  <p>YARA malware detection rule generator — converts a malware description or sample analysis into a production-ready <strong>YARA rule</strong> with meta, string patterns, and condition logic. Uses pe/elf modules where appropriate.</p>
+  <div class="ep-header">
+    <span class="method method-post">POST</span>
+    <span class="ep-path">/v1/yara</span>
+    <span class="ep-badge">YARA mode</span>
+  </div>
+  <div class="code-block">
+    <span class="t-prompt">$ </span>curl -X POST http://localhost:5000/v1/yara \<br/>
+    &nbsp;&nbsp;-H <span class="t-str">"Content-Type: application/json"</span> \<br/>
+    &nbsp;&nbsp;-d <span class="t-str">'{"description":"Cobalt Strike beacon — default malleable C2 HTTP profile","file_type":"PE"}'</span><br/><br/>
+    <span class="t-cmt">// Response</span><br/>
+    {<br/>
+    &nbsp;&nbsp;<span class="t-key">"rule"</span>: <span class="t-str">"rule CobaltStrike_Beacon_Default_HTTP {\n  meta:\n    description = \"...\"\n  strings:\n    ...\n  condition:\n    ...\n}"</span>,<br/>
+    &nbsp;&nbsp;<span class="t-key">"file_type"</span>: <span class="t-str">"PE"</span>,<br/>
+    &nbsp;&nbsp;<span class="t-key">"model"</span>: <span class="t-str">"mistralai/mistral-7b-instruct-v0.3"</span><br/>
+    }
+  </div>
+  <table class="params">
+    <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    <tr><td><code>description</code></td><td class="type">string</td><td class="req">required</td><td>Malware family, behaviour, or sample to detect. Also accepts <code>malware</code> or <code>query</code> aliases.</td></tr>
+    <tr><td><code>file_type</code></td><td class="type">string</td><td class="opt">optional</td><td>File type hint — <code>PE</code>, <code>Office macro</code>, <code>PDF</code>, <code>script</code>, <code>shellcode</code>, <code>memory</code></td></tr>
+    <tr><td><code>hash</code></td><td class="type">string</td><td class="opt">optional</td><td>Known SHA256 sample hash — included in rule <code>meta</code> section</td></tr>
+  </table>
+  <div class="alert alert-info">Set <code>HANCOCK_WEBHOOK_SECRET</code> to enable HMAC-SHA256 signature verification on <code>/v1/webhook</code> — sign requests with <code>X-Hancock-Signature: sha256=&lt;hex&gt;</code>.</div>
 
   <!-- POST /v1/webhook -->
   <h2 id="webhook">POST /v1/webhook</h2>

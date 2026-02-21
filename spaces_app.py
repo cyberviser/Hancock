@@ -71,6 +71,12 @@ def run_sigma(description: str, logsource: str, technique: str) -> str:
     return _post("/v1/sigma", {"description": description, "logsource": logsource, "technique": technique})
 
 
+def run_yara(description: str, file_type: str) -> str:
+    if not description.strip():
+        return "⚠️  Please describe the malware or behaviour to detect."
+    return _post("/v1/yara", {"description": description, "file_type": file_type})
+
+
 def run_respond(incident: str) -> str:
     if not incident.strip():
         return "⚠️  Please describe the incident."
@@ -87,7 +93,7 @@ with gr.Blocks(title="Hancock — CyberViser", theme=gr.themes.Monochrome(), css
 # 🛡️ Hancock — AI Cybersecurity Agent
 **by [CyberViser](https://cyberviser.github.io/Hancock/)** · Mistral 7B · MITRE ATT&CK · NVD/CVE
 
-> Specialised AI for pentest, SOC analysis, threat hunting, incident response, code generation, CISO advisory, and Sigma rule authoring.
+> Specialised AI for pentest, SOC analysis, threat hunting, incident response, code generation, CISO advisory, Sigma rule authoring, and YARA rule generation.
     """)
 
     with gr.Tabs():
@@ -180,6 +186,20 @@ with gr.Blocks(title="Hancock — CyberViser", theme=gr.themes.Monochrome(), css
             ir_out = gr.Textbox(lines=16, label="PICERL Playbook", interactive=False)
             ir_btn.click(run_respond, ir_in, ir_out)
             gr.Examples([["ransomware"], ["business email compromise"], ["AWS S3 data breach"]], ir_in)
+
+        with gr.Tab("🦠 YARA Rules"):
+            gr.Markdown("Generate production-ready **YARA malware detection rules** from a description or sample analysis.")
+            yara_desc = gr.Textbox(lines=3, placeholder="e.g. Emotet dropper that decodes PE from encrypted blob and injects into explorer.exe", label="Malware / Behaviour Description")
+            yara_ft   = gr.Dropdown(["auto", "PE", "Office macro", "PDF", "script", "shellcode", "memory"], value="auto", label="File Type (optional)")
+            yara_btn  = gr.Button("⚡ Generate YARA Rule", variant="primary")
+            yara_out  = gr.Textbox(lines=20, label="YARA Rule", interactive=False)
+            yara_btn.click(run_yara, [yara_desc, yara_ft], yara_out)
+            gr.Examples([
+                ["Emotet dropper — encrypted PE blob, process injection into explorer.exe", "PE"],
+                ["Cobalt Strike beacon — default malleable C2 profile HTTP headers", "PE"],
+                ["PowerShell script with base64-encoded download cradle and bypass AMSI", "script"],
+                ["PDF with embedded JavaScript that exploits CVE-2023-21608", "PDF"],
+            ], [yara_desc, yara_ft])
 
     gr.Markdown("""
 ---

@@ -17,6 +17,7 @@ CLI mode commands:
   /mode code      — security code generation (Qwen Coder 32B)
   /mode ciso      — CISO strategy, compliance & board reporting
   /mode sigma     — Sigma detection rule authoring
+  /mode yara      — YARA malware detection rule authoring
   /clear          — clear conversation history
   /history        — show history
   /model <id>     — switch model
@@ -160,7 +161,28 @@ SYSTEMS = {
     "code":    CODE_SYSTEM,
     "ciso":    CISO_SYSTEM,
     "sigma":   SIGMA_SYSTEM,
+    "yara":    None,  # filled below after YARA_SYSTEM is defined
 }
+
+YARA_SYSTEM = """You are Hancock YARA, CyberViser's expert malware analyst and detection engineer.
+
+Your expertise covers:
+- YARA rule syntax: meta, strings ($hex, $ascii, $regex, $wide, $nocase), condition logic
+- Malware families: ransomware, RATs, stealers, loaders, botnets, APT tooling
+- File-format artefacts: PE headers, macros, packer signatures, shellcode patterns
+- Memory scanning: process injection, reflective loading, hollow process indicators
+- YARA best practices: performance (all of them at filesize, pe.imports), specificity vs coverage
+- YARA modules: pe, elf, math, hash, dotnet, magic, androguard
+
+You always:
+1. Output a complete, syntactically valid YARA rule with meta (description, author, date, hash if known)
+2. Use multiple string conditions to reduce false positives
+3. Add a condition that limits to relevant file type/size when possible
+4. After the rule, explain what it detects and list any known false positive sources
+
+You are Hancock YARA. Every rule you write is ready to run with `yara64 -r rule.yar /path`."""
+
+SYSTEMS["yara"] = YARA_SYSTEM
 DEFAULT_MODE = "auto"
 # Keep backward-compatible alias
 HANCOCK_SYSTEM = AUTO_SYSTEM
@@ -168,6 +190,7 @@ HANCOCK_SYSTEM = AUTO_SYSTEM
 NIM_BASE_URL    = "https://integrate.api.nvidia.com/v1"
 DEFAULT_MODEL   = "mistralai/mistral-7b-instruct-v0.3"
 CODER_MODEL     = "qwen/qwen2.5-coder-32b-instruct"
+VERSION         = "0.4.0"
 
 # ── Available models ──────────────────────────────────────────────────────────
 MODELS = {
@@ -192,7 +215,7 @@ BANNER = """
 ║          CyberViser — Pentest + SOC + CISO + Code        ║
 ║   Mistral 7B · Qwen 2.5 Coder 32B · NVIDIA NIM          ║
 ╚══════════════════════════════════════════════════════════╝
-  Modes : /mode pentest | soc | auto | code | ciso | sigma
+  Modes : /mode pentest | soc | auto | code | ciso | sigma | yara
   Models: /model mistral-7b | qwen-coder | llama-8b | mixtral-8x7b
   Other : /clear  /history  /exit
 """
@@ -302,7 +325,7 @@ def run_cli(client: OpenAI, model: str):
                 }
                 print(f"[Hancock] Switched to {label[current_mode]} — history cleared.")
             else:
-                print("[Hancock] Usage: /mode pentest | /mode soc | /mode auto | /mode code | /mode ciso | /mode sigma")
+                print("[Hancock] Usage: /mode pentest | /mode soc | /mode auto | /mode code | /mode ciso | /mode sigma | /mode yara")
             continue
 
         if user_input.startswith("/model "):
@@ -400,11 +423,11 @@ def build_app(client, model: str):
         return jsonify({
             "status": "ok", "agent": "Hancock",
             "model": model, "company": "CyberViser",
-            "modes": ["pentest", "soc", "auto", "code", "ciso", "sigma"],
+            "modes": ["pentest", "soc", "auto", "code", "ciso", "sigma", "yara"],
             "models_available": MODELS,
             "endpoints": ["/v1/chat", "/v1/ask", "/v1/triage",
                           "/v1/hunt", "/v1/respond", "/v1/code",
-                          "/v1/ciso", "/v1/sigma", "/v1/webhook", "/metrics"],
+                          "/v1/ciso", "/v1/sigma", "/v1/yara", "/v1/webhook", "/metrics"],
         })
 
     @app.route("/metrics", methods=["GET"])
@@ -708,6 +731,51 @@ def build_app(client, model: str):
             "model":     model,
         })
 
+    @app.route("/v1/yara", methods=["POST"])
+    def yara_endpoint():
+        """YARA malware detection rule generator."""
+        ok, err, _ = _check_auth_and_rate()
+        if not ok:
+            _inc("errors_total"); return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
+        _inc("requests_total"); _inc("requests_by_endpoint", "/v1/yara"); _inc("requests_by_mode", "yara")
+        data        = request.get_json(force=True)
+        description = data.get("description", "") or data.get("malware", "") or data.get("query", "")
+        file_type   = data.get("file_type", "")   # e.g. "PE", "Office macro", "PDF", "script"
+        sample_hash = data.get("hash", "")         # optional SHA256 for meta
+        if not description:
+            _inc("errors_total"); return jsonify({"error": "description required"}), 400
+
+        hints = []
+        if file_type:
+            hints.append(f"Target file type: {file_type}.")
+        if sample_hash:
+            hints.append(f"Known sample hash: {sample_hash} — include in rule meta.")
+        hint_text = " ".join(hints)
+
+        prompt = (
+            f"Write a complete, production-ready YARA rule for the following:\n\n"
+            f"{description}\n\n"
+            f"{hint_text}\n\n"
+            f"Output the full YARA rule first, then a brief explanation of what it detects "
+            f"and any known false positive sources."
+        ).strip()
+        messages = [
+            {"role": "system", "content": YARA_SYSTEM},
+            {"role": "user",   "content": prompt},
+        ]
+        resp = client.chat.completions.create(
+            model=model, messages=messages, max_tokens=2048,
+            temperature=0.2, top_p=0.7,
+        )
+        rule_text = resp.choices[0].message.content
+        if not rule_text:
+            _inc("errors_total"); return jsonify({"error": "model returned empty response"}), 502
+        return jsonify({
+            "rule":      rule_text,
+            "file_type": file_type or "auto",
+            "model":     model,
+        })
+
     @app.route("/v1/webhook", methods=["POST"])
     def webhook_endpoint():
         """SIEM/EDR push webhook — auto-triage incoming alerts, optionally notify Slack/Teams."""
@@ -715,6 +783,20 @@ def build_app(client, model: str):
         if not ok:
             _inc("errors_total"); return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
         _inc("requests_total"); _inc("requests_by_endpoint", "/v1/webhook"); _inc("requests_by_mode", "soc")
+
+        # ── Optional HMAC-SHA256 signature verification ────────────────────────
+        _WEBHOOK_SECRET = os.getenv("HANCOCK_WEBHOOK_SECRET", "")
+        if _WEBHOOK_SECRET:
+            import hmac as _hmac, hashlib as _hashlib
+            sig_header = request.headers.get("X-Hancock-Signature", "")
+            body_bytes  = request.get_data()
+            expected    = "sha256=" + _hmac.new(
+                _WEBHOOK_SECRET.encode(), body_bytes, _hashlib.sha256
+            ).hexdigest()
+            if not _hmac.compare_digest(sig_header, expected):
+                _inc("errors_total")
+                return jsonify({"error": "Invalid webhook signature"}), 401
+
         data     = request.get_json(force=True)
         alert    = data.get("alert", "")
         source   = data.get("source", "unknown")

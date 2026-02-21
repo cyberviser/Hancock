@@ -51,6 +51,13 @@ CISO_SYSTEM = (
     "Provide executive-ready language referencing specific control IDs where relevant."
 )
 
+YARA_SYSTEM = (
+    "You are Hancock YARA, CyberViser's expert malware analyst. "
+    "Write production-ready YARA rules with meta, string patterns ($hex, $ascii, $regex, $wide), "
+    "and condition logic. Use pe/elf modules when appropriate. "
+    "After the rule, explain what it detects and known false positive sources."
+)
+
 CODE_SYSTEM = (
     "You are Hancock Code, an elite security code specialist built by CyberViser. "
     "You write production-quality security tools in Python, Bash, PowerShell, and Go. "
@@ -185,6 +192,26 @@ class HancockClient:
         prompt   = f"{question}{ctx_line}\n\n{hint}".strip()
         return self._complete(CISO_SYSTEM, prompt, self.model,
                               temperature=0.3, top_p=0.95, max_tokens=2048)
+
+    def yara(
+        self,
+        description: str,
+        file_type: str = "",
+        sample_hash: str = "",
+    ) -> str:
+        """Generate a YARA malware detection rule."""
+        hints = []
+        if file_type:
+            hints.append(f"Target file type: {file_type}.")
+        if sample_hash:
+            hints.append(f"Known sample hash: {sample_hash} — include in rule meta.")
+        prompt = (
+            f"Write a complete YARA rule for: {description}\n"
+            + (" ".join(hints) + "\n" if hints else "")
+            + "Output the full rule first, then a brief explanation and false positive notes."
+        )
+        return self._complete(YARA_SYSTEM, prompt, self.model,
+                              temperature=0.2, top_p=0.7, max_tokens=2048)
 
     def chat(self, message: str, history: Optional[list] = None, mode: str = "auto") -> str:
         """Multi-turn conversation with history."""

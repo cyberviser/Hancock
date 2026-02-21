@@ -43,6 +43,11 @@ Expertise: NIST RMF, ISO 27001, SOC 2, PCI-DSS, HIPAA, GDPR, NIST CSF 2.0, CIS C
 Translate technical risk into business impact. Prioritize by likelihood × impact × cost.
 Provide executive-ready language referencing specific control IDs where relevant.`;
 
+const YARA_SYSTEM = `You are Hancock YARA, CyberViser's expert malware analyst.
+Write production-ready YARA rules with meta, string patterns ($hex, $ascii, $regex, $wide),
+and condition logic. Use pe/elf modules when appropriate.
+After the rule, explain what it detects and list known false positive sources.`;
+
 // ── NIM Client ──────────────────────────────────────────────────────────────
 function createClient() {
   const apiKey = process.env.NVIDIA_API_KEY;
@@ -61,11 +66,12 @@ async function ask(client, prompt, mode = 'security') {
   const isCode  = mode === 'code';
   const isSigma = mode === 'sigma';
   const isCiso  = mode === 'ciso';
+  const isYara  = mode === 'yara';
   const model   = isCode ? CODER_MODEL : DEFAULT_MODEL;
-  const system  = isCode ? CODE_SYSTEM : isSigma ? SIGMA_SYSTEM : isCiso ? CISO_SYSTEM : SECURITY_SYSTEM;
-  const temp    = isCode || isSigma ? 0.2 : isCiso ? 0.3 : 0.7;
-  const topP    = isCode || isSigma ? 0.7 : 0.95;
-  const maxTok  = isCode || isSigma || isCiso ? 2048 : 1024;
+  const system  = isCode ? CODE_SYSTEM : isSigma ? SIGMA_SYSTEM : isCiso ? CISO_SYSTEM : isYara ? YARA_SYSTEM : SECURITY_SYSTEM;
+  const temp    = isCode || isSigma || isYara ? 0.2 : isCiso ? 0.3 : 0.7;
+  const topP    = isCode || isSigma || isYara ? 0.7 : 0.95;
+  const maxTok  = isCode || isSigma || isCiso || isYara ? 2048 : 1024;
 
   const completion = await client.chat.completions.create({
     model,
@@ -92,11 +98,12 @@ async function askStream(client, prompt, mode = 'security') {
   const isCode  = mode === 'code';
   const isSigma = mode === 'sigma';
   const isCiso  = mode === 'ciso';
+  const isYara  = mode === 'yara';
   const model   = isCode ? CODER_MODEL : DEFAULT_MODEL;
-  const system  = isCode ? CODE_SYSTEM : isSigma ? SIGMA_SYSTEM : isCiso ? CISO_SYSTEM : SECURITY_SYSTEM;
-  const temp    = isCode || isSigma ? 0.2 : isCiso ? 0.3 : 0.7;
-  const topP    = isCode || isSigma ? 0.7 : 0.95;
-  const maxTok  = isCode || isSigma || isCiso ? 2048 : 1024;
+  const system  = isCode ? CODE_SYSTEM : isSigma ? SIGMA_SYSTEM : isCiso ? CISO_SYSTEM : isYara ? YARA_SYSTEM : SECURITY_SYSTEM;
+  const temp    = isCode || isSigma || isYara ? 0.2 : isCiso ? 0.3 : 0.7;
+  const topP    = isCode || isSigma || isYara ? 0.7 : 0.95;
+  const maxTok  = isCode || isSigma || isCiso || isYara ? 2048 : 1024;
 
   process.stdout.write('\nHancock > ');
   const stream = await client.chat.completions.create({
@@ -129,7 +136,7 @@ async function interactiveCLI(client, initialMode) {
 ╚══════════════════════════════════════════════════════════╝
 Mode: ${mode} | Model: ${mode === 'code' ? CODER_MODEL : DEFAULT_MODEL}
 
-Commands: /mode security | /mode code | /mode sigma | /mode ciso | /model <alias> | /exit
+Commands: /mode security | /mode code | /mode sigma | /mode ciso | /mode yara | /model <alias> | /exit
 Aliases:  mistral-7b | qwen-coder | llama-8b | mixtral-8x7b
 `);
 
