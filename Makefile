@@ -3,7 +3,7 @@
 PYTHON        := .venv/bin/python
 PIP           := .venv/bin/pip
 
-.PHONY: help setup install dev-install run server pipeline finetune lint clean docker docker-up
+.PHONY: help setup install dev-install run server pipeline finetune lint test clean docker docker-up client-python client-node
 
 help:
 	@echo ""
@@ -27,6 +27,10 @@ help:
 	@echo "    server         Start Hancock REST API server (port 5000)"
 	@echo "    pipeline       Run data collection pipeline"
 	@echo "    finetune       Run LoRA fine-tuning on Mistral 7B"
+	@echo ""
+	@echo "  Clients:"
+	@echo "    client-python  Run Python SDK CLI (interactive)"
+	@echo "    client-node    Run Node.js SDK CLI (interactive)"
 	@echo ""
 	@echo "  Dev:"
 	@echo "    lint           Run flake8 linter"
@@ -70,6 +74,9 @@ lint:
 	.venv/bin/flake8 . --count --select=E9,F63,F7,F82 \
 	  --exclude=.venv,__pycache__,data,docs --show-source --statistics
 
+test:
+	.venv/bin/pytest tests/ -v --tb=short
+
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	find . -name "*.pyc" -delete 2>/dev/null || true
@@ -83,3 +90,12 @@ docker:
 
 docker-up:
 	docker-compose up -d
+
+# ─── Clients ─────────────────────────────────────────────────
+client-python:
+	@$(PIP) install openai python-dotenv -q
+	$(PYTHON) clients/python/hancock_cli.py
+
+client-node:
+	@cd clients/nodejs && npm install --silent
+	node clients/nodejs/hancock.js

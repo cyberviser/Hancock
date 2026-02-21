@@ -1,0 +1,65 @@
+name: Fine-Tune Hancock (Modal GPU)
+
+on:
+  workflow_dispatch:
+    inputs:
+      gpu:
+        description: 'GPU type'
+        required: true
+        default: 'T4'
+        type: choice
+        options: ['T4', 'A10G', 'A100']
+      push_hub:
+        description: 'Push model to HuggingFace Hub after training'
+        required: false
+        default: false
+        type: boolean
+      dry_run:
+        description: 'Dry run — validate setup only, skip training'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  finetune:
+    name: Fine-Tune on Modal (${{ github.event.inputs.gpu }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install Modal
+        run: pip install modal
+
+      - name: Authenticate Modal
+        env:
+          MODAL_TOKEN_ID:     ${{ secrets.MODAL_TOKEN_ID }}
+          MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+        run: |
+          modal token set \
+            --token-id     "$MODAL_TOKEN_ID" \
+            --token-secret "$MODAL_TOKEN_SECRET"
+
+      - name: Run fine-tuning job
+        env:
+          MODAL_TOKEN_ID:     ${{ secrets.MODAL_TOKEN_ID }}
+          MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+        run: |
+          DRY_RUN="${{ github.event.inputs.dry_run }}"
+          PUSH_HUB="${{ github.event.inputs.push_hub }}"
+
+          ARGS=""
+          [ "$DRY_RUN" = "true" ] && ARGS="$ARGS --dry-run"
+          [ "$PUSH_HUB" = "true" ] && ARGS="$ARGS --push-hub"
+
+          modal run train_modal.py $ARGS
+
+      - name: Training complete
+        run: echo "✅ Hancock fine-tuning job submitted to Modal (${{ github.event.inputs.gpu }})"

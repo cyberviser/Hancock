@@ -121,6 +121,11 @@
   <a href="#triage"><span class="method-tag tag-post">POST</span>/v1/triage</a>
   <a href="#hunt"><span class="method-tag tag-post">POST</span>/v1/hunt</a>
   <a href="#respond"><span class="method-tag tag-post">POST</span>/v1/respond</a>
+  <a href="#code"><span class="method-tag tag-post">POST</span>/v1/code</a>
+  <a href="#webhook"><span class="method-tag tag-post">POST</span>/v1/webhook</a>
+  <div class="nav-section">Clients</div>
+  <a href="#client-python">Python SDK</a>
+  <a href="#client-node">Node.js SDK</a>
   <div class="nav-section">Guides</div>
   <a href="#modes">Specialist Modes</a>
   <a href="#errors">Error Handling</a>
@@ -268,13 +273,95 @@
     <tr><td><code>incident</code></td><td class="type">string</td><td class="req">required</td><td>Incident type (e.g. <code>ransomware</code>, <code>BEC</code>, <code>data exfiltration</code>)</td></tr>
   </table>
 
+  <!-- POST /v1/code -->
+  <h2 id="code">POST /v1/code</h2>
+  <p>Generate production-ready security code using <strong>Qwen 2.5 Coder 32B</strong>. Outputs Python, Bash, PowerShell, Go, KQL, SPL, YARA, and Sigma rules.</p>
+  <div class="ep-header">
+    <span class="method method-post">POST</span>
+    <span class="ep-path">/v1/code</span>
+    <span class="ep-badge">Code mode</span>
+  </div>
+  <div class="code-block">
+    <span class="t-prompt">$ </span>curl -X POST http://localhost:5000/v1/code \<br/>
+    &nbsp;&nbsp;-H <span class="t-str">"Content-Type: application/json"</span> \<br/>
+    &nbsp;&nbsp;-d <span class="t-str">'{"task": "YARA rule for Emotet dropper", "language": "yara"}'</span><br/><br/>
+    <span class="t-cmt">// Response</span><br/>
+    {<br/>
+    &nbsp;&nbsp;<span class="t-key">"code"</span>: <span class="t-str">"rule Emotet_Dropper { ... }"</span>,<br/>
+    &nbsp;&nbsp;<span class="t-key">"model"</span>: <span class="t-str">"qwen/qwen2.5-coder-32b-instruct"</span>,<br/>
+    &nbsp;&nbsp;<span class="t-key">"language"</span>: <span class="t-str">"yara"</span><br/>
+    }
+  </div>
+  <table class="params">
+    <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    <tr><td><code>task</code></td><td class="type">string</td><td class="req">required</td><td>What to build (e.g. "KQL query for Pass-the-Hash", "YARA rule for Cobalt Strike")</td></tr>
+    <tr><td><code>language</code></td><td class="type">string</td><td class="opt">optional</td><td><code>python</code>, <code>bash</code>, <code>powershell</code>, <code>go</code>, <code>kql</code>, <code>spl</code>, <code>yara</code>, <code>sigma</code></td></tr>
+  </table>
+
+  <!-- POST /v1/webhook -->
+  <h2 id="webhook">POST /v1/webhook</h2>
+  <p>SIEM/EDR push webhook — auto-triage incoming alerts. Optionally forwards results to <strong>Slack</strong> or <strong>Microsoft Teams</strong> via <code>HANCOCK_SLACK_WEBHOOK</code> / <code>HANCOCK_TEAMS_WEBHOOK</code> env vars.</p>
+  <div class="ep-header">
+    <span class="method method-post">POST</span>
+    <span class="ep-path">/v1/webhook</span>
+    <span class="ep-badge">SOC mode</span>
+  </div>
+  <div class="code-block">
+    <span class="t-prompt">$ </span>curl -X POST http://localhost:5000/v1/webhook \<br/>
+    &nbsp;&nbsp;-H <span class="t-str">"Content-Type: application/json"</span> \<br/>
+    &nbsp;&nbsp;-d <span class="t-str">'{"source":"splunk","alert":"Mimikatz.exe on DC01","severity":"critical"}'</span><br/><br/>
+    <span class="t-cmt">// Response</span><br/>
+    {<br/>
+    &nbsp;&nbsp;<span class="t-key">"status"</span>: <span class="t-str">"triaged"</span>,<br/>
+    &nbsp;&nbsp;<span class="t-key">"source"</span>: <span class="t-str">"splunk"</span>,<br/>
+    &nbsp;&nbsp;<span class="t-key">"severity"</span>: <span class="t-str">"critical"</span>,<br/>
+    &nbsp;&nbsp;<span class="t-key">"triage"</span>: <span class="t-str">"**CRITICAL** — T1003 OS Credential Dumping..."</span>,<br/>
+    &nbsp;&nbsp;<span class="t-key">"model"</span>: <span class="t-str">"mistralai/mistral-7b-instruct-v0.3"</span><br/>
+    }
+  </div>
+  <table class="params">
+    <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    <tr><td><code>alert</code></td><td class="type">string</td><td class="req">required</td><td>Raw alert text from SIEM, EDR, or IDS/IPS</td></tr>
+    <tr><td><code>source</code></td><td class="type">string</td><td class="opt">optional</td><td>Alert origin: <code>splunk</code>, <code>elastic</code>, <code>sentinel</code>, <code>crowdstrike</code>, etc.</td></tr>
+    <tr><td><code>severity</code></td><td class="type">string</td><td class="opt">optional</td><td>Reported severity: <code>critical</code>, <code>high</code>, <code>medium</code>, <code>low</code></td></tr>
+  </table>
+  <div class="alert alert-warning">Set <code>HANCOCK_SLACK_WEBHOOK</code> and/or <code>HANCOCK_TEAMS_WEBHOOK</code> env vars to auto-forward triage results to your SOC channel.</div>
+
+  <!-- Python SDK -->
+  <h2 id="client-python">Python SDK</h2>
+  <p>Install and use the official Python client from <code>clients/python/</code>.</p>
+  <div class="code-block standalone">
+    <span class="t-prompt">$ </span>pip install openai python-dotenv<br/>
+    <span class="t-prompt">$ </span>export NVIDIA_API_KEY=nvapi-...<br/><br/>
+    <span class="t-cmt"># security mode</span><br/>
+    from hancock_client import HancockClient<br/>
+    h = HancockClient()<br/>
+    print(h.ask(<span class="t-str">"Explain CVE-2021-44228"</span>))<br/><br/>
+    <span class="t-cmt"># code generation mode</span><br/>
+    print(h.code(<span class="t-str">"YARA rule for Emotet dropper"</span>, language=<span class="t-str">"yara"</span>))
+  </div>
+
+  <!-- Node.js SDK -->
+  <h2 id="client-node">Node.js SDK</h2>
+  <p>Install and use the official Node.js client from <code>clients/nodejs/</code>.</p>
+  <div class="code-block standalone">
+    <span class="t-prompt">$ </span>cd clients/nodejs &amp;&amp; npm install<br/>
+    <span class="t-prompt">$ </span>export NVIDIA_API_KEY=nvapi-...<br/><br/>
+    <span class="t-cmt">// One-shot code generation</span><br/>
+    node hancock.js --mode code --task <span class="t-str">"write a KQL query for Pass-the-Hash"</span><br/><br/>
+    <span class="t-cmt">// Interactive CLI</span><br/>
+    node hancock.js --mode code<br/>
+    [code] &gt; write a Sigma rule for Kerberoasting
+  </div>
+
   <!-- Modes -->
   <h2 id="modes">Specialist Modes</h2>
   <table class="params">
-    <tr><th>Mode</th><th>Best For</th><th>Persona</th></tr>
-    <tr><td><code>pentest</code></td><td>Offensive security, recon, exploitation, CVE research</td><td>Elite red team operator</td></tr>
-    <tr><td><code>soc</code></td><td>Alert triage, SIEM queries, IR, threat hunting</td><td>SOC Tier-2/3 analyst</td></tr>
-    <tr><td><code>auto</code></td><td>Mixed tasks — auto-detects context</td><td>Combined persona</td></tr>
+    <tr><th>Mode</th><th>Best For</th><th>Persona</th><th>Model</th></tr>
+    <tr><td><code>pentest</code></td><td>Offensive security, recon, exploitation, CVE research</td><td>Elite red team operator</td><td>Mistral 7B</td></tr>
+    <tr><td><code>soc</code></td><td>Alert triage, SIEM queries, IR, threat hunting</td><td>SOC Tier-2/3 analyst</td><td>Mistral 7B</td></tr>
+    <tr><td><code>auto</code></td><td>Mixed tasks — auto-detects context</td><td>Combined persona</td><td>Mistral 7B</td></tr>
+    <tr><td><code>code</code></td><td>YARA/Sigma rules, KQL/SPL, exploit PoCs, CTF scripts</td><td>Security code specialist</td><td>Qwen 2.5 Coder 32B</td></tr>
   </table>
 
   <!-- Errors -->

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Train Hancock — Free GPU Fine-Tuning | CyberViser</title>
+  <meta name="description" content="Fine-tune Hancock on free GPU infrastructure — Google Colab, Kaggle, Modal.com. 1,375 training samples from MITRE ATT&CK + CVE + pentest knowledge bases." />
+  <link rel="canonical" href="https://cyberviser.netlify.app/train" />
+  <meta property="og:title"       content="Train Hancock — Free GPU Fine-Tuning" />
+  <meta property="og:description" content="Run Hancock fine-tuning on free GPUs: Colab T4, Kaggle T4 (30h/week), Modal A10G ($30 free credit)." />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --green:#00ff88; --cyan:#00e5ff; --red:#ff3366; --yellow:#ffbd2e; --dark:#080c10; --card:#0d1117; --border:#1a2332; --text:#c9d1d9; --muted:#586069; }
+    body { background: var(--dark); color: var(--text); font-family: 'Courier New', monospace; }
+
+    nav { display:flex; justify-content:space-between; align-items:center; padding:1.2rem 2rem; border-bottom:1px solid var(--border); position:sticky; top:0; background:rgba(8,12,16,.95); backdrop-filter:blur(10px); z-index:100; }
+    .nav-logo { font-size:1.2rem; font-weight:700; color:var(--green); text-decoration:none; letter-spacing:2px; }
+    .nav-logo span { color:var(--cyan); }
+    .nav-links { display:flex; gap:1.5rem; list-style:none; }
+    .nav-links a { color:var(--muted); text-decoration:none; font-size:.85rem; transition:color .2s; }
+    .nav-links a:hover { color:var(--green); }
+    .nav-cta { border:1px solid var(--green); color:var(--green) !important; padding:.4rem 1rem; border-radius:4px; font-weight:700; }
+    .nav-cta:hover { background:var(--green) !important; color:var(--dark) !important; }
+
+    .hero { text-align:center; padding:4rem 2rem 2rem; }
+    .badge { display:inline-block; background:rgba(0,255,136,.1); border:1px solid var(--green); color:var(--green); font-size:.75rem; padding:.25rem .8rem; border-radius:20px; margin-bottom:1rem; letter-spacing:1px; }
+    .hero h1 { font-size:clamp(1.8rem,4vw,2.8rem); font-weight:900; margin-bottom:.8rem; }
+    .hero h1 span { color:var(--green); }
+    .hero p { color:var(--muted); font-size:.95rem; max-width:580px; margin:0 auto 1rem; line-height:1.7; }
+
+    /* Dataset stats */
+    .stats { display:flex; flex-wrap:wrap; gap:1rem; justify-content:center; padding:1.5rem 2rem 2.5rem; max-width:900px; margin:0 auto; }
+    .stat { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1rem 1.5rem; text-align:center; flex:1; min-width:140px; }
+    .stat-num { font-size:1.6rem; font-weight:900; color:var(--green); }
+    .stat-label { color:var(--muted); font-size:.75rem; margin-top:.2rem; }
+
+    /* GPU option cards */
+    .section { max-width:1100px; margin:0 auto; padding:0 2rem 3rem; }
+    .section h2 { color:var(--cyan); font-size:1.3rem; margin-bottom:1.5rem; border-bottom:1px solid var(--border); padding-bottom:.5rem; }
+    .gpu-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:1.5rem; margin-bottom:2.5rem; }
+    .gpu-card { background:var(--card); border:1px solid var(--border); border-radius:8px; overflow:hidden; transition:border-color .2s; }
+    .gpu-card:hover { border-color:var(--green); }
+    .gpu-card.recommended { border-color:var(--green); }
+    .gpu-header { padding:1rem 1.2rem; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); }
+    .gpu-name { font-weight:700; font-size:1rem; }
+    .gpu-badge { font-size:.7rem; padding:.2rem .6rem; border-radius:20px; font-weight:700; }
+    .badge-free  { background:rgba(0,255,136,.15); color:var(--green); border:1px solid var(--green); }
+    .badge-best  { background:rgba(0,229,255,.15); color:var(--cyan);  border:1px solid var(--cyan); }
+    .badge-paid  { background:rgba(255,189,46,.1); color:var(--yellow); border:1px solid var(--yellow); }
+    .gpu-body { padding:1.2rem; }
+    .gpu-specs { display:grid; grid-template-columns:1fr 1fr; gap:.4rem .8rem; margin-bottom:1rem; font-size:.8rem; }
+    .spec-label { color:var(--muted); }
+    .spec-value { color:var(--text); }
+    .gpu-body p { color:var(--muted); font-size:.85rem; line-height:1.6; margin-bottom:1rem; }
+    .btn-launch { display:inline-block; padding:.5rem 1.2rem; border-radius:4px; font-family:inherit; font-size:.82rem; font-weight:700; text-decoration:none; background:var(--green); color:var(--dark); transition:opacity .2s; }
+    .btn-launch:hover { opacity:.85; }
+    .btn-launch.cyan  { background:var(--cyan); }
+    .btn-launch.red   { background:var(--red); color:#fff; }
+    .btn-launch.yellow{ background:var(--yellow); }
+
+    /* Steps */
+    .steps { counter-reset:step; }
+    .step  { display:flex; gap:1rem; margin-bottom:1.2rem; }
+    .step::before { counter-increment:step; content:counter(step); background:var(--green); color:var(--dark); width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.8rem; font-weight:900; flex-shrink:0; margin-top:.15rem; }
+    .step p { color:var(--text); font-size:.88rem; line-height:1.6; }
+    .step code { background:#161b22; color:var(--cyan); padding:.1rem .4rem; border-radius:3px; font-family:inherit; font-size:.82rem; }
+
+    /* Code block */
+    pre { background:#080c10; border:1px solid var(--border); border-radius:6px; padding:1rem 1.2rem; font-size:.8rem; overflow-x:auto; line-height:1.8; margin-bottom:1rem; }
+    .t-green { color:var(--green); }
+    .t-cyan  { color:var(--cyan); }
+    .t-muted { color:var(--muted); }
+    .t-yellow{ color:var(--yellow); }
+
+    /* Pipeline diagram */
+    .pipeline { display:flex; align-items:center; flex-wrap:wrap; gap:.5rem; justify-content:center; padding:1.5rem 2rem; background:var(--card); border:1px solid var(--border); border-radius:8px; margin-bottom:2.5rem; }
+    .pipe-step { text-align:center; padding:.5rem .8rem; }
+    .pipe-icon { font-size:1.4rem; display:block; }
+    .pipe-label { font-size:.72rem; color:var(--muted); margin-top:.2rem; }
+    .pipe-arrow { color:var(--muted); font-size:1rem; }
+
+    footer { text-align:center; padding:2rem; border-top:1px solid var(--border); color:var(--muted); font-size:.8rem; }
+    footer a { color:var(--green); text-decoration:none; }
+    @media(max-width:600px) { .nav-links { display:none; } .stats { gap:.6rem; } }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">CYBER<span>VISER</span></a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="demo.html">Live Demo</a></li>
+    <li><a href="api.html">API Docs</a></li>
+    <li><a href="pricing.html">Pricing</a></li>
+    <li><a href="contact.html" class="nav-cta">Get Access ↗</a></li>
+  </ul>
+</nav>
+
+<div class="hero">
+  <div class="badge">🧠 FINE-TUNING PIPELINE</div>
+  <h1>Train <span>Hancock</span> — Free GPUs</h1>
+  <p>1,375 training samples from MITRE ATT&CK, NVD/CVE, pentest methodology, and SOC playbooks. Run on free GPU infrastructure in under 60 minutes.</p>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-num">1,375</div><div class="stat-label">Training Samples</div></div>
+  <div class="stat"><div class="stat-num">691</div><div class="stat-label">MITRE ATT&amp;CK Techniques</div></div>
+  <div class="stat"><div class="stat-num">600</div><div class="stat-label">Critical/High CVEs</div></div>
+  <div class="stat"><div class="stat-num">84</div><div class="stat-label">Pentest + SOC Q&amp;A Pairs</div></div>
+  <div class="stat"><div class="stat-num">2.3MB</div><div class="stat-label">Dataset Size</div></div>
+  <div class="stat"><div class="stat-num">~45min</div><div class="stat-label">T4 Training Time</div></div>
+</div>
+
+<!-- Pipeline diagram -->
+<div class="section">
+  <div class="pipeline">
+    <div class="pipe-step"><span class="pipe-icon">🔌</span><span class="pipe-label">MITRE ATT&amp;CK<br>TAXII API</span></div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step"><span class="pipe-icon">🛡️</span><span class="pipe-label">NVD/CVE<br>Database</span></div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step"><span class="pipe-icon">📚</span><span class="pipe-label">Pentest + SOC<br>Knowledge Base</span></div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step"><span class="pipe-icon">⚙️</span><span class="pipe-label">hancock_pipeline.py<br>Formatter</span></div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step"><span class="pipe-icon">📦</span><span class="pipe-label">hancock_v2.jsonl<br>1,375 samples</span></div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step"><span class="pipe-icon">🧠</span><span class="pipe-label">Mistral 7B<br>LoRA r=32</span></div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step"><span class="pipe-icon">🚀</span><span class="pipe-label">Hancock<br>Fine-tuned</span></div>
+  </div>
+
+  <h2>// choose your free GPU</h2>
+  <div class="gpu-grid">
+
+    <div class="gpu-card recommended">
+      <div class="gpu-header">
+        <span class="gpu-name">Modal.com</span>
+        <span class="gpu-badge badge-best">★ RECOMMENDED</span>
+      </div>
+      <div class="gpu-body">
+        <div class="gpu-specs">
+          <span class="spec-label">Free credit</span><span class="spec-value">$30/month</span>
+          <span class="spec-label">GPU</span><span class="spec-value">T4 / A10G / A100</span>
+          <span class="spec-label">VRAM</span><span class="spec-value">16 / 24 / 80 GB</span>
+          <span class="spec-label">Est. time</span><span class="spec-value">~45 min (T4)</span>
+          <span class="spec-label">Trigger</span><span class="spec-value">GitHub Actions ✅</span>
+          <span class="spec-label">Storage</span><span class="spec-value">Persistent volume</span>
+        </div>
+        <p>Best option. CI/CD integrated — trigger training from GitHub with one click. Model persists in Modal volumes between runs.</p>
+        <a href="https://modal.com" target="_blank" class="btn-launch cyan">Sign up free →</a>
+      </div>
+    </div>
+
+    <div class="gpu-card">
+      <div class="gpu-header">
+        <span class="gpu-name">Kaggle Notebooks</span>
+        <span class="gpu-badge badge-free">FREE</span>
+      </div>
+      <div class="gpu-body">
+        <div class="gpu-specs">
+          <span class="spec-label">Free hours</span><span class="spec-value">30h / week</span>
+          <span class="spec-label">GPU</span><span class="spec-value">T4 x2 / P100</span>
+          <span class="spec-label">VRAM</span><span class="spec-value">16 GB (T4)</span>
+          <span class="spec-label">Est. time</span><span class="spec-value">~45 min</span>
+          <span class="spec-label">Trigger</span><span class="spec-value">Manual / Scheduled</span>
+          <span class="spec-label">Storage</span><span class="spec-value">/kaggle/working</span>
+        </div>
+        <p>30 hours per week free — more reliable quota than Colab. Upload the Kaggle notebook and run.</p>
+        <a href="https://kaggle.com" target="_blank" class="btn-launch">Open Kaggle →</a>
+      </div>
+    </div>
+
+    <div class="gpu-card">
+      <div class="gpu-header">
+        <span class="gpu-name">Google Colab</span>
+        <span class="gpu-badge badge-free">FREE</span>
+      </div>
+      <div class="gpu-body">
+        <div class="gpu-specs">
+          <span class="spec-label">Free tier</span><span class="spec-value">T4 (limited hrs)</span>
+          <span class="spec-label">GPU</span><span class="spec-value">T4 / A100 (Pro)</span>
+          <span class="spec-label">VRAM</span><span class="spec-value">16 GB (T4)</span>
+          <span class="spec-label">Est. time</span><span class="spec-value">~45–60 min</span>
+          <span class="spec-label">Trigger</span><span class="spec-value">Manual</span>
+          <span class="spec-label">Storage</span><span class="spec-value">Google Drive</span>
+        </div>
+        <p>Easiest to start. Open notebook in Colab, select T4 GPU runtime, run all cells.</p>
+        <a href="https://colab.research.google.com/github/cyberviser/Hancock/blob/main/Hancock_CyberViser_Finetune.ipynb" target="_blank" class="btn-launch red">Open in Colab →</a>
+      </div>
+    </div>
+
+    <div class="gpu-card">
+      <div class="gpu-header">
+        <span class="gpu-name">NVIDIA NIM API</span>
+        <span class="gpu-badge badge-free">FREE INFERENCE</span>
+      </div>
+      <div class="gpu-body">
+        <div class="gpu-specs">
+          <span class="spec-label">Use case</span><span class="spec-value">Inference only</span>
+          <span class="spec-label">Model</span><span class="spec-value">Mistral 7B + others</span>
+          <span class="spec-label">Free tier</span><span class="spec-value">1000 req/day</span>
+          <span class="spec-label">Latency</span><span class="spec-value">&lt;2s / request</span>
+          <span class="spec-label">Already integrated</span><span class="spec-value">✅ Yes</span>
+          <span class="spec-label">Key</span><span class="spec-value">build.nvidia.com</span>
+        </div>
+        <p>Already powering Hancock. Free 1000 requests/day — no fine-tuning needed to start. Use for production inference.</p>
+        <a href="https://build.nvidia.com" target="_blank" class="btn-launch yellow">Get API Key →</a>
+      </div>
+    </div>
+
+  </div>
+
+  <h2>// modal.com setup (recommended)</h2>
+  <div class="steps">
+    <div class="step"><p>Sign up at <code>modal.com</code> — free $30/month credit (~32 hours A10G GPU or ~50 hours T4)</p></div>
+    <div class="step"><p>Install Modal CLI and authenticate:<br>
+      <code>pip install modal && modal token new</code></p></div>
+    <div class="step"><p>Create the secrets store with your API keys:<br>
+      <code>modal secret create cyberviser-secrets HF_TOKEN=hf_xxx NVIDIA_API_KEY=nvapi-xxx</code></p></div>
+    <div class="step"><p>Run fine-tuning from the Hancock repo:<br>
+      <code>modal run train_modal.py</code><br>
+      Or trigger from GitHub: Actions → <strong>Fine-Tune Hancock</strong> → Run workflow</p></div>
+    <div class="step"><p>Download the trained model:<br>
+      <code>modal volume get hancock-models hancock_lora ./hancock_lora</code><br>
+      <code>modal volume get hancock-models hancock_gguf ./hancock_gguf</code></p></div>
+    <div class="step"><p>Add GitHub Actions secrets for automated CI training:<br>
+      <code>MODAL_TOKEN_ID</code> and <code>MODAL_TOKEN_SECRET</code> from <code>modal token new</code></p></div>
+  </div>
+
+  <h2>// run the full pipeline</h2>
+  <pre><span class="t-muted"># 1. Clone and generate training data (no GPU needed)</span>
+git clone https://github.com/cyberviser/Hancock.git
+cd Hancock
+pip install -r requirements.txt
+python hancock_pipeline.py
+<span class="t-green"># → data/hancock_v2.jsonl  (1,375 samples, 2.3MB)</span>
+
+<span class="t-muted"># 2a. Train on Modal (recommended)</span>
+pip install modal && modal token new
+modal run train_modal.py --push-hub
+<span class="t-green"># → uploads to huggingface.co/cyberviser/hancock-mistral-7b-lora</span>
+
+<span class="t-muted"># 2b. Train on Kaggle — upload Hancock_Kaggle_Finetune.ipynb</span>
+<span class="t-muted"># 2c. Train on Colab  — open Hancock_CyberViser_Finetune.ipynb</span>
+
+<span class="t-muted"># 3. Run Hancock with fine-tuned model</span>
+<span class="t-cyan">NVIDIA_API_KEY=nvapi-xxx</span> python hancock_agent.py --server
+<span class="t-muted"># Or with your own weights via llama.cpp / Ollama:</span>
+ollama create hancock -f Modelfile
+ollama serve &amp;&amp; python hancock_agent.py --server --model hancock</pre>
+
+</div>
+
+<footer>
+  <p>© 2026 CyberViser | <a href="/">Home</a> | <a href="demo.html">Demo</a> | <a href="pricing.html">Pricing</a> | <a href="contact.html">Contact</a> | <a href="mailto:cyberviser@proton.me">cyberviser@proton.me</a></p>
+</footer>
+
+</body>
+</html>

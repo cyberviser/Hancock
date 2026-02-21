@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "hancock-client"
+version = "0.3.0"
+description = "Hancock AI Cybersecurity Agent — Python SDK (NVIDIA NIM backend)"
+readme = "clients/python/README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+authors = [{ name = "CyberViser", email = "cyberviser@proton.me" }]
+keywords = ["cybersecurity", "ai", "pentest", "soc", "llm", "nvidia", "security"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Information Technology",
+  "Topic :: Security",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "License :: Other/Proprietary License",
+]
+dependencies = [
+  "openai>=1.0.0",
+  "python-dotenv>=1.0.0",
+]
+
+[project.urls]
+Homepage = "https://cyberviser.netlify.app"
+Repository = "https://github.com/cyberviser/Hancock"
+Documentation = "https://cyberviser.netlify.app/api"
+
+[project.scripts]
+hancock = "hancock_cli:main"
+
+[tool.setuptools.packages.find]
+where = ["clients/python"]
+
+[tool.setuptools.package-dir]
+"" = "clients/python"

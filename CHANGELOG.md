@@ -7,6 +7,33 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [0.3.0] — 2026-02-21
+
+### Added
+- **Qwen 2.5 Coder 32B integration** — `MODELS` dict with aliases (`mistral-7b`, `qwen-coder`, `llama-8b`, `mixtral-8x7b`)
+- **`/v1/code` REST endpoint** — security code generation: YARA/Sigma rules, KQL/SPL queries, exploit PoCs, CTF scripts
+- **`/mode code` CLI command** — auto-switches to Qwen Coder model on entry
+- **`CODE_SYSTEM` prompt** — security code specialist persona for Python, Bash, PowerShell, Go, KQL, SPL, YARA, Sigma
+- **Python SDK** (`clients/python/`) — `HancockClient` class with `ask/code/triage/hunt/respond/chat` methods
+- **Python CLI** (`clients/python/hancock_cli.py`) — interactive + one-shot, `/mode`, `/model` commands, multi-turn history
+- **Node.js SDK** (`clients/nodejs/`) — streaming CLI backed by NVIDIA NIM, ES module, same model aliases
+- **`pyproject.toml`** — Python SDK installable as `hancock-client` package via `pip install -e .`
+- **`__init__.py`** for Python SDK package — exports `HancockClient`, `MODELS`, `__version__`
+- **GPU training page** (`docs/train.html`) — 4 free GPU options (Modal ⭐, Kaggle, Colab, NVIDIA NIM)
+- **Modal.com GPU runner** (`train_modal.py`) — full LoRA pipeline: data → train → GGUF export, free $30/mo
+- **Kaggle fine-tune notebook** (`Hancock_Kaggle_Finetune.ipynb`) — 30h/week free T4
+- **Manual finetune workflow** (`.github/workflows/finetune.yml`) — GPU choice dropdown (T4/A10G/A100)
+- **Makefile `client-python` + `client-node` targets** — one-command SDK launch
+- **1,375 training samples** (`data/hancock_v2.jsonl`) — 691 MITRE ATT&CK + 600 CVEs + 75 pentest/SOC KB + 9 Sigma
+
+### Changed
+- `requirements.txt` — added `openai>=1.0.0`, `flask>=3.0.0`, `python-dotenv>=1.0.0`
+- `docs/api.html` — added `/v1/code` endpoint, Python SDK + Node.js SDK sections, updated Modes table with `code` mode
+- `/health` endpoint — now exposes `modes_available`, `models_available`, and all 6 endpoints
+- `.env.example` — documents `HANCOCK_CODER_MODEL=qwen/qwen2.5-coder-32b-instruct`
+
+---
+
 ## [0.2.0] — 2026-02-21
 
 ### Added
