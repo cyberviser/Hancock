@@ -14,6 +14,8 @@ CLI mode commands:
   /mode pentest   — switch to Pentest Specialist persona
   /mode soc       — switch to SOC Analyst persona
   /mode auto      — combined persona (default)
+  /mode code      — security code generation (Qwen Coder 32B)
+  /mode ciso      — CISO strategy, compliance & board reporting
   /clear          — clear conversation history
   /history        — show history
   /model <id>     — switch model
@@ -88,8 +90,6 @@ You always:
 
 You are Hancock. Built by CyberViser."""
 
-SYSTEMS = {"pentest": PENTEST_SYSTEM, "soc": SOC_SYSTEM, "auto": AUTO_SYSTEM}
-
 CODE_SYSTEM = """You are Hancock Code, CyberViser's expert security code assistant powered by Qwen 2.5 Coder 32B.
 
 You write production-quality security tooling code in Python, Bash, PowerShell, and Go.
@@ -111,11 +111,33 @@ You always:
 
 You are Hancock Code. Precision over verbosity. Ship working code."""
 
+CISO_SYSTEM = """You are Hancock CISO, CyberViser's AI-powered Chief Information Security Officer advisor.
+
+Your expertise covers:
+- Risk Management: NIST RMF, ISO 27001/27005, FAIR quantitative risk analysis, risk register management
+- Compliance & Frameworks: SOC 2, ISO 27001, PCI-DSS, HIPAA, GDPR, DORA, NIST CSF 2.0, CIS Controls v8
+- Board & Executive Reporting: security posture summaries, risk-adjusted metrics, budget justification, KRI/KPI dashboards
+- Security Program Strategy: maturity assessments (CMMI, C2M2), roadmap planning, control gap analysis
+- Vendor & Third-Party Risk: TPRM frameworks, questionnaire assessment, supply chain risk, SLA review
+- Incident Communication: breach notification drafting, regulatory reporting, stakeholder messaging
+- Security Architecture Review: zero trust, cloud security posture (CSPM), identity governance, data classification
+- Budget & ROI: security spend optimization, tool consolidation, make-vs-buy analysis, cyber insurance guidance
+
+You always:
+1. Translate technical risk into business impact (financial, reputational, regulatory)
+2. Prioritize by likelihood × impact × cost-to-remediate
+3. Align recommendations to the organization's risk appetite and industry sector
+4. Provide executive-ready language — clear, concise, no jargon unless requested
+5. Reference specific control numbers (CIS Control 5.1, NIST CSF ID.AM-1) where relevant
+
+You are Hancock CISO. You speak business and security fluently."""
+
 SYSTEMS = {
     "pentest": PENTEST_SYSTEM,
     "soc":     SOC_SYSTEM,
     "auto":    AUTO_SYSTEM,
     "code":    CODE_SYSTEM,
+    "ciso":    CISO_SYSTEM,
 }
 DEFAULT_MODE = "auto"
 # Keep backward-compatible alias
@@ -145,10 +167,10 @@ BANNER = """
 ║  ██╔══██║██╔══██║██║╚██╗██║██║     ██║   ██║██║     ██╚╗║
 ║  ██║  ██║██║  ██║██║ ╚████║╚██████╗╚██████╔╝╚██████╗╚═╝║║
 ║  ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═════╝  ╚═════╝   ║
-║          CyberViser — Pentest + SOC + Code               ║
+║          CyberViser — Pentest + SOC + CISO + Code        ║
 ║   Mistral 7B · Qwen 2.5 Coder 32B · NVIDIA NIM          ║
 ╚══════════════════════════════════════════════════════════╝
-  Modes : /mode pentest | soc | auto | code
+  Modes : /mode pentest | soc | auto | code | ciso
   Models: /model mistral-7b | qwen-coder | llama-8b | mixtral-8x7b
   Other : /clear  /history  /exit
 """
@@ -254,10 +276,11 @@ def run_cli(client: OpenAI, model: str):
                     "soc":     "SOC Analyst 🔵",
                     "auto":    "Auto (Pentest+SOC) ⚡",
                     "code":    "Code Assistant 💻 (Qwen 2.5 Coder 32B)",
+                    "ciso":    "CISO Advisor 👔",
                 }
                 print(f"[Hancock] Switched to {label[current_mode]} — history cleared.")
             else:
-                print("[Hancock] Usage: /mode pentest | /mode soc | /mode auto | /mode code")
+                print("[Hancock] Usage: /mode pentest | /mode soc | /mode auto | /mode code | /mode ciso")
             continue
 
         if user_input.startswith("/model "):
@@ -325,7 +348,7 @@ def build_app(client, model: str):
         return jsonify({
             "status": "ok", "agent": "Hancock",
             "model": model, "company": "CyberViser",
-            "modes": ["pentest", "soc", "auto", "code"],
+            "modes": ["pentest", "soc", "auto", "code", "ciso"],
             "models_available": MODELS,
             "endpoints": ["/v1/chat", "/v1/ask", "/v1/triage",
                           "/v1/hunt", "/v1/respond", "/v1/code", "/v1/webhook"],

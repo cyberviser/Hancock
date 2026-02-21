@@ -175,10 +175,6 @@ def main():
     print("═" * 55)
 
 
-if __name__ == "__main__":
-    main()
-
-
 # ── v3 pipeline additions ─────────────────────────────────────────────────────
 def run_kev(data_dir: Path) -> bool:
     print("\n[kev] Fetching CISA Known Exploited Vulnerabilities...")
@@ -222,3 +218,7 @@ def run_formatter_v3() -> bool:
     except Exception as e:
         print(f"[formatter-v3] ERROR: {e}")
         return False
+
+
+if __name__ == "__main__":
+    main()
