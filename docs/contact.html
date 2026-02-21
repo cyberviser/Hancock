@@ -4,7 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Contact & Get Access — CyberViser Hancock</title>
+  <meta name="description" content="Get access to Hancock — CyberViser's AI security platform. Contact us for a free trial, enterprise pricing, or API access." />
+  <meta name="author" content="CyberViser" />
   <link rel="canonical" href="https://cyberviser.netlify.app/contact" />
+  <meta property="og:type"        content="website" />
+  <meta property="og:url"         content="https://cyberviser.netlify.app/contact" />
+  <meta property="og:title"       content="Get Access — CyberViser Hancock" />
+  <meta property="og:description" content="Free trial, Pro $299/mo, or Enterprise. Contact the CyberViser team." />
+  <meta property="og:image"       content="https://cyberviser.netlify.app/og-image.png" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root { --green:#00ff88; --cyan:#00e5ff; --red:#ff3366; --dark:#080c10; --card:#0d1117; --border:#1a2332; --text:#c9d1d9; --muted:#586069; }
@@ -112,9 +119,9 @@
     <div>
       <div class="form-card">
         <h2>// send a message</h2>
-        <form id="contactForm" action="https://formspree.io/f/cyberviser" method="POST">
-          <input type="hidden" name="_subject" value="Hancock Inquiry" />
-          <input type="hidden" name="_replyto" value="" id="replyField" />
+        <form id="contactForm" name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field" action="/contact?success=true">
+          <input type="hidden" name="form-name" value="contact" />
+          <input type="hidden" name="bot-field" style="display:none" />
 
           <div class="field">
             <label>Name</label>
@@ -161,18 +168,11 @@
 </section>
 
 <script>
-  const form = document.getElementById('contactForm');
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const data = new FormData(form);
-    const res = await fetch(form.action, {
-      method: 'POST', body: data, headers: { 'Accept': 'application/json' }
-    });
-    if (res.ok) {
-      form.style.display = 'none';
-      document.getElementById('successMsg').style.display = 'block';
-    }
-  });
+  // Show success state if redirected back with ?success=true
+  if (window.location.search.includes('success=true')) {
+    document.getElementById('contactForm').style.display = 'none';
+    document.getElementById('successMsg').style.display  = 'block';
+  }
 </script>
 </body>
 </html>
