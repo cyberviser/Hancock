@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pricing — CyberViser Hancock</title>
+  <link rel="canonical" href="https://cyberviser.netlify.app/pricing" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --green:#00ff88; --cyan:#00e5ff; --red:#ff3366; --dark:#080c10; --card:#0d1117; --border:#1a2332; --text:#c9d1d9; --muted:#586069; }
+    body { font-family:'Courier New',monospace; background:var(--dark); color:var(--text); }
+    body::before { content:''; position:fixed; inset:0; pointer-events:none; z-index:9999; background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,136,0.012) 2px,rgba(0,255,136,0.012) 4px); }
+    ::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-thumb { background:var(--green); }
+    nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:1rem 3rem; background:rgba(8,12,16,0.92); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); }
+    .nav-logo { color:var(--green); text-decoration:none; font-size:1.1rem; font-weight:bold; letter-spacing:0.15em; }
+    .nav-logo span { color:var(--cyan); }
+    .nav-links { display:flex; gap:2rem; list-style:none; }
+    .nav-links a { color:var(--muted); text-decoration:none; font-size:0.85rem; transition:color 0.2s; }
+    .nav-links a:hover, .nav-links a.active { color:var(--green); }
+    .nav-cta { padding:0.4rem 1.1rem; border:1px solid var(--green); border-radius:4px; color:var(--green) !important; }
+    .nav-cta:hover { background:var(--green) !important; color:var(--dark) !important; }
+    section { padding:7rem 2rem 5rem; }
+    .container { max-width:1100px; margin:0 auto; }
+    .section-label { font-size:0.7rem; letter-spacing:0.2em; color:var(--green); text-transform:uppercase; margin-bottom:0.5rem; }
+    h1 { font-size:clamp(1.8rem,4vw,2.8rem); margin-bottom:0.8rem; }
+    .sub { color:var(--muted); font-size:0.95rem; margin-bottom:3rem; max-width:560px; }
+    /* Grid */
+    .plans { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1.5rem; margin-bottom:4rem; }
+    .plan { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:2rem; position:relative; transition:border-color 0.25s,box-shadow 0.25s; }
+    .plan:hover { border-color:var(--green); box-shadow:0 0 24px rgba(0,255,136,0.07); }
+    .plan.featured { border-color:var(--green); box-shadow:0 0 30px rgba(0,255,136,0.1); }
+    .badge { position:absolute; top:-1px; left:50%; transform:translateX(-50%); background:var(--green); color:var(--dark); font-size:0.65rem; font-weight:bold; letter-spacing:0.1em; padding:0.2rem 0.9rem; border-radius:0 0 6px 6px; text-transform:uppercase; }
+    .plan-name { font-size:0.75rem; letter-spacing:0.15em; color:var(--muted); text-transform:uppercase; margin-bottom:0.5rem; }
+    .plan-price { font-size:2.8rem; font-weight:bold; color:var(--green); line-height:1; margin-bottom:0.3rem; }
+    .plan-price span { font-size:1rem; color:var(--muted); }
+    .plan-desc { font-size:0.82rem; color:var(--muted); margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:1px solid var(--border); line-height:1.6; }
+    .features { list-style:none; margin-bottom:1.8rem; }
+    .features li { font-size:0.82rem; padding:0.35rem 0; color:var(--text); display:flex; gap:0.6rem; }
+    .features li::before { content:'✓'; color:var(--green); flex-shrink:0; }
+    .features li.no::before { content:'✗'; color:var(--muted); }
+    .features li.no { color:var(--muted); }
+    .btn { display:block; text-align:center; padding:0.75rem; border-radius:5px; text-decoration:none; font-family:inherit; font-size:0.88rem; font-weight:bold; letter-spacing:0.05em; transition:all 0.2s; cursor:pointer; border:none; width:100%; }
+    .btn-primary { background:var(--green); color:var(--dark); }
+    .btn-primary:hover { box-shadow:0 0 18px rgba(0,255,136,0.4); transform:translateY(-1px); }
+    .btn-outline { background:transparent; color:var(--cyan); border:1px solid var(--cyan); }
+    .btn-outline:hover { background:rgba(0,229,255,0.08); }
+    .btn-ghost { background:transparent; color:var(--muted); border:1px solid var(--border); }
+    .btn-ghost:hover { border-color:var(--green); color:var(--green); }
+    /* FAQ */
+    .faq { max-width:720px; }
+    .faq h2 { font-size:1.4rem; margin-bottom:1.5rem; }
+    .faq-item { border-bottom:1px solid var(--border); padding:1rem 0; }
+    .faq-q { font-size:0.88rem; color:var(--text); cursor:pointer; display:flex; justify-content:space-between; }
+    .faq-q::after { content:'+'; color:var(--green); font-size:1.2rem; }
+    .faq-a { font-size:0.82rem; color:var(--muted); line-height:1.7; margin-top:0.6rem; display:none; }
+    .faq-item.open .faq-a { display:block; }
+    .faq-item.open .faq-q::after { content:'−'; }
+    /* CTA */
+    .cta-strip { background:rgba(0,255,136,0.04); border:1px solid var(--border); border-radius:10px; padding:2.5rem; text-align:center; margin-top:2rem; }
+    .cta-strip h2 { font-size:1.5rem; margin-bottom:0.5rem; }
+    .cta-strip p { color:var(--muted); font-size:0.88rem; margin-bottom:1.5rem; }
+    .cta-btns { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
+    .cta-btns a { padding:0.7rem 1.8rem; border-radius:5px; text-decoration:none; font-family:inherit; font-size:0.88rem; font-weight:bold; transition:all 0.2s; }
+    @media(max-width:768px) { nav { padding:1rem 1.5rem; } .nav-links { display:none; } }
+  </style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-logo">CYBER<span>VISER</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="index.html#features">Features</a></li>
+    <li><a href="api.html">API Docs</a></li>
+    <li><a href="pricing.html" class="active">Pricing</a></li>
+    <li><a href="contact.html" class="nav-cta">Get Access ↗</a></li>
+  </ul>
+</nav>
+
+<section>
+  <div class="container">
+    <div class="section-label">// pricing</div>
+    <h1>Simple, Transparent Pricing</h1>
+    <p class="sub">Start free. Scale with your team. All plans include the full Hancock API — pentest, SOC, and auto modes.</p>
+
+    <div class="plans">
+
+      <!-- Community -->
+      <div class="plan">
+        <div class="plan-name">Community</div>
+        <div class="plan-price">$0<span>/mo</span></div>
+        <p class="plan-desc">Self-hosted. Full source code. No limits on personal or research use. Bring your own NVIDIA API key.</p>
+        <ul class="features">
+          <li>Full source code on GitHub</li>
+          <li>CLI + REST API (all 5 endpoints)</li>
+          <li>Pentest + SOC + Auto modes</li>
+          <li>NVIDIA NIM inference</li>
+          <li>Community support (GitHub Issues)</li>
+          <li class="no">Managed cloud hosting</li>
+          <li class="no">SLA / uptime guarantee</li>
+          <li class="no">Commercial use</li>
+        </ul>
+        <a href="https://github.com/cyberviser/Hancock" target="_blank" class="btn btn-ghost">View on GitHub</a>
+      </div>
+
+      <!-- Pro -->
+      <div class="plan featured">
+        <div class="badge">Most Popular</div>
+        <div class="plan-name">Pro</div>
+        <div class="plan-price">$299<span>/mo per seat</span></div>
+        <p class="plan-desc">Managed cloud deployment. No GPU required. Plug into your existing security stack in minutes.</p>
+        <ul class="features">
+          <li>Everything in Community</li>
+          <li>Managed NVIDIA NIM hosting</li>
+          <li>99.9% uptime SLA</li>
+          <li>Priority support (&lt;4h response)</li>
+          <li>Audit logs + RBAC + SSO</li>
+          <li>Commercial use license</li>
+          <li>API rate limits: 10,000 req/mo</li>
+          <li class="no">Custom fine-tuning</li>
+        </ul>
+        <a href="contact.html" class="btn btn-primary">Start Free Trial →</a>
+      </div>
+
+      <!-- Enterprise -->
+      <div class="plan">
+        <div class="plan-name">Enterprise</div>
+        <div class="plan-price">Custom<span></span></div>
+        <p class="plan-desc">On-premise or private cloud. Fine-tuned on your internal security data. Dedicated support.</p>
+        <ul class="features">
+          <li>Everything in Pro</li>
+          <li>On-premise / private cloud deploy</li>
+          <li>Custom fine-tuning on your data</li>
+          <li>Dedicated model instance</li>
+          <li>SIEM/SOAR integrations</li>
+          <li>Unlimited API requests</li>
+          <li>Professional services + training</li>
+          <li>White-label option available</li>
+        </ul>
+        <a href="contact.html" class="btn btn-outline">Contact Sales →</a>
+      </div>
+
+      <!-- API -->
+      <div class="plan">
+        <div class="plan-name">API Usage</div>
+        <div class="plan-price">$0.008<span>/req</span></div>
+        <p class="plan-desc">Pay-per-use. No seat licenses. Perfect for developers building security tools and integrations.</p>
+        <ul class="features">
+          <li>All 5 API endpoints</li>
+          <li>No minimum commitment</li>
+          <li>Volume discounts at 100k+ req/mo</li>
+          <li>Splunk / Elastic integrations</li>
+          <li>JSON + SSE streaming</li>
+          <li class="no">SLA guarantee</li>
+          <li class="no">Custom fine-tuning</li>
+          <li class="no">Dedicated support</li>
+        </ul>
+        <a href="contact.html" class="btn btn-ghost">Get API Key →</a>
+      </div>
+
+    </div>
+
+    <!-- FAQ -->
+    <div class="faq">
+      <h2>Frequently Asked Questions</h2>
+
+      <div class="faq-item">
+        <div class="faq-q">Do I need a GPU to run Hancock?</div>
+        <div class="faq-a">Not for inference. The Community plan uses NVIDIA NIM cloud inference — you just need an NVIDIA API key (free tier available at build.nvidia.com). For local fine-tuning, a GPU with 16GB+ VRAM is recommended.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Can I use Hancock in commercial pentests?</div>
+        <div class="faq-a">Yes — with a Pro or Enterprise license. The Community plan is for personal/research use only. Commercial use requires a signed license agreement.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Is Hancock safe to use in a production SOC?</div>
+        <div class="faq-a">The Enterprise plan includes on-premise deployment, so your alerts and data never leave your environment. Pro plan traffic is encrypted in transit and at rest. We do not log conversation content.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">What SIEM platforms does Hancock integrate with?</div>
+        <div class="faq-a">Hancock generates native queries for Splunk SPL, Elastic KQL, and Microsoft Sentinel KQL out of the box via the /v1/hunt endpoint. Direct integrations (Splunk app, Elastic plugin) are on the roadmap.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">How does billing work?</div>
+        <div class="faq-a">Pro is billed monthly per seat. Usage-based billing is metered per API request. Enterprise is annual contract. All plans can be cancelled anytime — no lock-in.</div>
+      </div>
+    </div>
+
+    <div class="cta-strip">
+      <h2>Ready to deploy Hancock?</h2>
+      <p>Get started in minutes. No credit card required for the free trial.</p>
+      <div class="cta-btns">
+        <a href="contact.html" style="background:var(--green);color:var(--dark);">Start Free Trial</a>
+        <a href="contact.html" style="border:1px solid var(--cyan);color:var(--cyan);">Talk to Sales</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll('.faq-q').forEach(q => {
+    q.addEventListener('click', () => {
+      q.closest('.faq-item').classList.toggle('open');
+    });
+  });
+</script>
+</body>
+</html>

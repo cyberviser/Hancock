@@ -1,2 +1,4 @@
-/api   /api.html   200
-/*     /index.html  200
+/api      /api.html      200
+/pricing  /pricing.html  200
+/contact  /contact.html  200
+/*        /index.html    200

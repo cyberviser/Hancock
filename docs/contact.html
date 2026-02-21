@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact & Get Access — CyberViser Hancock</title>
+  <link rel="canonical" href="https://cyberviser.netlify.app/contact" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --green:#00ff88; --cyan:#00e5ff; --red:#ff3366; --dark:#080c10; --card:#0d1117; --border:#1a2332; --text:#c9d1d9; --muted:#586069; }
+    body { font-family:'Courier New',monospace; background:var(--dark); color:var(--text); }
+    body::before { content:''; position:fixed; inset:0; pointer-events:none; z-index:9999; background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,136,0.012) 2px,rgba(0,255,136,0.012) 4px); }
+    nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:1rem 3rem; background:rgba(8,12,16,0.92); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); }
+    .nav-logo { color:var(--green); text-decoration:none; font-size:1.1rem; font-weight:bold; letter-spacing:0.15em; }
+    .nav-logo span { color:var(--cyan); }
+    .nav-links { display:flex; gap:2rem; list-style:none; }
+    .nav-links a { color:var(--muted); text-decoration:none; font-size:0.85rem; transition:color 0.2s; }
+    .nav-links a:hover, .nav-links a.active { color:var(--green); }
+    .nav-cta { padding:0.4rem 1.1rem; border:1px solid var(--green); border-radius:4px; color:var(--green) !important; }
+    section { padding:7rem 2rem 5rem; min-height:100vh; }
+    .container { max-width:960px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:4rem; }
+    @media(max-width:768px) { .container { grid-template-columns:1fr; gap:2rem; } nav { padding:1rem 1.5rem; } .nav-links { display:none; } }
+    .section-label { font-size:0.7rem; letter-spacing:0.2em; color:var(--green); text-transform:uppercase; margin-bottom:0.5rem; }
+    h1 { font-size:clamp(1.6rem,3.5vw,2.4rem); margin-bottom:0.8rem; }
+    p { color:var(--muted); font-size:0.88rem; line-height:1.7; margin-bottom:1rem; }
+    .contact-info { padding-top:1rem; }
+    .info-item { display:flex; gap:1rem; padding:1rem 0; border-bottom:1px solid var(--border); align-items:flex-start; }
+    .info-icon { font-size:1.2rem; flex-shrink:0; }
+    .info-label { font-size:0.68rem; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase; margin-bottom:0.2rem; }
+    .info-val { font-size:0.88rem; color:var(--text); }
+    .info-val a { color:var(--green); text-decoration:none; }
+    /* Form */
+    .form-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:2rem; }
+    .form-card h2 { font-size:1rem; margin-bottom:1.5rem; color:var(--green); letter-spacing:0.05em; }
+    .field { margin-bottom:1.2rem; }
+    label { display:block; font-size:0.72rem; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase; margin-bottom:0.4rem; }
+    input, select, textarea {
+      width:100%; background:#010409; border:1px solid var(--border); border-radius:5px;
+      color:var(--text); font-family:inherit; font-size:0.85rem; padding:0.7rem 0.9rem;
+      transition:border-color 0.2s; outline:none;
+    }
+    input:focus, select:focus, textarea:focus { border-color:var(--green); }
+    select option { background:var(--card); }
+    textarea { resize:vertical; min-height:100px; }
+    .btn-submit {
+      width:100%; padding:0.85rem; background:var(--green); color:var(--dark);
+      border:none; border-radius:5px; font-family:inherit; font-size:0.9rem;
+      font-weight:bold; letter-spacing:0.05em; cursor:pointer; transition:all 0.2s;
+    }
+    .btn-submit:hover { box-shadow:0 0 20px rgba(0,255,136,0.4); transform:translateY(-1px); }
+    .success { display:none; text-align:center; padding:2rem; }
+    .success .check { font-size:3rem; margin-bottom:1rem; }
+    .success h3 { color:var(--green); margin-bottom:0.5rem; }
+    .note { font-size:0.72rem; color:var(--muted); margin-top:0.8rem; text-align:center; }
+  </style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-logo">CYBER<span>VISER</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="index.html#features">Features</a></li>
+    <li><a href="api.html">API Docs</a></li>
+    <li><a href="pricing.html">Pricing</a></li>
+    <li><a href="contact.html" class="active nav-cta">Get Access ↗</a></li>
+  </ul>
+</nav>
+
+<section>
+  <div class="container">
+
+    <!-- Left: info -->
+    <div>
+      <div class="section-label">// contact</div>
+      <h1>Get Access to Hancock</h1>
+      <p>Whether you're a solo pentester, an MSSP, or an enterprise security team — we'll get you set up with the right plan.</p>
+      <p>Response time: <strong style="color:var(--green)">under 24 hours</strong> on business days.</p>
+
+      <div class="contact-info">
+        <div class="info-item">
+          <div class="info-icon">📧</div>
+          <div>
+            <div class="info-label">General & Sales</div>
+            <div class="info-val"><a href="mailto:cyberviser@proton.me">cyberviser@proton.me</a></div>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-icon">🔒</div>
+          <div>
+            <div class="info-label">Security / Vulnerability Reports</div>
+            <div class="info-val"><a href="mailto:cyberviser@proton.me">cyberviser@proton.me</a></div>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-icon">🐙</div>
+          <div>
+            <div class="info-label">GitHub</div>
+            <div class="info-val"><a href="https://github.com/cyberviser/Hancock" target="_blank">github.com/cyberviser/Hancock</a></div>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-icon">💬</div>
+          <div>
+            <div class="info-label">Community</div>
+            <div class="info-val"><a href="https://github.com/cyberviser/Hancock/discussions" target="_blank">GitHub Discussions</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: form -->
+    <div>
+      <div class="form-card">
+        <h2>// send a message</h2>
+        <form id="contactForm" action="https://formspree.io/f/cyberviser" method="POST">
+          <input type="hidden" name="_subject" value="Hancock Inquiry" />
+          <input type="hidden" name="_replyto" value="" id="replyField" />
+
+          <div class="field">
+            <label>Name</label>
+            <input type="text" name="name" placeholder="Your name" required />
+          </div>
+          <div class="field">
+            <label>Email</label>
+            <input type="email" name="email" placeholder="you@company.com" required
+              oninput="document.getElementById('replyField').value=this.value" />
+          </div>
+          <div class="field">
+            <label>Company / Organization</label>
+            <input type="text" name="company" placeholder="Optional" />
+          </div>
+          <div class="field">
+            <label>I'm interested in...</label>
+            <select name="interest" required>
+              <option value="">Select a plan</option>
+              <option value="community">Community (Free / Self-hosted)</option>
+              <option value="pro-trial">Pro — Free Trial ($299/mo)</option>
+              <option value="enterprise">Enterprise / Custom</option>
+              <option value="api">API Usage / Developer</option>
+              <option value="partnership">Partnership / Integration</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Message</label>
+            <textarea name="message" placeholder="Tell us about your use case, team size, or any questions..."></textarea>
+          </div>
+          <button type="submit" class="btn-submit">Send Message →</button>
+          <p class="note">Your message goes directly to cyberviser@proton.me. No spam, no data selling.</p>
+        </form>
+
+        <div class="success" id="successMsg">
+          <div class="check">✅</div>
+          <h3>Message sent!</h3>
+          <p style="color:var(--muted)">We'll get back to you within 24 hours at the email you provided.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+  const form = document.getElementById('contactForm');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = new FormData(form);
+    const res = await fetch(form.action, {
+      method: 'POST', body: data, headers: { 'Accept': 'application/json' }
+    });
+    if (res.ok) {
+      form.style.display = 'none';
+      document.getElementById('successMsg').style.display = 'block';
+    }
+  });
+</script>
+</body>
+</html>
