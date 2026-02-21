@@ -206,6 +206,23 @@ Hancock uses **LoRA fine-tuning** on Mistral 7B — trained on a multi-source cy
 3. **Runtime → Run all** (~50 min)
 4. Downloads GGUF Q4_K_M at end — run locally with Ollama
 
+### CPU Fine-Tuning (No GPU Required)
+
+Run on any machine — trains TinyLlama-1.1B with LoRA (adapter already included):
+
+```bash
+# Quick test (10 steps, ~40 min)
+python hancock_cpu_finetune.py --debug
+
+# Full run (500 steps, ~25 hr on 16-core CPU)
+python hancock_cpu_finetune.py --max-steps 500
+
+# Load and test the saved adapter
+python hancock_cpu_finetune.py --test
+```
+
+Pre-trained adapter: [`hancock-cpu-adapter/`](./hancock-cpu-adapter/) — TinyLlama-1.1B + LoRA (r=8, eval_loss=2.084)
+
 ### Other GPU Options
 
 | Platform | GPU | Cost | Script |
