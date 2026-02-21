@@ -61,7 +61,9 @@ It operates in three specialist modes and exposes a clean REST API.
 | 🔴 **Pentest Specialist** | Recon, exploitation, CVE analysis, PTES reporting | ✅ Live |
 | 🔵 **SOC Analyst** | Alert triage, SIEM queries, PICERL IR, Sigma/YARA | ✅ Live |
 | ⚡ **Auto** | Context-aware switching between pentest + SOC | ✅ Live |
-| 👔 **CISO Strategy** | Compliance, risk reporting, board summaries | 🗓️ Phase 3 |
+| 💻 **Code** | Security code: YARA, KQL, SPL, Sigma, Python, Bash | ✅ Live |
+| 👔 **CISO** | Compliance, risk reporting, board summaries, gap analysis | ✅ Live |
+| 🔍 **Sigma** | Sigma detection rule authoring with ATT&CK tagging | ✅ Live |
 
 ---
 
@@ -123,14 +125,17 @@ Start the server: `python hancock_agent.py --server`
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/health` | Agent status and capabilities |
-| `POST` | `/v1/chat` | Conversational AI with history |
-| `POST` | `/v1/ask` | Single-shot question |
-| `POST` | `/v1/triage` | SOC alert triage |
-| `POST` | `/v1/hunt` | Threat hunting query generator |
-| `POST` | `/v1/respond` | PICERL incident response playbook |
-| `POST` | `/v1/code` | Security code generation (YARA/Sigma/KQL) |
-| `POST` | `/v1/webhook` | Ingest alerts from Splunk/Elastic/SIEM |
+| `GET`  | `/health`       | Agent status and capabilities |
+| `GET`  | `/metrics`      | Prometheus-compatible request counters |
+| `POST` | `/v1/chat`      | Conversational AI with history + streaming |
+| `POST` | `/v1/ask`       | Single-shot question |
+| `POST` | `/v1/triage`    | SOC alert triage + MITRE ATT&CK mapping |
+| `POST` | `/v1/hunt`      | Threat hunting query generator (Splunk/Elastic/Sentinel) |
+| `POST` | `/v1/respond`   | PICERL incident response playbook |
+| `POST` | `/v1/code`      | Security code generation (YARA/Sigma/KQL/SPL) |
+| `POST` | `/v1/ciso`      | CISO advisory: risk, compliance, board reports, gap analysis |
+| `POST` | `/v1/sigma`     | Sigma detection rule generator |
+| `POST` | `/v1/webhook`   | Ingest alerts from Splunk/Elastic/Sentinel/CrowdStrike |
 
 ### Examples
 
@@ -148,6 +153,20 @@ curl -X POST http://localhost:5000/v1/hunt \
   -d '{"target": "lateral movement via PsExec", "siem": "splunk"}'
 ```
 
+**Sigma Rule Generation:**
+```bash
+curl -X POST http://localhost:5000/v1/sigma \
+  -H "Content-Type: application/json" \
+  -d '{"description": "Detect LSASS memory dump", "logsource": "windows sysmon", "technique": "T1003.001"}'
+```
+
+**CISO Board Summary:**
+```bash
+curl -X POST http://localhost:5000/v1/ciso \
+  -H "Content-Type: application/json" \
+  -d '{"question": "Summarise top 5 risks for the board", "output": "board-summary", "context": "50-person SaaS, AWS"}'
+```
+
 **Incident Response Playbook:**
 ```bash
 curl -X POST http://localhost:5000/v1/respond \
@@ -155,12 +174,7 @@ curl -X POST http://localhost:5000/v1/respond \
   -d '{"incident": "ransomware"}'
 ```
 
-**Chat (pentest mode):**
-```bash
-curl -X POST http://localhost:5000/v1/chat \
-  -H "Content-Type: application/json" \
-  -d '{"message": "How do I enumerate subdomains?", "mode": "pentest"}'
-```
+> 📖 Full OpenAPI 3.1.0 spec: [`docs/openapi.yaml`](docs/openapi.yaml) · [Interactive API Docs](https://cyberviser.netlify.app/api)
 
 ### CLI Commands
 
@@ -168,6 +182,9 @@ curl -X POST http://localhost:5000/v1/chat \
 /mode pentest   — switch to Pentest Specialist
 /mode soc       — switch to SOC Analyst
 /mode auto      — combined persona (default)
+/mode code      — security code (Qwen Coder 32B)
+/mode ciso      — CISO strategy & compliance
+/mode sigma     — Sigma detection rule authoring
 /clear          — clear conversation history
 /history        — show history
 /model <id>     — switch NVIDIA NIM model

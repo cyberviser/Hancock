@@ -86,3 +86,34 @@ class TestHancockClient:
             from hancock_client import HancockClient, MODELS
             c = HancockClient(api_key="test", model="mixtral-8x7b")
             assert c.model == MODELS["mixtral-8x7b"]
+
+    def test_sigma_returns_string(self, client):
+        result = client.sigma("Detect LSASS memory dump")
+        assert isinstance(result, str)
+        assert len(result) > 0
+
+    def test_sigma_with_logsource_and_technique(self, client):
+        result = client.sigma(
+            "Kerberoasting via Rubeus",
+            logsource="windows security",
+            technique="T1558.003",
+        )
+        assert isinstance(result, str)
+
+    def test_ciso_returns_string(self, client):
+        result = client.ciso("What is NIST CSF 2.0?")
+        assert isinstance(result, str)
+        assert len(result) > 0
+
+    def test_ciso_output_types(self, client):
+        for output in ["advice", "report", "gap-analysis", "board-summary"]:
+            result = client.ciso("ISO 27001 gap analysis", output=output)
+            assert isinstance(result, str)
+
+    def test_ciso_with_context(self, client):
+        result = client.ciso(
+            "What controls should we prioritise?",
+            output="gap-analysis",
+            context="50-person SaaS, AWS, no certifications",
+        )
+        assert isinstance(result, str)
