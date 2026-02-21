@@ -1,0 +1,359 @@
+openapi: 3.1.0
+info:
+  title: Hancock — CyberViser AI Security Agent
+  version: 0.4.0
+  description: |
+    Hancock is an AI-powered cybersecurity agent by CyberViser. It provides
+    REST endpoints for SOC triage, penetration testing guidance, threat hunting,
+    incident response, security code generation, CISO advisory, Sigma rule
+    authoring, and SIEM webhook integration.
+  contact:
+    name: CyberViser
+    email: contact@cyberviser.ai
+    url: https://cyberviser.ai
+  license:
+    name: MIT
+    url: https://github.com/cyberviser/Hancock/blob/main/LICENSE
+
+servers:
+  - url: http://localhost:5000
+    description: Local development
+  - url: https://your-oracle-vm-ip
+    description: Oracle Cloud production
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Set HANCOCK_API_KEY env var to enable auth. Leave unset to disable.
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+    ModelRef:
+      type: object
+      properties:
+        model:
+          type: string
+          description: Model ID used to generate the response
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      security: []
+      tags: [System]
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:     { type: string, example: ok }
+                  agent:      { type: string, example: Hancock }
+                  model:      { type: string }
+                  company:    { type: string, example: CyberViser }
+                  modes:      { type: array, items: { type: string } }
+                  endpoints:  { type: array, items: { type: string } }
+
+  /metrics:
+    get:
+      summary: Prometheus-compatible metrics
+      security: []
+      tags: [System]
+      responses:
+        "200":
+          description: Plain-text Prometheus metrics
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /v1/chat:
+    post:
+      summary: Multi-turn chat
+      tags: [Chat]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message:
+                  type: string
+                  description: User message
+                history:
+                  type: array
+                  description: Prior conversation turns
+                  items:
+                    type: object
+                    properties:
+                      role:    { type: string, enum: [user, assistant] }
+                      content: { type: string }
+                mode:
+                  type: string
+                  enum: [pentest, soc, auto, code, ciso, sigma]
+                  default: auto
+                stream:
+                  type: boolean
+                  default: false
+                  description: Stream response as Server-Sent Events
+      responses:
+        "200":
+          description: Chat response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ModelRef"
+                  - type: object
+                    properties:
+                      response: { type: string }
+                      mode:     { type: string }
+        "400": { description: Bad request, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "401": { description: Unauthorized }
+        "429": { description: Rate limit exceeded }
+        "502": { description: Model returned empty response }
+
+  /v1/ask:
+    post:
+      summary: Single-shot question (no history)
+      tags: [Chat]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [question]
+              properties:
+                question: { type: string }
+                mode:     { type: string, enum: [pentest, soc, auto, code, ciso, sigma], default: auto }
+      responses:
+        "200":
+          description: Answer
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ModelRef"
+                  - type: object
+                    properties:
+                      answer: { type: string }
+                      mode:   { type: string }
+        "400": { description: Bad request }
+        "401": { description: Unauthorized }
+
+  /v1/triage:
+    post:
+      summary: SOC alert triage
+      tags: [SOC]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [alert]
+              properties:
+                alert: { type: string, description: Raw alert text }
+      responses:
+        "200":
+          description: Triage result with severity, ATT&CK mapping, containment steps
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ModelRef"
+                  - type: object
+                    properties:
+                      triage: { type: string }
+        "400": { description: Bad request }
+
+  /v1/hunt:
+    post:
+      summary: Threat hunting query generator
+      tags: [SOC]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [target]
+              properties:
+                target: { type: string, description: "TTP or behaviour to hunt, e.g. lateral movement with PsExec" }
+                siem:   { type: string, enum: [splunk, elastic, sentinel], default: splunk }
+      responses:
+        "200":
+          description: SIEM query with explanation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ModelRef"
+                  - type: object
+                    properties:
+                      query: { type: string }
+                      siem:  { type: string }
+
+  /v1/respond:
+    post:
+      summary: Incident response playbook (PICERL)
+      tags: [SOC]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [incident]
+              properties:
+                incident: { type: string, description: "Incident type, e.g. ransomware, BEC, data exfiltration" }
+      responses:
+        "200":
+          description: PICERL playbook
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ModelRef"
+                  - type: object
+                    properties:
+                      playbook: { type: string }
+                      incident: { type: string }
+
+  /v1/code:
+    post:
+      summary: Security code generation
+      tags: [Code]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [task]
+              properties:
+                task:     { type: string, description: "Code task, e.g. write a Splunk query for kerberoasting" }
+                language: { type: string, description: "Optional: python, bash, kql, spl, yara, sigma" }
+      responses:
+        "200":
+          description: Generated code
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ModelRef"
+                  - type: object
+                    properties:
+                      code:     { type: string }
+                      language: { type: string }
+                      task:     { type: string }
+
+  /v1/ciso:
+    post:
+      summary: CISO advisor — risk, compliance, board reporting
+      tags: [CISO]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [question]
+              properties:
+                question: { type: string, description: "Also accepts 'query' or 'message' as alias" }
+                context:  { type: string, description: "Optional: org size, industry, current frameworks" }
+                output:
+                  type: string
+                  enum: [advice, report, gap-analysis, board-summary]
+                  default: advice
+      responses:
+        "200":
+          description: CISO advice or structured output
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ModelRef"
+                  - type: object
+                    properties:
+                      advice: { type: string }
+                      output: { type: string }
+
+  /v1/sigma:
+    post:
+      summary: Sigma detection rule generator
+      tags: [Detection]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  description: "TTP or behaviour to detect. Also accepts 'ttp' or 'query' as alias."
+                logsource:
+                  type: string
+                  description: "Log source hint, e.g. windows sysmon, linux auditd, aws cloudtrail"
+                technique:
+                  type: string
+                  description: "MITRE ATT&CK technique ID, e.g. T1059.001"
+      responses:
+        "200":
+          description: Sigma rule YAML + tuning notes
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ModelRef"
+                  - type: object
+                    properties:
+                      rule:      { type: string, description: Full Sigma YAML + explanation }
+                      logsource: { type: string }
+                      technique: { type: string }
+        "400": { description: Bad request }
+
+  /v1/webhook:
+    post:
+      summary: SIEM/EDR push webhook — auto-triage incoming alerts
+      tags: [SOC]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [alert]
+              properties:
+                alert:    { type: string }
+                source:   { type: string, description: "e.g. splunk, elastic, sentinel, crowdstrike", default: unknown }
+                severity: { type: string, description: "e.g. critical, high, medium, low", default: unknown }
+      responses:
+        "200":
+          description: Triage result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ModelRef"
+                  - type: object
+                    properties:
+                      status:   { type: string, example: triaged }
+                      source:   { type: string }
+                      severity: { type: string }
+                      triage:   { type: string }

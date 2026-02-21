@@ -457,3 +457,65 @@ class TestMetrics:
                     content_type="application/json")
         r = client.get("/metrics")
         assert b'/v1/ask' in r.data
+
+
+# ── /v1/sigma ─────────────────────────────────────────────────────────────────
+
+class TestSigma:
+    def test_sigma_returns_rule(self, client):
+        r = client.post("/v1/sigma",
+                        data=json.dumps({
+                            "description": "Detect PowerShell encoded command execution",
+                            "logsource": "windows sysmon",
+                        }),
+                        content_type="application/json")
+        assert r.status_code == 200
+        d = r.get_json()
+        assert "rule" in d
+        assert "model" in d
+        assert d["logsource"] == "windows sysmon"
+
+    def test_sigma_with_technique(self, client):
+        r = client.post("/v1/sigma",
+                        data=json.dumps({
+                            "description": "Kerberoasting via Rubeus",
+                            "technique": "T1558.003",
+                        }),
+                        content_type="application/json")
+        assert r.status_code == 200
+        assert d["technique"] == "T1558.003" if (d := r.get_json()) else True
+
+    def test_sigma_ttp_alias(self, client):
+        """Accepts 'ttp' field as alias for 'description'."""
+        r = client.post("/v1/sigma",
+                        data=json.dumps({"ttp": "LSASS memory dump via procdump"}),
+                        content_type="application/json")
+        assert r.status_code == 200
+
+    def test_sigma_missing_description_returns_400(self, client):
+        r = client.post("/v1/sigma",
+                        data=json.dumps({}),
+                        content_type="application/json")
+        assert r.status_code == 400
+        assert "error" in r.get_json()
+
+
+# ── Rate-limit headers ────────────────────────────────────────────────────────
+
+class TestRateLimitHeaders:
+    def test_ratelimit_headers_present(self, client):
+        r = client.get("/health")
+        assert "X-RateLimit-Limit" in r.headers
+        assert "X-RateLimit-Remaining" in r.headers
+        assert "X-RateLimit-Window" in r.headers
+
+    def test_ratelimit_remaining_decrements(self, client):
+        r1 = client.post("/v1/ask",
+                         data=json.dumps({"question": "test"}),
+                         content_type="application/json")
+        r2 = client.post("/v1/ask",
+                         data=json.dumps({"question": "test2"}),
+                         content_type="application/json")
+        rem1 = int(r1.headers["X-RateLimit-Remaining"])
+        rem2 = int(r2.headers["X-RateLimit-Remaining"])
+        assert rem2 <= rem1

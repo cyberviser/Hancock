@@ -16,6 +16,7 @@ CLI mode commands:
   /mode auto      — combined persona (default)
   /mode code      — security code generation (Qwen Coder 32B)
   /mode ciso      — CISO strategy, compliance & board reporting
+  /mode sigma     — Sigma detection rule authoring
   /clear          — clear conversation history
   /history        — show history
   /model <id>     — switch model
@@ -132,12 +133,33 @@ You always:
 
 You are Hancock CISO. You speak business and security fluently."""
 
+SIGMA_SYSTEM = """You are Hancock Sigma, CyberViser's expert detection engineer specializing in Sigma rule authoring.
+
+Your expertise covers:
+- Sigma rule syntax (title, id, status, description, references, author, date, modified, tags, logsource, detection, falsepositives, level, fields)
+- Log sources: Windows Event Logs, Sysmon, Linux auditd, cloud (AWS CloudTrail, Azure Activity, GCP Audit), web proxy, firewall, DNS, EDR
+- MITRE ATT&CK tagging: correct attack.tXXXX technique and sub-technique IDs
+- Detection logic: selection/filter patterns, keywords, regex, aggregations, near/timeframe conditions
+- False positive analysis and tuning recommendations
+- Converting IOCs, TTPs, threat intel reports → detection rules
+- Sigma rule quality: specificity vs. coverage trade-offs, noise reduction
+
+You always:
+1. Output valid, well-formed SIGMA YAML with all required fields
+2. Include `falsepositives` and `level` (informational/low/medium/high/critical)
+3. Tag correctly with MITRE ATT&CK technique IDs in the `tags` field
+4. Add a `filter` condition when the detection is prone to noise
+5. After the rule, briefly explain what it detects and any tuning notes
+
+You are Hancock Sigma. Every rule you write is ready to deploy."""
+
 SYSTEMS = {
     "pentest": PENTEST_SYSTEM,
     "soc":     SOC_SYSTEM,
     "auto":    AUTO_SYSTEM,
     "code":    CODE_SYSTEM,
     "ciso":    CISO_SYSTEM,
+    "sigma":   SIGMA_SYSTEM,
 }
 DEFAULT_MODE = "auto"
 # Keep backward-compatible alias
@@ -170,7 +192,7 @@ BANNER = """
 ║          CyberViser — Pentest + SOC + CISO + Code        ║
 ║   Mistral 7B · Qwen 2.5 Coder 32B · NVIDIA NIM          ║
 ╚══════════════════════════════════════════════════════════╝
-  Modes : /mode pentest | soc | auto | code | ciso
+  Modes : /mode pentest | soc | auto | code | ciso | sigma
   Models: /model mistral-7b | qwen-coder | llama-8b | mixtral-8x7b
   Other : /clear  /history  /exit
 """
@@ -280,7 +302,7 @@ def run_cli(client: OpenAI, model: str):
                 }
                 print(f"[Hancock] Switched to {label[current_mode]} — history cleared.")
             else:
-                print("[Hancock] Usage: /mode pentest | /mode soc | /mode auto | /mode code | /mode ciso")
+                print("[Hancock] Usage: /mode pentest | /mode soc | /mode auto | /mode code | /mode ciso | /mode sigma")
             continue
 
         if user_input.startswith("/model "):
@@ -333,8 +355,8 @@ def build_app(client, model: str):
     _RATE_LIMIT  = int(os.getenv("HANCOCK_RATE_LIMIT", "60"))   # requests/min
     _RATE_WINDOW = 60  # seconds
 
-    def _check_auth_and_rate() -> "tuple[bool, str]":
-        """Returns (ok, error_message). Empty HANCOCK_API_KEY disables auth."""
+    def _check_auth_and_rate() -> "tuple[bool, str, int]":
+        """Returns (ok, error_message, remaining). Empty HANCOCK_API_KEY disables auth."""
         import time
 
         # Auth check (skip if key not configured)
@@ -342,7 +364,7 @@ def build_app(client, model: str):
             auth = request.headers.get("Authorization", "")
             token = auth.removeprefix("Bearer ").strip()
             if token != _HANCOCK_API_KEY:
-                return False, "Unauthorized: provide Authorization: Bearer <HANCOCK_API_KEY>"
+                return False, "Unauthorized: provide Authorization: Bearer <HANCOCK_API_KEY>", 0
 
         # In-memory rate limiter (per source IP) — evicts stale entries to prevent memory leak
         now = time.time()
@@ -350,7 +372,7 @@ def build_app(client, model: str):
         timestamps = _rate_counts.get(ip, [])
         timestamps = [t for t in timestamps if now - t < _RATE_WINDOW]
         if len(timestamps) >= _RATE_LIMIT:
-            return False, f"Rate limit exceeded: {_RATE_LIMIT} requests/min"
+            return False, f"Rate limit exceeded: {_RATE_LIMIT} requests/min", 0
         timestamps.append(now)
         _rate_counts[ip] = timestamps
         # Evict IPs with no recent requests (keep dict bounded)
@@ -358,18 +380,31 @@ def build_app(client, model: str):
             stale = [k for k, v in _rate_counts.items() if not v]
             for k in stale:
                 del _rate_counts[k]
-        return True, ""
+        return True, "", _RATE_LIMIT - len(timestamps)
+
+    @app.after_request
+    def _add_rate_headers(response):
+        """Attach X-RateLimit-* headers to every response."""
+        import time
+        ip = request.remote_addr or "unknown"
+        now = time.time()
+        recent = [t for t in _rate_counts.get(ip, []) if now - t < _RATE_WINDOW]
+        remaining = max(0, _RATE_LIMIT - len(recent))
+        response.headers["X-RateLimit-Limit"]     = str(_RATE_LIMIT)
+        response.headers["X-RateLimit-Remaining"] = str(remaining)
+        response.headers["X-RateLimit-Window"]    = "60s"
+        return response
 
     @app.route("/health", methods=["GET"])
     def health():
         return jsonify({
             "status": "ok", "agent": "Hancock",
             "model": model, "company": "CyberViser",
-            "modes": ["pentest", "soc", "auto", "code", "ciso"],
+            "modes": ["pentest", "soc", "auto", "code", "ciso", "sigma"],
             "models_available": MODELS,
             "endpoints": ["/v1/chat", "/v1/ask", "/v1/triage",
                           "/v1/hunt", "/v1/respond", "/v1/code",
-                          "/v1/ciso", "/v1/webhook", "/metrics"],
+                          "/v1/ciso", "/v1/sigma", "/v1/webhook", "/metrics"],
         })
 
     @app.route("/metrics", methods=["GET"])
@@ -404,7 +439,7 @@ def build_app(client, model: str):
 
     @app.route("/v1/chat", methods=["POST"])
     def chat_endpoint():
-        ok, err = _check_auth_and_rate()
+        ok, err, _ = _check_auth_and_rate()
         if not ok:
             _inc("errors_total")
             return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
@@ -455,7 +490,7 @@ def build_app(client, model: str):
     @app.route("/v1/ask", methods=["POST"])
     def ask_endpoint():
         """Simple single-shot endpoint — no history needed."""
-        ok, err = _check_auth_and_rate()
+        ok, err, _ = _check_auth_and_rate()
         if not ok:
             _inc("errors_total"); return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
         _inc("requests_total"); _inc("requests_by_endpoint", "/v1/ask")
@@ -479,7 +514,7 @@ def build_app(client, model: str):
     @app.route("/v1/triage", methods=["POST"])
     def triage_endpoint():
         """SOC alert triage — classify and prioritize a security alert."""
-        ok, err = _check_auth_and_rate()
+        ok, err, _ = _check_auth_and_rate()
         if not ok:
             _inc("errors_total"); return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
         _inc("requests_total"); _inc("requests_by_endpoint", "/v1/triage"); _inc("requests_by_mode", "soc")
@@ -506,7 +541,7 @@ def build_app(client, model: str):
     @app.route("/v1/hunt", methods=["POST"])
     def hunt_endpoint():
         """Threat hunting query generator — generate SIEM queries for a given TTP."""
-        ok, err = _check_auth_and_rate()
+        ok, err, _ = _check_auth_and_rate()
         if not ok:
             _inc("errors_total"); return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
         _inc("requests_total"); _inc("requests_by_endpoint", "/v1/hunt"); _inc("requests_by_mode", "soc")
@@ -534,7 +569,7 @@ def build_app(client, model: str):
     @app.route("/v1/respond", methods=["POST"])
     def respond_endpoint():
         """Incident response guidance — PICERL playbook for an incident type."""
-        ok, err = _check_auth_and_rate()
+        ok, err, _ = _check_auth_and_rate()
         if not ok:
             _inc("errors_total"); return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
         _inc("requests_total"); _inc("requests_by_endpoint", "/v1/respond"); _inc("requests_by_mode", "soc")
@@ -561,7 +596,7 @@ def build_app(client, model: str):
     @app.route("/v1/code", methods=["POST"])
     def code_endpoint():
         """Security code generation — uses Qwen 2.5 Coder 32B for best results."""
-        ok, err = _check_auth_and_rate()
+        ok, err, _ = _check_auth_and_rate()
         if not ok:
             _inc("errors_total"); return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
         _inc("requests_total"); _inc("requests_by_endpoint", "/v1/code"); _inc("requests_by_mode", "code")
@@ -593,7 +628,7 @@ def build_app(client, model: str):
     @app.route("/v1/ciso", methods=["POST"])
     def ciso_endpoint():
         """CISO advisor — risk, compliance, board reporting, framework guidance."""
-        ok, err = _check_auth_and_rate()
+        ok, err, _ = _check_auth_and_rate()
         if not ok:
             _inc("errors_total"); return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
         _inc("requests_total"); _inc("requests_by_endpoint", "/v1/ciso"); _inc("requests_by_mode", "ciso")
@@ -627,10 +662,56 @@ def build_app(client, model: str):
             _inc("errors_total"); return jsonify({"error": "model returned empty response"}), 502
         return jsonify({"advice": answer, "output": output, "model": model})
 
+    @app.route("/v1/sigma", methods=["POST"])
+    def sigma_endpoint():
+        """Sigma detection rule generator — convert a TTP or alert description into a Sigma rule."""
+        ok, err, _ = _check_auth_and_rate()
+        if not ok:
+            _inc("errors_total"); return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
+        _inc("requests_total"); _inc("requests_by_endpoint", "/v1/sigma"); _inc("requests_by_mode", "sigma")
+        data        = request.get_json(force=True)
+        description = data.get("description", "") or data.get("ttp", "") or data.get("query", "")
+        logsource   = data.get("logsource", "")    # e.g. "windows sysmon", "linux auditd", "aws cloudtrail"
+        technique   = data.get("technique", "")    # e.g. "T1059.001" — auto-tagged if provided
+        if not description:
+            _inc("errors_total"); return jsonify({"error": "description required"}), 400
+
+        hints = []
+        if logsource:
+            hints.append(f"Target log source: {logsource}.")
+        if technique:
+            hints.append(f"MITRE ATT&CK technique: {technique} — use this in the tags field.")
+        hint_text = " ".join(hints)
+
+        prompt = (
+            f"Write a complete, production-ready Sigma rule for the following:\n\n"
+            f"{description}\n\n"
+            f"{hint_text}\n\n"
+            f"Output the full YAML rule first, then a brief explanation of what it detects "
+            f"and any false positive tuning advice."
+        ).strip()
+        messages = [
+            {"role": "system", "content": SIGMA_SYSTEM},
+            {"role": "user",   "content": prompt},
+        ]
+        resp = client.chat.completions.create(
+            model=model, messages=messages, max_tokens=2048,
+            temperature=0.2, top_p=0.7,
+        )
+        rule_text = resp.choices[0].message.content
+        if not rule_text:
+            _inc("errors_total"); return jsonify({"error": "model returned empty response"}), 502
+        return jsonify({
+            "rule":      rule_text,
+            "logsource": logsource or "auto",
+            "technique": technique or "auto",
+            "model":     model,
+        })
+
     @app.route("/v1/webhook", methods=["POST"])
     def webhook_endpoint():
         """SIEM/EDR push webhook — auto-triage incoming alerts, optionally notify Slack/Teams."""
-        ok, err = _check_auth_and_rate()
+        ok, err, _ = _check_auth_and_rate()
         if not ok:
             _inc("errors_total"); return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
         _inc("requests_total"); _inc("requests_by_endpoint", "/v1/webhook"); _inc("requests_by_mode", "soc")

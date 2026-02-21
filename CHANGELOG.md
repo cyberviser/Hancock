@@ -10,6 +10,18 @@ Versioning: [Semantic Versioning](https://semver.org/)
 ## [Unreleased] — v0.4.0
 
 ### Added
+- **Sigma mode** (`/mode sigma`) — Sigma detection rule authoring: correct YAML syntax, MITRE ATT&CK
+  tagging, logsource selection, false-positive analysis, ready-to-deploy rules
+- **`/v1/sigma` REST endpoint** — generate Sigma rules from a TTP description; accepts `logsource`
+  and `technique` (ATT&CK ID) params; returns YAML rule + tuning notes
+- **`/metrics` endpoint** — Prometheus-compatible plain-text counters: `hancock_requests_total`,
+  `hancock_errors_total`, per-endpoint and per-mode labels; thread-safe atomic increments
+- **`X-RateLimit-*` response headers** — `X-RateLimit-Limit`, `X-RateLimit-Remaining`,
+  `X-RateLimit-Window` added to every response via `@app.after_request`
+- **`docs/openapi.yaml`** — full OpenAPI 3.1.0 specification for all 9 endpoints
+- **`fly.toml`** — Fly.io free-tier deployment config: auto-stop/start, health check on `/health`
+- **`Makefile` targets**: `pipeline-v3` (phase 3 only), `test-cov` (HTML coverage), `fly-deploy`
+- **56 tests** (was 50): `TestSigma` (4), `TestRateLimitHeaders` (2)
 - **CISO mode** (`/mode ciso`) — AI Chief Information Security Officer advisor: risk management,
   ISO 27001/SOC 2/NIST CSF/PCI-DSS compliance, board reporting, TPRM, FAIR risk analysis
 - **`/v1/ciso` REST endpoint** — dedicated CISO advisor endpoint with `output` param:
@@ -31,8 +43,8 @@ Versioning: [Semantic Versioning](https://semver.org/)
   `HANCOCK_LLM_BACKEND`, `OPENAI_API_KEY`, `OPENAI_ORG_ID`, `OPENAI_MODEL` env vars
 - **`oracle-cloud-setup.sh`** — full Oracle Cloud Always-Free VM setup: Docker, Nginx,
   systemd `hancock.service` (auto-start on reboot), firewall (UFW + iptables), HTTPS-ready
-- **42 tests** (was 31): auth (401/429), rate-limit TTL, input validation (400/502),
-  OpenAI fallback path, streaming, webhook
+- **HuggingFace Space** (`spaces_app.py`) — 6-tab Gradio demo: SOC Triage, Pentest/CVE,
+  Threat Hunting, Security Code, CISO Advisor, IR Playbook
 
 ### Fixed
 - `hancock_pipeline.py` — v3 functions defined after `if __name__ == "__main__"` caused
@@ -48,9 +60,9 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ### Changed
 - `hancock_agent.py` — input validation: `400` on unknown `mode`, non-list `history`;
-  `502` on empty model response; `/health` lists `ciso` in modes; CLI banner updated
+  `502` on empty model response; `/health` lists `ciso`+`sigma` in modes; CLI banner updated
 - `hancock_pipeline.py` — `--phase` now accepts `1|2|3|all`; banner updated
-- `README.md` — all 8 endpoints documented; v3 dataset tree; correct pipeline commands;
+- `README.md` — all 9 endpoints documented; v3 dataset tree; correct pipeline commands;
   roadmap Phase 1+2 marked live
 
 ---
