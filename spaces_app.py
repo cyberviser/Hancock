@@ -65,6 +65,12 @@ def run_ciso(question: str, output_type: str, context: str) -> str:
     return _post("/v1/ciso", {"question": question, "output": output_type, "context": context})
 
 
+def run_sigma(description: str, logsource: str, technique: str) -> str:
+    if not description.strip():
+        return "⚠️  Please describe the TTP or behaviour to detect."
+    return _post("/v1/sigma", {"description": description, "logsource": logsource, "technique": technique})
+
+
 def run_respond(incident: str) -> str:
     if not incident.strip():
         return "⚠️  Please describe the incident."
@@ -81,7 +87,7 @@ with gr.Blocks(title="Hancock — CyberViser", theme=gr.themes.Monochrome(), css
 # 🛡️ Hancock — AI Cybersecurity Agent
 **by [CyberViser](https://cyberviser.github.io/Hancock/)** · Mistral 7B · MITRE ATT&CK · NVD/CVE
 
-> Specialised AI for pentest, SOC analysis, threat hunting, incident response, code generation, and CISO advisory.
+> Specialised AI for pentest, SOC analysis, threat hunting, incident response, code generation, CISO advisory, and Sigma rule authoring.
     """)
 
     with gr.Tabs():
@@ -150,6 +156,22 @@ with gr.Blocks(title="Hancock — CyberViser", theme=gr.themes.Monochrome(), css
                 ["Summarise our top 5 risks for the board", "board-summary", "50-person SaaS, AWS, ISO 27001 in progress"],
                 ["Gap analysis for PCI-DSS SAQ-D compliance", "gap-analysis", "E-commerce, Stripe payments, 200 employees"],
             ], [ciso_q, ciso_out_type, ciso_ctx])
+
+        with gr.Tab("🔍 Sigma Rules"):
+            gr.Markdown("Generate production-ready **Sigma detection rules** from a TTP or threat description.")
+            sigma_desc = gr.Textbox(lines=3, placeholder="e.g. Detect PowerShell encoded command execution via Sysmon", label="TTP / Behaviour to Detect")
+            with gr.Row():
+                sigma_ls  = gr.Textbox(placeholder="e.g. windows sysmon, linux auditd, aws cloudtrail", label="Log Source (optional)")
+                sigma_ttp = gr.Textbox(placeholder="e.g. T1059.001", label="MITRE ATT&CK Technique (optional)")
+            sigma_btn = gr.Button("⚡ Generate Sigma Rule", variant="primary")
+            sigma_out = gr.Textbox(lines=20, label="Sigma Rule (YAML)", interactive=False)
+            sigma_btn.click(run_sigma, [sigma_desc, sigma_ls, sigma_ttp], sigma_out)
+            gr.Examples([
+                ["Detect LSASS memory dump via procdump or task manager", "windows sysmon", "T1003.001"],
+                ["Kerberoasting via Rubeus or Impacket GetUserSPNs", "windows security", "T1558.003"],
+                ["Detect suspicious AWS S3 bucket policy changes", "aws cloudtrail", "T1530"],
+                ["Linux cron job persistence via /etc/cron.d", "linux auditd", "T1053.003"],
+            ], [sigma_desc, sigma_ls, sigma_ttp])
 
         with gr.Tab("🚨 IR Playbook"):
             gr.Markdown("Generate PICERL incident response playbooks for any incident type.")

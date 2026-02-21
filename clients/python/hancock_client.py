@@ -11,6 +11,8 @@ Usage:
     print(h.triage("Mimikatz.exe on DC01 at 03:14 UTC"))
     print(h.hunt("lateral movement via PsExec", siem="splunk"))
     print(h.respond("ransomware"))
+    print(h.sigma("PowerShell encoded exec", logsource="windows sysmon", technique="T1059.001"))
+    print(h.ciso("ISO 27001 gap analysis", output="gap-analysis", context="50-person SaaS, AWS"))
 """
 
 from __future__ import annotations
@@ -33,6 +35,20 @@ SECURITY_SYSTEM = (
     "incident response, CISO strategy, and security architecture. "
     "Respond with actionable, technically precise guidance. "
     "Use MITRE ATT&CK framework, CVE data, and industry best practices."
+)
+
+SIGMA_SYSTEM = (
+    "You are Hancock Sigma, an expert detection engineer. "
+    "Write production-ready Sigma YAML rules with correct logsource, detection, tags "
+    "(MITRE ATT&CK technique IDs), falsepositives, and severity level. "
+    "After the YAML, briefly explain what it detects and tuning notes."
+)
+
+CISO_SYSTEM = (
+    "You are Hancock CISO, CyberViser's AI-powered CISO advisor. "
+    "Your expertise: NIST RMF, ISO 27001, SOC 2, PCI-DSS, HIPAA, GDPR, NIST CSF 2.0, CIS Controls. "
+    "Translate technical risk into business impact. Prioritize by likelihood × impact × cost. "
+    "Provide executive-ready language referencing specific control IDs where relevant."
 )
 
 CODE_SYSTEM = (
@@ -130,6 +146,45 @@ class HancockClient:
             "Lessons Learned. Be specific with actionable steps."
         )
         return self._complete(SECURITY_SYSTEM, prompt, self.model, max_tokens=2048)
+
+    def sigma(
+        self,
+        description: str,
+        logsource: str = "",
+        technique: str = "",
+    ) -> str:
+        """Generate a Sigma detection rule from a TTP description."""
+        hints = []
+        if logsource:
+            hints.append(f"Target log source: {logsource}.")
+        if technique:
+            hints.append(f"MITRE ATT&CK technique: {technique} — add to tags field.")
+        prompt = (
+            f"Write a complete Sigma rule for: {description}\n"
+            + (" ".join(hints) + "\n" if hints else "")
+            + "Output the full YAML first, then a brief tuning note."
+        )
+        return self._complete(SIGMA_SYSTEM, prompt, self.model,
+                              temperature=0.2, top_p=0.7, max_tokens=2048)
+
+    def ciso(
+        self,
+        question: str,
+        output: str = "advice",
+        context: str = "",
+    ) -> str:
+        """CISO advisor — risk, compliance, board reporting, gap analysis."""
+        output_hints = {
+            "report":        "Format as a structured risk report: Executive Summary, Findings, Risk Ratings, Recommendations.",
+            "gap-analysis":  "Format as a gap analysis table: Control | Current State | Target State | Gap | Priority.",
+            "board-summary": "Format as a concise board-ready executive summary (≤300 words, no jargon).",
+            "advice":        "",
+        }
+        ctx_line = f"\n\nOrganisation context: {context}" if context else ""
+        hint     = output_hints.get(output, "")
+        prompt   = f"{question}{ctx_line}\n\n{hint}".strip()
+        return self._complete(CISO_SYSTEM, prompt, self.model,
+                              temperature=0.3, top_p=0.95, max_tokens=2048)
 
     def chat(self, message: str, history: Optional[list] = None, mode: str = "auto") -> str:
         """Multi-turn conversation with history."""
