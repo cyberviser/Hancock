@@ -3,6 +3,23 @@
 
 # No build command needed — pure static HTML
 
+# Custom domain — configure DNS at Google Domains:
+#   A record:     @ → 75.2.60.5
+#   CNAME record: www → apex-loadbalancer.netlify.com
+# Then add cyberviser.ai in Netlify → Site settings → Domain management
+
+[[redirects]]
+  from   = "https://cyberviser.netlify.app/*"
+  to     = "https://cyberviser.ai/:splat"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from   = "https://www.cyberviser.ai/*"
+  to     = "https://cyberviser.ai/:splat"
+  status = 301
+  force  = true
+
 [[headers]]
   for = "/*"
   [headers.values]

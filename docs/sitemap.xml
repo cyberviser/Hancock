@@ -1,43 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://cyberviser.netlify.app/</loc>
+    <loc>https://cyberviser.ai/</loc>
     <lastmod>2026-02-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://cyberviser.netlify.app/demo</loc>
+    <loc>https://cyberviser.ai/demo</loc>
     <lastmod>2026-02-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://cyberviser.netlify.app/pricing</loc>
+    <loc>https://cyberviser.ai/pricing</loc>
     <lastmod>2026-02-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://cyberviser.netlify.app/api</loc>
+    <loc>https://cyberviser.ai/api</loc>
     <lastmod>2026-02-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://cyberviser.netlify.app/train</loc>
+    <loc>https://cyberviser.ai/train</loc>
     <lastmod>2026-02-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://cyberviser.netlify.app/contact</loc>
+    <loc>https://cyberviser.ai/contact</loc>
     <lastmod>2026-02-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://cyberviser.netlify.app/sponsors</loc>
+    <loc>https://cyberviser.ai/sponsors</loc>
     <lastmod>2026-02-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
