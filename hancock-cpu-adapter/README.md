@@ -1,15 +1,12 @@
 ---
 base_model: TinyLlama/TinyLlama-1.1B-Chat-v1.0
-library_name: peft
+library_name: transformers
 model_name: hancock-cpu-adapter
 tags:
-- base_model:adapter:TinyLlama/TinyLlama-1.1B-Chat-v1.0
-- lora
+- generated_from_trainer
 - sft
-- transformers
 - trl
 licence: license
-pipeline_tag: text-generation
 ---
 
 # Model Card for hancock-cpu-adapter
@@ -37,7 +34,6 @@ This model was trained with SFT.
 
 ### Framework versions
 
-- PEFT 0.18.1
 - TRL: 0.28.0
 - Transformers: 5.2.0
 - Pytorch: 2.10.0

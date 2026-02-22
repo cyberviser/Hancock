@@ -125,7 +125,7 @@ def main():
         learning_rate=2e-4,
         fp16=True,
         logging_steps=10,
-        evaluation_strategy="steps",
+        evaluation_strategy="steps",  # use eval_strategy if trl>=0.28
         eval_steps=50,
         save_strategy="steps",
         save_steps=100,
@@ -139,7 +139,7 @@ def main():
 
     trainer = SFTTrainer(
         model=model,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
         dataset_text_field="text",
