@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sponsor — CyberViser Hancock</title>
+  <meta name="description" content="Support CyberViser Hancock — open-source AI cybersecurity. Sponsor tiers from $5/mo. Help close the 3.5M cybersecurity talent gap." />
+  <meta name="author" content="CyberViser" />
+  <link rel="canonical" href="https://cyberviser.netlify.app/sponsors" />
+  <meta property="og:type"        content="website" />
+  <meta property="og:url"         content="https://cyberviser.netlify.app/sponsors" />
+  <meta property="og:title"       content="Sponsor — CyberViser Hancock" />
+  <meta property="og:description" content="Support open-source AI cybersecurity. Sponsor from $5/mo. Help close the 3.5M talent gap." />
+  <meta property="og:image"       content="https://cyberviser.netlify.app/og-image.png" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --green:#00ff88; --cyan:#00e5ff; --red:#ff3366; --dark:#080c10; --card:#0d1117; --border:#1a2332; --text:#c9d1d9; --muted:#586069; --gold:#ffd700; }
+    body { font-family:'Courier New',monospace; background:var(--dark); color:var(--text); }
+    body::before { content:''; position:fixed; inset:0; pointer-events:none; z-index:9999; background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,136,0.012) 2px,rgba(0,255,136,0.012) 4px); }
+    ::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-thumb { background:var(--green); }
+    nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:1rem 3rem; background:rgba(8,12,16,0.92); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); }
+    .nav-logo { color:var(--green); text-decoration:none; font-size:1.1rem; font-weight:bold; letter-spacing:0.15em; }
+    .nav-logo span { color:var(--cyan); }
+    .nav-links { display:flex; gap:2rem; list-style:none; }
+    .nav-links a { color:var(--muted); text-decoration:none; font-size:0.85rem; transition:color 0.2s; }
+    .nav-links a:hover, .nav-links a.active { color:var(--green); }
+    .nav-cta { padding:0.4rem 1.1rem; border:1px solid var(--green); border-radius:4px; color:var(--green) !important; }
+    .nav-cta:hover { background:var(--green) !important; color:var(--dark) !important; }
+    section { padding:7rem 2rem 4rem; }
+    .container { max-width:1100px; margin:0 auto; }
+    .section-label { font-size:0.7rem; letter-spacing:0.2em; color:var(--green); text-transform:uppercase; margin-bottom:0.5rem; }
+    h1 { font-size:clamp(1.8rem,4vw,2.8rem); margin-bottom:0.8rem; }
+    .sub { color:var(--muted); font-size:0.95rem; margin-bottom:3rem; max-width:620px; line-height:1.7; }
+
+    /* Tiers */
+    .tiers { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1.5rem; margin-bottom:4rem; }
+    .tier { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:2rem; position:relative; transition:border-color 0.25s,box-shadow 0.25s; }
+    .tier:hover { border-color:var(--green); box-shadow:0 0 24px rgba(0,255,136,0.07); }
+    .tier.featured { border-color:var(--green); box-shadow:0 0 30px rgba(0,255,136,0.1); }
+    .badge { position:absolute; top:-1px; left:50%; transform:translateX(-50%); background:var(--green); color:var(--dark); font-size:0.65rem; font-weight:bold; letter-spacing:0.1em; padding:0.2rem 0.9rem; border-radius:0 0 6px 6px; text-transform:uppercase; }
+    .tier-icon { font-size:2rem; margin-bottom:0.8rem; }
+    .tier-name { font-size:0.75rem; letter-spacing:0.15em; color:var(--muted); text-transform:uppercase; margin-bottom:0.5rem; }
+    .tier-price { font-size:2.4rem; font-weight:bold; color:var(--green); line-height:1; margin-bottom:0.3rem; }
+    .tier-price span { font-size:1rem; color:var(--muted); }
+    .tier-desc { font-size:0.82rem; color:var(--muted); margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:1px solid var(--border); line-height:1.6; }
+    .perks { list-style:none; margin-bottom:1.8rem; }
+    .perks li { font-size:0.82rem; padding:0.35rem 0; color:var(--text); display:flex; gap:0.6rem; }
+    .perks li::before { content:'✓'; color:var(--green); flex-shrink:0; }
+    .btn { display:block; text-align:center; padding:0.75rem; border-radius:5px; text-decoration:none; font-family:inherit; font-size:0.88rem; font-weight:bold; letter-spacing:0.05em; transition:all 0.2s; cursor:pointer; border:none; width:100%; }
+    .btn-primary { background:var(--green); color:var(--dark); }
+    .btn-primary:hover { box-shadow:0 0 18px rgba(0,255,136,0.4); transform:translateY(-1px); }
+    .btn-outline { background:transparent; color:var(--cyan); border:1px solid var(--cyan); }
+    .btn-outline:hover { background:rgba(0,229,255,0.08); }
+    .btn-ghost { background:transparent; color:var(--muted); border:1px solid var(--border); }
+    .btn-ghost:hover { border-color:var(--green); color:var(--green); }
+
+    /* Why sponsor */
+    .why { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1.5rem; margin-bottom:4rem; }
+    .why-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:1.8rem; }
+    .why-card h3 { font-size:1rem; margin-bottom:0.6rem; color:var(--text); }
+    .why-card p { font-size:0.82rem; color:var(--muted); line-height:1.7; }
+    .why-icon { font-size:1.6rem; margin-bottom:0.8rem; }
+
+    /* Current sponsors */
+    .sponsors-wall { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:2.5rem; text-align:center; margin-bottom:4rem; }
+    .sponsors-wall h2 { font-size:1.3rem; margin-bottom:0.5rem; }
+    .sponsors-wall p { color:var(--muted); font-size:0.88rem; margin-bottom:1.5rem; }
+    .sponsor-placeholder { display:inline-flex; align-items:center; justify-content:center; width:80px; height:80px; border:2px dashed var(--border); border-radius:10px; color:var(--muted); font-size:2rem; margin:0.5rem; transition:border-color 0.2s; }
+    .sponsor-placeholder:hover { border-color:var(--green); color:var(--green); }
+
+    /* CTA */
+    .cta-strip { background:rgba(0,255,136,0.04); border:1px solid var(--border); border-radius:10px; padding:2.5rem; text-align:center; }
+    .cta-strip h2 { font-size:1.5rem; margin-bottom:0.5rem; }
+    .cta-strip p { color:var(--muted); font-size:0.88rem; margin-bottom:1.5rem; }
+    .cta-btns { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
+    .cta-btns a { padding:0.7rem 1.8rem; border-radius:5px; text-decoration:none; font-family:inherit; font-size:0.88rem; font-weight:bold; transition:all 0.2s; }
+
+    /* Footer */
+    footer { text-align:center; padding:2rem; border-top:1px solid var(--border); font-size:0.75rem; color:var(--muted); }
+    footer a { color:var(--green); text-decoration:none; }
+
+    @media(max-width:768px) { nav { padding:1rem 1.5rem; } .nav-links { display:none; } }
+  </style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-logo">CYBER<span>VISER</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="demo.html">Live Demo</a></li>
+    <li><a href="api.html">API Docs</a></li>
+    <li><a href="pricing.html">Pricing</a></li>
+    <li><a href="sponsors.html" class="active">Sponsors</a></li>
+    <li><a href="contact.html" class="nav-cta">Get Access ↗</a></li>
+  </ul>
+</nav>
+
+<!-- ── Hero ───────────────────────────────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <div class="section-label">// sponsor</div>
+    <h1>Support <span style="color:var(--green)">Open-Source</span> Cybersecurity</h1>
+    <p class="sub">
+      Hancock is free, open-source AI for security teams. Your sponsorship funds full-time development,
+      new detection models, and keeps the project independent. Help us close the
+      <strong style="color:var(--cyan)">3.5 million</strong> cybersecurity talent gap — one AI agent at a time.
+    </p>
+
+    <!-- ── Sponsor Tiers ─────────────────────────────────────────────────── -->
+    <div class="tiers">
+
+      <!-- Backer -->
+      <div class="tier">
+        <div class="tier-icon">🛡️</div>
+        <div class="tier-name">Backer</div>
+        <div class="tier-price">$5<span>/mo</span></div>
+        <p class="tier-desc">Show your support for open-source security tooling.</p>
+        <ul class="perks">
+          <li>Name in SPONSORS.md on GitHub</li>
+          <li>Sponsor badge on your GitHub profile</li>
+          <li>Early access to release notes</li>
+        </ul>
+        <a href="https://github.com/sponsors/cyberviser" target="_blank" class="btn btn-ghost">Become a Backer →</a>
+      </div>
+
+      <!-- Supporter -->
+      <div class="tier">
+        <div class="tier-icon">⚔️</div>
+        <div class="tier-name">Supporter</div>
+        <div class="tier-price">$25<span>/mo</span></div>
+        <p class="tier-desc">For security professionals who rely on Hancock daily.</p>
+        <ul class="perks">
+          <li>Everything in Backer</li>
+          <li>Name + link in project README</li>
+          <li>Priority issue responses</li>
+          <li>Sponsor-only Discord channel</li>
+        </ul>
+        <a href="https://github.com/sponsors/cyberviser" target="_blank" class="btn btn-outline">Become a Supporter →</a>
+      </div>
+
+      <!-- Champion -->
+      <div class="tier featured">
+        <div class="badge">Popular</div>
+        <div class="tier-icon">🏆</div>
+        <div class="tier-name">Champion</div>
+        <div class="tier-price">$100<span>/mo</span></div>
+        <p class="tier-desc">For teams and companies that want to invest in the future of AI security.</p>
+        <ul class="perks">
+          <li>Everything in Supporter</li>
+          <li>Logo on this sponsors page</li>
+          <li>Logo in project README</li>
+          <li>Monthly progress updates</li>
+          <li>Vote on roadmap priorities</li>
+        </ul>
+        <a href="https://github.com/sponsors/cyberviser" target="_blank" class="btn btn-primary">Become a Champion →</a>
+      </div>
+
+      <!-- Enterprise Sponsor -->
+      <div class="tier">
+        <div class="tier-icon">💎</div>
+        <div class="tier-name">Enterprise Sponsor</div>
+        <div class="tier-price">$500+<span>/mo</span></div>
+        <p class="tier-desc">Strategic partnership for organizations building the future of cybersecurity.</p>
+        <ul class="perks">
+          <li>Everything in Champion</li>
+          <li>Logo on website homepage</li>
+          <li>Co-marketing opportunities</li>
+          <li>Advisory board seat</li>
+          <li>Direct Slack channel with maintainers</li>
+          <li>Custom integration support</li>
+        </ul>
+        <a href="https://github.com/sponsors/cyberviser" target="_blank" class="btn btn-outline">Contact for Sponsorship →</a>
+      </div>
+
+    </div>
+
+    <!-- ── Why Sponsor ───────────────────────────────────────────────────── -->
+    <div class="section-label">// why sponsor</div>
+    <h2 style="font-size:1.4rem; margin-bottom:1.5rem;">Where Your Sponsorship Goes</h2>
+
+    <div class="why">
+      <div class="why-card">
+        <div class="why-icon">🔬</div>
+        <h3>Model Development</h3>
+        <p>Fine-tuning cybersecurity LLMs on MITRE ATT&CK, CISA KEV, Atomic Red Team, and real-world pentest data. More data = better detections.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🛡️</div>
+        <h3>Detection Engineering</h3>
+        <p>Building Sigma, YARA, and Suricata rule generators. Expanding SIEM support to Sentinel, Chronicle, and Cortex XSIAM.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🌍</div>
+        <h3>Open Source Security</h3>
+        <p>Keeping Hancock free and accessible. 3.5 million cybersecurity jobs are unfilled — AI can help close that gap for teams who can't afford $50K pentests.</p>
+      </div>
+    </div>
+
+    <!-- ── Current Sponsors ──────────────────────────────────────────────── -->
+    <div class="sponsors-wall">
+      <h2>Our Sponsors</h2>
+      <p>Become the first to support CyberViser Hancock.</p>
+      <div>
+        <a href="https://github.com/sponsors/cyberviser" target="_blank" class="sponsor-placeholder" title="Your logo here">?</a>
+        <a href="https://github.com/sponsors/cyberviser" target="_blank" class="sponsor-placeholder" title="Your logo here">?</a>
+        <a href="https://github.com/sponsors/cyberviser" target="_blank" class="sponsor-placeholder" title="Your logo here">?</a>
+        <a href="https://github.com/sponsors/cyberviser" target="_blank" class="sponsor-placeholder" title="Your logo here">?</a>
+        <a href="https://github.com/sponsors/cyberviser" target="_blank" class="sponsor-placeholder" title="Your logo here">?</a>
+      </div>
+    </div>
+
+    <!-- ── CTA ───────────────────────────────────────────────────────────── -->
+    <div class="cta-strip">
+      <h2>Ready to support open-source security?</h2>
+      <p>Every dollar goes directly to building better AI for defenders.</p>
+      <div class="cta-btns">
+        <a href="https://github.com/sponsors/cyberviser" target="_blank" style="background:var(--green);color:var(--dark);">💚 Sponsor on GitHub</a>
+        <a href="contact.html" style="border:1px solid var(--cyan);color:var(--cyan);">Talk to Us</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span>© 2026 <a href="https://github.com/cyberviser">CyberViser</a> — All rights reserved.</span>
+</footer>
+</body>
+</html>
