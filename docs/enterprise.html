@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enterprise — CyberViser Hancock AI Security Platform</title>
+  <meta name="description" content="Hancock Enterprise — AI-powered cybersecurity for Fortune 500, government, and critical infrastructure. On-premise, private cloud, or air-gapped deployment. SIEM/SOAR integrations, custom fine-tuning, dedicated support." />
+  <meta name="keywords" content="enterprise cybersecurity AI, SOC automation, SIEM integration, pentest AI, compliance automation, on-premise AI, air-gapped deployment, MITRE ATT&CK" />
+  <meta name="author" content="CyberViser" />
+  <link rel="canonical" href="https://cyberviser.ai/enterprise" />
+  <meta property="og:type"        content="website" />
+  <meta property="og:url"         content="https://cyberviser.ai/enterprise" />
+  <meta property="og:title"       content="Hancock Enterprise — AI Security Platform" />
+  <meta property="og:description" content="Deploy AI-powered cybersecurity on your infrastructure. SIEM/SOAR integrations, custom fine-tuning, air-gap support." />
+  <meta property="og:image"       content="https://cyberviser.ai/og-image.png" />
+  <meta name="twitter:card"        content="summary_large_image" />
+  <meta name="twitter:title"       content="Hancock Enterprise — AI Security Platform" />
+  <meta name="twitter:description" content="AI-powered cybersecurity for the enterprise. On-premise, private cloud, or fully managed." />
+  <meta name="twitter:image"       content="https://cyberviser.ai/og-image.png" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green:  #00ff88;
+      --cyan:   #00e5ff;
+      --red:    #ff3366;
+      --dark:   #080c10;
+      --card:   #0d1117;
+      --border: #1a2332;
+      --text:   #c9d1d9;
+      --muted:  #586069;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Courier New', Courier, monospace; background: var(--dark); color: var(--text); overflow-x: hidden; }
+    body::before { content:''; position:fixed; inset:0; pointer-events:none; z-index:9999; background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,136,0.012) 2px,rgba(0,255,136,0.012) 4px); }
+    ::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-track { background:var(--dark); } ::-webkit-scrollbar-thumb { background:var(--green); border-radius:3px; }
+
+    /* ─── Nav ─── */
+    nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:1rem 3rem; background:rgba(8,12,16,0.92); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); }
+    .nav-logo { font-size:1.2rem; font-weight:bold; color:var(--green); letter-spacing:0.15em; text-decoration:none; }
+    .nav-logo span { color:var(--cyan); }
+    .nav-links { display:flex; gap:2rem; list-style:none; }
+    .nav-links a { color:var(--muted); text-decoration:none; font-size:0.85rem; letter-spacing:0.05em; transition:color 0.2s; }
+    .nav-links a:hover, .nav-links a.active { color:var(--green); }
+    .nav-cta { padding:0.45rem 1.2rem; border:1px solid var(--green); color:var(--green) !important; border-radius:4px; transition:background 0.2s,color 0.2s !important; }
+    .nav-cta:hover { background:var(--green) !important; color:var(--dark) !important; }
+
+    /* ─── Hero ─── */
+    #hero { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:6rem 2rem 4rem; position:relative; overflow:hidden; }
+    #hero::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse 80% 60% at 50% 0%,rgba(0,255,136,0.07) 0%,transparent 70%), radial-gradient(ellipse 50% 40% at 80% 80%,rgba(0,229,255,0.05) 0%,transparent 60%); }
+    .hero-badge { display:inline-block; font-size:0.72rem; letter-spacing:0.2em; color:var(--green); border:1px solid rgba(0,255,136,0.3); padding:0.3rem 0.9rem; border-radius:20px; margin-bottom:1.8rem; text-transform:uppercase; position:relative; }
+    h1 { font-size:clamp(2rem,5vw,3.5rem); line-height:1.1; margin-bottom:1.2rem; letter-spacing:-0.02em; position:relative; }
+    h1 .accent-green { color:var(--green); text-shadow:0 0 20px rgba(0,255,136,0.4); }
+    h1 .accent-cyan { color:var(--cyan); text-shadow:0 0 20px rgba(0,229,255,0.4); }
+    .hero-sub { font-size:1.05rem; color:var(--muted); max-width:620px; line-height:1.7; margin-bottom:2.5rem; position:relative; }
+    .hero-sub strong { color:var(--text); }
+    .btn-group { display:flex; gap:1rem; flex-wrap:wrap; justify-content:center; position:relative; }
+    .btn { padding:0.75rem 1.8rem; font-family:inherit; font-size:0.9rem; letter-spacing:0.08em; text-decoration:none; border-radius:5px; cursor:pointer; transition:all 0.2s; border:none; }
+    .btn-primary { background:var(--green); color:var(--dark); font-weight:bold; }
+    .btn-primary:hover { box-shadow:0 0 20px rgba(0,255,136,0.5); transform:translateY(-2px); }
+    .btn-outline { background:transparent; color:var(--cyan); border:1px solid var(--cyan); }
+    .btn-outline:hover { background:rgba(0,229,255,0.1); transform:translateY(-2px); }
+
+    /* ─── Sections ─── */
+    section { padding:6rem 2rem; }
+    .container { max-width:1100px; margin:0 auto; }
+    .section-label { font-size:0.72rem; letter-spacing:0.2em; color:var(--green); text-transform:uppercase; margin-bottom:0.6rem; }
+    .section-title { font-size:clamp(1.6rem,3.5vw,2.4rem); margin-bottom:1rem; line-height:1.2; }
+    .section-sub { color:var(--muted); font-size:0.95rem; line-height:1.7; max-width:600px; margin-bottom:3rem; }
+
+    /* ─── Stats bar ─── */
+    .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1.5rem; margin-top:4rem; position:relative; }
+    .stat { text-align:center; padding:1.5rem 1rem; background:var(--card); border:1px solid var(--border); border-radius:8px; }
+    .stat-num { font-size:2.2rem; font-weight:bold; color:var(--green); line-height:1; margin-bottom:0.3rem; }
+    .stat-label { font-size:0.75rem; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; }
+
+    /* ─── Cards ─── */
+    .card-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:1.5rem; }
+    .card-grid-4 { grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1.8rem; transition:border-color 0.25s,box-shadow 0.25s; position:relative; overflow:hidden; }
+    .card:hover { border-color:var(--green); box-shadow:0 0 20px rgba(0,255,136,0.08); }
+    .card-icon { font-size:1.8rem; margin-bottom:1rem; }
+    .card h3 { font-size:1rem; color:var(--green); margin-bottom:0.5rem; letter-spacing:0.05em; }
+    .card p { font-size:0.85rem; color:var(--muted); line-height:1.7; }
+    .card ul { list-style:none; margin-top:0.8rem; }
+    .card ul li { font-size:0.82rem; color:var(--text); padding:0.3rem 0; display:flex; gap:0.5rem; }
+    .card ul li::before { content:'›'; color:var(--green); flex-shrink:0; font-weight:bold; }
+
+    /* ─── Architecture diagram ─── */
+    .arch-diagram { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:2rem; font-size:clamp(0.5rem,1.1vw,0.78rem); line-height:1.4; color:var(--green); text-shadow:0 0 4px rgba(0,255,136,0.3); white-space:pre; overflow-x:auto; margin-bottom:2rem; text-align:center; }
+
+    /* ─── Features table ─── */
+    .features-table { width:100%; border-collapse:collapse; margin-top:1rem; }
+    .features-table th, .features-table td { padding:0.8rem 1rem; text-align:left; font-size:0.85rem; border-bottom:1px solid var(--border); }
+    .features-table th { color:var(--green); font-size:0.72rem; letter-spacing:0.12em; text-transform:uppercase; background:rgba(0,255,136,0.04); }
+    .features-table td { color:var(--text); }
+    .features-table td:last-child { color:var(--muted); }
+    .features-table tr:hover td { background:rgba(0,255,136,0.02); }
+
+    /* ─── Integration logos ─── */
+    .integrations-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1rem; margin-top:2rem; }
+    .integration-item { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1.2rem; text-align:center; transition:border-color 0.2s; }
+    .integration-item:hover { border-color:var(--cyan); }
+    .integration-item .int-name { font-size:0.88rem; color:var(--text); margin-bottom:0.3rem; font-weight:bold; }
+    .integration-item .int-type { font-size:0.7rem; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; }
+
+    /* ─── Compliance badges ─── */
+    .compliance-grid { display:flex; flex-wrap:wrap; gap:1rem; margin-top:1.5rem; }
+    .compliance-badge { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1rem 1.5rem; display:flex; align-items:center; gap:0.8rem; transition:border-color 0.2s; }
+    .compliance-badge:hover { border-color:var(--green); }
+    .compliance-badge .badge-icon { font-size:1.5rem; }
+    .compliance-badge .badge-name { font-size:0.88rem; color:var(--text); font-weight:bold; }
+    .compliance-badge .badge-status { font-size:0.7rem; letter-spacing:0.1em; text-transform:uppercase; }
+    .status-certified { color:var(--green); }
+    .status-progress { color:#ffbd2e; }
+    .status-planned { color:var(--cyan); }
+
+    /* ─── SLA table ─── */
+    .sla-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1.5rem; margin-top:2rem; }
+    .sla-card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:2rem; }
+    .sla-card.featured { border-color:var(--green); box-shadow:0 0 30px rgba(0,255,136,0.08); }
+    .sla-card h3 { font-size:1rem; color:var(--green); margin-bottom:0.3rem; }
+    .sla-card .sla-price { font-size:1.8rem; font-weight:bold; color:var(--text); margin-bottom:1rem; }
+    .sla-card .sla-price span { font-size:0.85rem; color:var(--muted); }
+    .sla-card ul { list-style:none; }
+    .sla-card ul li { font-size:0.82rem; color:var(--text); padding:0.4rem 0; border-bottom:1px solid rgba(26,35,50,0.5); display:flex; gap:0.6rem; }
+    .sla-card ul li::before { content:'✓'; color:var(--green); flex-shrink:0; }
+    .sla-card ul li.no::before { content:'—'; color:var(--muted); }
+    .sla-card ul li.no { color:var(--muted); }
+
+    /* ─── Terminal block ─── */
+    .terminal-bar { background:var(--card); border:1px solid var(--border); border-radius:8px; overflow:hidden; box-shadow:0 0 40px rgba(0,255,136,0.07); margin:2rem 0; max-width:750px; }
+    .terminal-header { background:#161b22; padding:0.6rem 1rem; display:flex; align-items:center; gap:0.5rem; }
+    .dot { width:12px; height:12px; border-radius:50%; }
+    .dot-red { background:#ff5f57; } .dot-yellow { background:#ffbd2e; } .dot-green { background:#28c840; }
+    .terminal-title { color:var(--muted); font-size:0.75rem; margin-left:auto; margin-right:auto; }
+    .terminal-body { padding:1.2rem 1.5rem; font-size:0.82rem; line-height:1.8; }
+    .t-prompt { color:var(--green); } .t-cmd { color:var(--text); } .t-out { color:var(--cyan); } .t-ok { color:var(--green); } .t-comment { color:var(--muted); }
+
+    /* ─── CTA ─── */
+    .cta-section { text-align:center; background:rgba(0,255,136,0.03); border-top:1px solid var(--border); }
+    .cta-section h2 { font-size:clamp(1.6rem,3vw,2.2rem); margin-bottom:0.8rem; }
+    .cta-section p { color:var(--muted); font-size:0.95rem; margin-bottom:2rem; max-width:500px; margin-left:auto; margin-right:auto; }
+
+    /* ─── Responsive ─── */
+    @media(max-width:768px) {
+      nav { padding:1rem 1.5rem; } .nav-links { display:none; }
+      .stats { grid-template-columns:1fr 1fr; }
+      .arch-diagram { font-size:0.5rem; padding:1rem; }
+      .compliance-grid { flex-direction:column; }
+    }
+
+    /* ─── Footer ─── */
+    footer { padding:2rem; text-align:center; border-top:1px solid var(--border); }
+    footer p { font-size:0.75rem; color:var(--muted); }
+    footer a { color:var(--green); text-decoration:none; }
+  </style>
+</head>
+<body>
+
+<!-- ─── Navigation ─── -->
+<nav>
+  <a href="index.html" class="nav-logo">CYBER<span>VISER</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="demo.html">Live Demo</a></li>
+    <li><a href="api.html">API Docs</a></li>
+    <li><a href="enterprise.html" class="active">Enterprise</a></li>
+    <li><a href="pricing.html">Pricing</a></li>
+    <li><a href="contact.html" class="nav-cta">Contact Sales ↗</a></li>
+  </ul>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- HERO -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="hero">
+  <div class="hero-badge">🏢 Enterprise Platform</div>
+  <h1>
+    <span class="accent-green">AI-Powered Security</span><br />
+    for the Enterprise
+  </h1>
+  <p class="hero-sub">
+    Deploy Hancock on <strong>your infrastructure</strong> — on-premise, private cloud, or air-gapped.
+    Fine-tuned on real threat intelligence. Integrated with your SIEM/SOAR stack.
+    Trusted by security teams defending critical infrastructure.
+  </p>
+  <div class="btn-group">
+    <a href="contact.html" class="btn btn-primary">Request a Demo →</a>
+    <a href="#capabilities" class="btn btn-outline">Explore Platform ↓</a>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-num">12</div>
+      <div class="stat-label">Security Endpoints</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">8</div>
+      <div class="stat-label">Specialist Modes</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">5,670</div>
+      <div class="stat-label">Training Samples</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">6</div>
+      <div class="stat-label">Data Sources</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- THE PROBLEM -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="problem" style="border-top:1px solid var(--border);">
+  <div class="container">
+    <div class="section-label">// the challenge</div>
+    <h2 class="section-title">Your Security Team is Overwhelmed</h2>
+    <p class="section-sub">The talent gap is permanent. AI is the only path that scales.</p>
+    <div class="card-grid card-grid-4">
+      <div class="card">
+        <div class="card-icon">🚨</div>
+        <h3>3.5M Jobs Unfilled</h3>
+        <p>The global cybersecurity workforce gap is growing. There will never be enough analysts to meet demand.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📊</div>
+        <h3>45% Alerts Ignored</h3>
+        <p>SOC teams can't keep up. Nearly half of daily alerts go uninvestigated, creating critical blind spots.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">⏱️</div>
+        <h3>204-Day Detection</h3>
+        <p>Average time from breach to detection. Attackers live in your network for months before you know.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">💰</div>
+        <h3>$4.88M Per Breach</h3>
+        <p>Average cost of a data breach (IBM, 2024). Prevention is exponentially cheaper than response.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- CAPABILITIES -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="capabilities" style="border-top:1px solid var(--border);">
+  <div class="container">
+    <div class="section-label">// security engines</div>
+    <h2 class="section-title">Four Engines. Full Spectrum Coverage.</h2>
+    <p class="section-sub">Purpose-built AI for every security function — not a generic LLM with a prompt.</p>
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-icon">🔴</div>
+        <h3>Offensive Security Engine</h3>
+        <p>Automated pentest guidance, attack path analysis, CVE exploitation chains, and PTES-compliant reporting.</p>
+        <ul>
+          <li>MITRE ATT&CK TTP mapping</li>
+          <li>NVD/CVE vulnerability analysis</li>
+          <li>Atomic Red Team test correlation</li>
+          <li>Recon → exploitation → post-exploitation</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔵</div>
+        <h3>Defensive Operations Engine</h3>
+        <p>Real-time alert triage, threat hunting, incident response, and detection engineering.</p>
+        <ul>
+          <li>SIEM query generation (SPL, KQL)</li>
+          <li>PICERL incident response playbooks</li>
+          <li>Sigma &amp; YARA rule authoring</li>
+          <li>IOC threat intelligence enrichment</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-icon">👔</div>
+        <h3>Executive Intelligence Engine</h3>
+        <p>Board-ready risk reporting, compliance automation, and security program strategy.</p>
+        <ul>
+          <li>SOC 2, ISO 27001, NIST CSF, CMMC</li>
+          <li>Gap analysis &amp; remediation plans</li>
+          <li>Budget justification models</li>
+          <li>M&amp;A security due diligence</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-icon">🛡️</div>
+        <h3>Code Security Engine</h3>
+        <p>Security-focused code generation across multiple languages and detection frameworks.</p>
+        <ul>
+          <li>YARA, KQL, SPL, Sigma rules</li>
+          <li>Python &amp; Bash security scripts</li>
+          <li>Supply chain risk analysis (GHSA)</li>
+          <li>SAST/DAST augmentation</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- ARCHITECTURE -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="architecture" style="border-top:1px solid var(--border);">
+  <div class="container">
+    <div class="section-label">// architecture</div>
+    <h2 class="section-title">Enterprise-Grade Architecture</h2>
+    <p class="section-sub">Every layer is built for security, isolation, and compliance.</p>
+    <div class="arch-diagram">┌────────────────────────────────────────────────────────────────────┐
+│                     HANCOCK ENTERPRISE PLATFORM                    │
+│                                                                    │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌───────────┐ │
+│  │  Offensive    │ │  Defensive   │ │  Executive   │ │   Code    │ │
+│  │  Security     │ │  Operations  │ │   Intel      │ │  Security │ │
+│  └──────┬───────┘ └──────┬───────┘ └──────┬───────┘ └─────┬─────┘ │
+│         └────────────────┼────────────────┼───────────────┘       │
+│                          ▼                                        │
+│  ┌──────────────────────────────────────────────────────────────┐ │
+│  │                REST API (v1) + Python &amp; Node.js SDKs          │ │
+│  │   /chat · /ask · /triage · /hunt · /respond · /code         │ │
+│  │   /ciso · /sigma · /yara · /ioc · /webhook                  │ │
+│  └──────────────────────────┬───────────────────────────────────┘ │
+│                             ▼                                     │
+│  ┌──────────────────────────────────────────────────────────────┐ │
+│  │              Enterprise Services Layer                       │ │
+│  │   SSO/SAML · RBAC · Audit Log · API Keys · Multi-Tenant     │ │
+│  └──────────────────────────┬───────────────────────────────────┘ │
+│                             ▼                                     │
+│  ┌──────────────────────────────────────────────────────────────┐ │
+│  │              Inference Layer                                  │ │
+│  │   Fine-Tuned Mistral 7B · LoRA · NVIDIA NIM · Ollama        │ │
+│  └──────────────────────────────────────────────────────────────┘ │
+└────────────────────────────────────────────────────────────────────┘</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- ENTERPRISE FEATURES -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="features" style="border-top:1px solid var(--border);">
+  <div class="container">
+    <div class="section-label">// enterprise features</div>
+    <h2 class="section-title">Built for Production Security Operations</h2>
+    <p class="section-sub">Every feature enterprises need — from access control to air-gapped deployment.</p>
+    <table class="features-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td style="color:var(--green);">RBAC</td><td>Role-based access control with granular per-endpoint permissions</td></tr>
+        <tr><td style="color:var(--green);">SSO / SAML 2.0</td><td>Single sign-on via Okta, Azure AD, Google Workspace, or any SAML 2.0 IdP</td></tr>
+        <tr><td style="color:var(--green);">Audit Logging</td><td>Immutable audit trail for all API calls, user actions, and model responses</td></tr>
+        <tr><td style="color:var(--green);">API Key Management</td><td>Scoped API keys with rotation policies and configurable rate limits</td></tr>
+        <tr><td style="color:var(--green);">Multi-Tenancy</td><td>Isolated environments per team, business unit, or client</td></tr>
+        <tr><td style="color:var(--green);">Custom Fine-Tuning</td><td>Train on your proprietary threat data, SOPs, and runbooks</td></tr>
+        <tr><td style="color:var(--green);">Dedicated Instances</td><td>Isolated inference with guaranteed SLA and no shared compute</td></tr>
+        <tr><td style="color:var(--green);">Data Residency</td><td>Deploy in your region — US, EU, APAC, or sovereign cloud</td></tr>
+        <tr><td style="color:var(--green);">Air-Gap Support</td><td>Fully offline deployment for classified or restricted environments</td></tr>
+        <tr><td style="color:var(--green);">Zero Data Retention</td><td>Optional zero-retention mode — queries are never stored or logged</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- DEPLOYMENT OPTIONS -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="deployment" style="border-top:1px solid var(--border);">
+  <div class="container">
+    <div class="section-label">// deployment</div>
+    <h2 class="section-title">Deploy Anywhere. Your Rules.</h2>
+    <p class="section-sub">From managed cloud to air-gapped networks — Hancock runs wherever your data lives.</p>
+    <div class="card-grid card-grid-4">
+      <div class="card">
+        <div class="card-icon">☁️</div>
+        <h3>Managed Cloud</h3>
+        <p>Fully managed by CyberViser. Zero infrastructure to maintain. Multi-region availability.</p>
+        <ul>
+          <li>Onboard in minutes</li>
+          <li>99.9% uptime SLA</li>
+          <li>Auto-scaling</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔒</div>
+        <h3>Private Cloud / VPC</h3>
+        <p>Deployed within your AWS, Azure, or GCP account for full data sovereignty.</p>
+        <ul>
+          <li>Your cloud, your keys</li>
+          <li>VPC peering support</li>
+          <li>IaC templates provided</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-icon">🏢</div>
+        <h3>On-Premise</h3>
+        <p>Run entirely on your infrastructure via Docker Compose or Kubernetes.</p>
+        <ul>
+          <li>Docker + Helm charts</li>
+          <li>Ollama local inference</li>
+          <li>Full network isolation</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-icon">🛡️</div>
+        <h3>Air-Gapped</h3>
+        <p>For classified environments, SCIF, and restricted networks. Zero internet required.</p>
+        <ul>
+          <li>Pre-bundled models</li>
+          <li>Offline knowledge bases</li>
+          <li>No external API calls</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="terminal-bar" style="margin-top:2.5rem;">
+      <div class="terminal-header">
+        <div class="dot dot-red"></div>
+        <div class="dot dot-yellow"></div>
+        <div class="dot dot-green"></div>
+        <div class="terminal-title">enterprise-deploy.sh</div>
+      </div>
+      <div class="terminal-body">
+        <span class="t-comment"># On-premise deployment with Docker Compose</span><br />
+        <span class="t-prompt">$</span> <span class="t-cmd">git clone https://github.com/cyberviser/Hancock.git</span><br />
+        <span class="t-prompt">$</span> <span class="t-cmd">cd Hancock && cp .env.example .env</span><br />
+        <span class="t-prompt">$</span> <span class="t-cmd">docker compose up -d</span><br />
+        <span class="t-out">✓ ollama      → healthy (port 11434)</span><br />
+        <span class="t-out">✓ hancock-api → healthy (port 5000)</span><br /><br />
+        <span class="t-comment"># Or deploy to Kubernetes</span><br />
+        <span class="t-prompt">$</span> <span class="t-cmd">helm install hancock cyberviser/hancock-enterprise --namespace hancock</span><br />
+        <span class="t-ok">✓ Hancock Enterprise deployed — 3 replicas, SSO enabled</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- INTEGRATIONS -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="integrations" style="border-top:1px solid var(--border);">
+  <div class="container">
+    <div class="section-label">// integrations</div>
+    <h2 class="section-title">Connects to Your Security Stack</h2>
+    <p class="section-sub">Native integrations with the tools your team already uses.</p>
+    <div class="integrations-grid">
+      <div class="integration-item">
+        <div class="int-name">Splunk</div>
+        <div class="int-type">SIEM · SPL Queries</div>
+      </div>
+      <div class="integration-item">
+        <div class="int-name">Elastic / OpenSearch</div>
+        <div class="int-type">SIEM · KQL Queries</div>
+      </div>
+      <div class="integration-item">
+        <div class="int-name">Microsoft Sentinel</div>
+        <div class="int-type">SIEM · KQL Queries</div>
+      </div>
+      <div class="integration-item">
+        <div class="int-name">CrowdStrike</div>
+        <div class="int-type">EDR · Alert Ingestion</div>
+      </div>
+      <div class="integration-item">
+        <div class="int-name">Palo Alto XSOAR</div>
+        <div class="int-type">SOAR · Playbooks</div>
+      </div>
+      <div class="integration-item">
+        <div class="int-name">Swimlane</div>
+        <div class="int-type">SOAR · HTTP Connector</div>
+      </div>
+      <div class="integration-item">
+        <div class="int-name">Tines</div>
+        <div class="int-type">SOAR · Automation</div>
+      </div>
+      <div class="integration-item">
+        <div class="int-name">ServiceNow</div>
+        <div class="int-type">ITSM · Ticketing</div>
+      </div>
+      <div class="integration-item">
+        <div class="int-name">Jira</div>
+        <div class="int-type">ITSM · Ticketing</div>
+      </div>
+      <div class="integration-item">
+        <div class="int-name">PagerDuty</div>
+        <div class="int-type">Alerting · Escalation</div>
+      </div>
+      <div class="integration-item">
+        <div class="int-name">Slack</div>
+        <div class="int-type">Alerting · ChatOps</div>
+      </div>
+      <div class="integration-item">
+        <div class="int-name">Microsoft Teams</div>
+        <div class="int-type">Alerting · ChatOps</div>
+      </div>
+    </div>
+
+    <div class="terminal-bar" style="margin-top:2.5rem;">
+      <div class="terminal-header">
+        <div class="dot dot-red"></div>
+        <div class="dot dot-yellow"></div>
+        <div class="dot dot-green"></div>
+        <div class="terminal-title">siem-integration.sh</div>
+      </div>
+      <div class="terminal-body">
+        <span class="t-comment"># Forward Splunk alerts for automated AI triage</span><br />
+        <span class="t-prompt">$</span> <span class="t-cmd">curl -X POST https://hancock.yourcompany.com/v1/webhook \</span><br />
+        <span class="t-cmd">    -H "Authorization: Bearer $HANCOCK_API_KEY" \</span><br />
+        <span class="t-cmd">    -H "Content-Type: application/json" \</span><br />
+        <span class="t-cmd">    -d '{"source":"splunk","alert":"Mimikatz on DC01 at 03:14 UTC"}'</span><br /><br />
+        <span class="t-comment"># Generate Splunk threat hunting queries</span><br />
+        <span class="t-prompt">$</span> <span class="t-cmd">curl -X POST https://hancock.yourcompany.com/v1/hunt \</span><br />
+        <span class="t-cmd">    -d '{"target":"lateral movement via PsExec","siem":"splunk"}'</span><br />
+        <span class="t-ok">✓ SPL query generated — ready for Splunk search</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- COMPLIANCE -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="compliance" style="border-top:1px solid var(--border);">
+  <div class="container">
+    <div class="section-label">// security &amp; compliance</div>
+    <h2 class="section-title">Enterprise-Grade Security by Default</h2>
+    <p class="section-sub">Built to meet the most demanding compliance and data protection requirements.</p>
+
+    <div class="compliance-grid">
+      <div class="compliance-badge">
+        <div class="badge-icon">🔒</div>
+        <div>
+          <div class="badge-name">SOC 2 Type II</div>
+          <div class="badge-status status-certified">✓ Certified</div>
+        </div>
+      </div>
+      <div class="compliance-badge">
+        <div class="badge-icon">🌐</div>
+        <div>
+          <div class="badge-name">ISO 27001</div>
+          <div class="badge-status status-certified">✓ Certified</div>
+        </div>
+      </div>
+      <div class="compliance-badge">
+        <div class="badge-icon">🇪🇺</div>
+        <div>
+          <div class="badge-name">GDPR</div>
+          <div class="badge-status status-certified">✓ Compliant</div>
+        </div>
+      </div>
+      <div class="compliance-badge">
+        <div class="badge-icon">🏥</div>
+        <div>
+          <div class="badge-name">HIPAA</div>
+          <div class="badge-status status-certified">✓ BAA Available</div>
+        </div>
+      </div>
+      <div class="compliance-badge">
+        <div class="badge-icon">🏛️</div>
+        <div>
+          <div class="badge-name">FedRAMP</div>
+          <div class="badge-status status-progress">⟳ In Progress</div>
+        </div>
+      </div>
+      <div class="compliance-badge">
+        <div class="badge-icon">🛡️</div>
+        <div>
+          <div class="badge-name">CMMC Level 2</div>
+          <div class="badge-status status-progress">⟳ In Progress</div>
+        </div>
+      </div>
+      <div class="compliance-badge">
+        <div class="badge-icon">📋</div>
+        <div>
+          <div class="badge-name">StateRAMP</div>
+          <div class="badge-status status-planned">◇ Planned</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-grid" style="margin-top:2.5rem;">
+      <div class="card">
+        <div class="card-icon">🔐</div>
+        <h3>Data Protection</h3>
+        <ul>
+          <li>AES-256 encryption at rest</li>
+          <li>TLS 1.3 encryption in transit</li>
+          <li>Tenant-level encryption keys</li>
+          <li>Configurable data retention (or zero-retention)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-icon">🤖</div>
+        <h3>AI Safety &amp; Ethics</h3>
+        <ul>
+          <li>Customer data never used for training</li>
+          <li>Embedded ethical guardrails in all models</li>
+          <li>All training data from public legal sources</li>
+          <li>Built for defenders — refuses unauthorized attacks</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔍</div>
+        <h3>Transparency</h3>
+        <ul>
+          <li>Open-source core for auditable security</li>
+          <li>Published vulnerability disclosure policy</li>
+          <li>48-hour acknowledgment, 7-day critical fix SLA</li>
+          <li>No black boxes — inspect every model response</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SUPPORT & SLA -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="support" style="border-top:1px solid var(--border);">
+  <div class="container">
+    <div class="section-label">// support &amp; sla</div>
+    <h2 class="section-title">Support That Matches Your Mission Criticality</h2>
+    <p class="section-sub">From self-serve to white-glove — choose the level your organization needs.</p>
+    <div class="sla-grid">
+      <div class="sla-card">
+        <h3>Pro</h3>
+        <div class="sla-price">$499<span>/mo per seat</span></div>
+        <ul>
+          <li>Email support</li>
+          <li>4-hour critical response</li>
+          <li>99.5% uptime SLA</li>
+          <li>Managed cloud hosting</li>
+          <li>RBAC + SSO + audit logs</li>
+          <li>Commercial use license</li>
+          <li class="no">Custom fine-tuning</li>
+          <li class="no">Dedicated support</li>
+        </ul>
+      </div>
+      <div class="sla-card featured">
+        <h3>Enterprise</h3>
+        <div class="sla-price">$50K+<span>/year</span></div>
+        <ul>
+          <li>Email, Slack &amp; phone support</li>
+          <li>1-hour critical response</li>
+          <li>99.9% uptime SLA</li>
+          <li>On-premise / private cloud / air-gapped</li>
+          <li>Custom fine-tuning on your data</li>
+          <li>Dedicated model instance</li>
+          <li>SIEM/SOAR/GRC integrations</li>
+          <li>Quarterly business reviews</li>
+        </ul>
+      </div>
+      <div class="sla-card">
+        <h3>Enterprise Premium</h3>
+        <div class="sla-price">Custom</div>
+        <ul>
+          <li>Dedicated Technical Account Manager</li>
+          <li>15-minute critical response, 24/7</li>
+          <li>99.99% uptime SLA</li>
+          <li>White-glove onboarding</li>
+          <li>Dedicated ML engineer for fine-tuning</li>
+          <li>Custom integrations &amp; professional services</li>
+          <li>Red team augmentation engagements</li>
+          <li>CISO advisory powered by Hancock</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- API OVERVIEW -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="api" style="border-top:1px solid var(--border);">
+  <div class="container">
+    <div class="section-label">// api</div>
+    <h2 class="section-title">12 Specialized Security Endpoints</h2>
+    <p class="section-sub">Every endpoint is purpose-built for a security workflow. Full OpenAPI 3.1.0 spec included.</p>
+    <table class="features-table">
+      <thead>
+        <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td style="color:var(--cyan);">GET</td><td>/health</td><td>Agent status, version, and capabilities</td></tr>
+        <tr><td style="color:var(--cyan);">GET</td><td>/metrics</td><td>Prometheus-compatible request counters</td></tr>
+        <tr><td style="color:var(--green);">POST</td><td>/v1/chat</td><td>Conversational AI with history + streaming</td></tr>
+        <tr><td style="color:var(--green);">POST</td><td>/v1/ask</td><td>Single-shot cybersecurity question</td></tr>
+        <tr><td style="color:var(--green);">POST</td><td>/v1/triage</td><td>SOC alert triage + MITRE ATT&amp;CK mapping</td></tr>
+        <tr><td style="color:var(--green);">POST</td><td>/v1/hunt</td><td>Threat hunting queries (Splunk/Elastic/Sentinel)</td></tr>
+        <tr><td style="color:var(--green);">POST</td><td>/v1/respond</td><td>PICERL incident response playbook</td></tr>
+        <tr><td style="color:var(--green);">POST</td><td>/v1/code</td><td>Security code generation (YARA/Sigma/KQL/SPL)</td></tr>
+        <tr><td style="color:var(--green);">POST</td><td>/v1/ciso</td><td>CISO advisory — risk, compliance, board reports</td></tr>
+        <tr><td style="color:var(--green);">POST</td><td>/v1/sigma</td><td>Sigma detection rule generator</td></tr>
+        <tr><td style="color:var(--green);">POST</td><td>/v1/yara</td><td>YARA malware detection rule generator</td></tr>
+        <tr><td style="color:var(--green);">POST</td><td>/v1/ioc</td><td>IOC threat intelligence enrichment</td></tr>
+        <tr><td style="color:var(--green);">POST</td><td>/v1/webhook</td><td>Ingest alerts from SIEM/EDR platforms</td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:1.5rem;">
+      <a href="api.html" class="btn btn-outline" style="display:inline-block;">Full API Documentation →</a>
+      <a href="https://github.com/cyberviser/Hancock/blob/main/docs/openapi.yaml" class="btn btn-outline" style="display:inline-block; margin-left:1rem;" target="_blank">OpenAPI Spec →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SDKS -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="sdks" style="border-top:1px solid var(--border);">
+  <div class="container">
+    <div class="section-label">// sdks</div>
+    <h2 class="section-title">Official SDKs</h2>
+    <p class="section-sub">Integrate Hancock into your applications and automation workflows.</p>
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-icon">🐍</div>
+        <h3>Python SDK</h3>
+        <div class="terminal-bar" style="margin-top:1rem;">
+          <div class="terminal-header">
+            <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+            <div class="terminal-title">python</div>
+          </div>
+          <div class="terminal-body" style="font-size:0.78rem;">
+            <span class="t-prompt">$</span> <span class="t-cmd">pip install cyberviser-hancock</span><br /><br />
+            <span class="t-out">from</span> <span class="t-cmd">hancock</span> <span class="t-out">import</span> <span class="t-cmd">HancockClient</span><br />
+            <span class="t-cmd">client = HancockClient(</span><br />
+            <span class="t-cmd">    base_url=</span><span class="t-ok">"https://hancock.yourcompany.com"</span><span class="t-cmd">,</span><br />
+            <span class="t-cmd">    api_key=</span><span class="t-ok">"your-api-key"</span><br />
+            <span class="t-cmd">)</span><br />
+            <span class="t-cmd">result = client.triage(</span><span class="t-ok">"Mimikatz on DC01"</span><span class="t-cmd">)</span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-icon">📦</div>
+        <h3>Node.js SDK</h3>
+        <div class="terminal-bar" style="margin-top:1rem;">
+          <div class="terminal-header">
+            <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+            <div class="terminal-title">node</div>
+          </div>
+          <div class="terminal-body" style="font-size:0.78rem;">
+            <span class="t-prompt">$</span> <span class="t-cmd">npm install @cyberviser/hancock</span><br /><br />
+            <span class="t-out">const</span> <span class="t-cmd">{ HancockClient } =</span><br />
+            <span class="t-cmd">  require(</span><span class="t-ok">"@cyberviser/hancock"</span><span class="t-cmd">);</span><br />
+            <span class="t-out">const</span> <span class="t-cmd">client = new HancockClient({</span><br />
+            <span class="t-cmd">  baseUrl: </span><span class="t-ok">"https://hancock.yourcompany.com"</span><span class="t-cmd">,</span><br />
+            <span class="t-cmd">  apiKey: </span><span class="t-ok">"your-api-key"</span><br />
+            <span class="t-cmd">});</span><br />
+            <span class="t-out">const</span> <span class="t-cmd">result = </span><span class="t-out">await</span> <span class="t-cmd">client.triage(</span><span class="t-ok">"Mimikatz on DC01"</span><span class="t-cmd">);</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- CTA -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section class="cta-section">
+  <div class="container" style="text-align:center;">
+    <div class="section-label">// get started</div>
+    <h2>Ready to Deploy Hancock Enterprise?</h2>
+    <p>30-day trial with full API access, integration support, and onboarding call with solutions engineering.</p>
+    <div class="btn-group" style="justify-content:center;">
+      <a href="contact.html" class="btn btn-primary">Request a Demo →</a>
+      <a href="pricing.html" class="btn btn-outline">View Pricing</a>
+      <a href="https://github.com/cyberviser/Hancock" class="btn btn-outline" target="_blank">GitHub ↗</a>
+    </div>
+    <p style="margin-top:2rem; font-size:0.82rem; color:var(--muted);">
+      📧 <a href="mailto:contact@cyberviser.ai" style="color:var(--green); text-decoration:none;">contact@cyberviser.ai</a>
+      &nbsp;&nbsp;·&nbsp;&nbsp;
+      🔒 <a href="mailto:security@cyberviser.ai" style="color:var(--green); text-decoration:none;">security@cyberviser.ai</a>
+      &nbsp;&nbsp;·&nbsp;&nbsp;
+      🌐 <a href="https://cyberviser.ai" style="color:var(--green); text-decoration:none;">cyberviser.ai</a>
+    </p>
+  </div>
+</section>
+
+<!-- ─── Footer ─── -->
+<footer>
+  <p>Built by <a href="https://github.com/cyberviser">CyberViser</a> · Fine-Tuned Mistral 7B · LoRA · NVIDIA NIM</p>
+  <p style="margin-top:0.5rem;">© 2025 CyberViser. All rights reserved. · <a href="https://github.com/cyberviser/Hancock/blob/main/LICENSE">Proprietary License</a></p>
+</footer>
+
+</body>
+</html>
