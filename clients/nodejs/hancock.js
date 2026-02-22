@@ -139,7 +139,7 @@ async function interactiveCLI(client, initialMode) {
   console.log(`
 ╔══════════════════════════════════════════════════════════╗
 ║   HANCOCK  —  AI Cybersecurity Agent  (Node.js client)  ║
-║   Powered by NVIDIA NIM + CyberViser                    ║
+║   Powered by CyberViser — Multi-Backend AI              ║
 ╚══════════════════════════════════════════════════════════╝
 Mode: ${mode} | Model: ${mode === 'code' ? CODER_MODEL : DEFAULT_MODEL}
 
