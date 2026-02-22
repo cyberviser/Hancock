@@ -217,14 +217,21 @@ curl -X POST http://localhost:5000/v1/respond \
 
 Hancock uses **LoRA fine-tuning** on Mistral 7B — trained on a multi-source cybersecurity dataset (MITRE ATT&CK + NVD CVEs + SOC/Pentest KB + CISA KEV + Atomic Red Team + GitHub Security Advisories).
 
-### ⚡ One-Click: Google Colab (Free T4)
+### ⚡ One-Click: Colab / Kaggle (Free T4)
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cyberviser/Hancock/blob/main/Hancock_Colab_Finetune_v3.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cyberviser/Hancock/blob/main/Hancock_Universal_Finetune.ipynb)
 
-1. Click the badge above
-2. **Runtime → Change runtime type → T4 GPU**
-3. **Runtime → Run all** (~50 min)
+Works on **both** Google Colab and Kaggle — auto-detects environment:
+
+1. Click the badge above (or import `Hancock_Universal_Finetune.ipynb` on Kaggle)
+2. **Enable GPU** (Colab: Runtime → T4 GPU / Kaggle: Settings → Accelerator → T4)
+3. **Run all** (~30 min)
 4. Downloads GGUF Q4_K_M at end — run locally with Ollama
+
+Or use the CLI script directly:
+```bash
+python hancock_finetune_v3.py --steps 300 --export-gguf --push-to-hub
+```
 
 ### CPU Fine-Tuning (No GPU Required)
 
@@ -247,8 +254,8 @@ Pre-trained adapter: [`hancock-cpu-adapter/`](./hancock-cpu-adapter/) — TinyLl
 
 | Platform | GPU | Cost | Script |
 |----------|-----|------|--------|
-| Google Colab | T4 16GB | Free (15 hr/day) | `Hancock_Colab_Finetune_v3.ipynb` |
-| Kaggle | T4 16GB | Free (30 hr/week) | `Hancock_Kaggle_Finetune.ipynb` |
+| Google Colab | T4 16GB | Free (15 hr/day) | `Hancock_Universal_Finetune.ipynb` |
+| Kaggle | T4 16GB | Free (30 hr/week) | `Hancock_Universal_Finetune.ipynb` |
 | Modal.com | T4/A10G | Free $30/mo | `modal run train_modal.py` |
 | Any GPU server | Any | Varies | `python hancock_finetune_gpu.py` |
 
