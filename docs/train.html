@@ -214,6 +214,66 @@
       </div>
     </div>
 
+    <div class="gpu-card">
+      <div class="gpu-header">
+        <span class="gpu-name">Google Cloud</span>
+        <span class="gpu-badge badge-paid">$300 FREE CREDIT</span>
+      </div>
+      <div class="gpu-body">
+        <div class="gpu-specs">
+          <span class="spec-label">Platform</span><span class="spec-value">Vertex AI</span>
+          <span class="spec-label">GPU</span><span class="spec-value">T4 / A100</span>
+          <span class="spec-label">VRAM</span><span class="spec-value">16 / 80 GB</span>
+          <span class="spec-label">Est. time</span><span class="spec-value">~45 min (T4)</span>
+          <span class="spec-label">Storage</span><span class="spec-value">GCS buckets</span>
+          <span class="spec-label">Free tier</span><span class="spec-value">$300 for new accounts</span>
+        </div>
+        <p>Vertex AI training with T4/A100 GPUs and GCS model storage. $300 free credit for new accounts — enough for multiple training runs.</p>
+        <a href="https://cloud.google.com/free" target="_blank" class="btn-launch cyan">Start free →</a>
+      </div>
+    </div>
+
+  </div>
+
+  <h2>// model storage</h2>
+  <div class="gpu-grid">
+
+    <div class="gpu-card">
+      <div class="gpu-header">
+        <span class="gpu-name">HuggingFace Hub</span>
+        <span class="gpu-badge badge-best">PRIMARY</span>
+      </div>
+      <div class="gpu-body">
+        <p>Primary model repository for trained Hancock weights and adapters.</p>
+        <code style="display:block;background:#161b22;color:var(--cyan);padding:.5rem .8rem;border-radius:4px;font-size:.82rem;margin-bottom:1rem;">cyberviser/hancock-v3</code>
+        <a href="https://huggingface.co/cyberviser/hancock-v3" target="_blank" class="btn-launch cyan">View on HF →</a>
+      </div>
+    </div>
+
+    <div class="gpu-card">
+      <div class="gpu-header">
+        <span class="gpu-name">Google Cloud Storage</span>
+        <span class="gpu-badge badge-paid">GCS</span>
+      </div>
+      <div class="gpu-body">
+        <p>Cloud storage bucket for Vertex AI training artifacts and model checkpoints.</p>
+        <code style="display:block;background:#161b22;color:var(--cyan);padding:.5rem .8rem;border-radius:4px;font-size:.82rem;margin-bottom:1rem;">gs://cyberviser-models/</code>
+        <a href="https://console.cloud.google.com/storage" target="_blank" class="btn-launch cyan">GCS Console →</a>
+      </div>
+    </div>
+
+    <div class="gpu-card">
+      <div class="gpu-header">
+        <span class="gpu-name">Modal Volumes</span>
+        <span class="gpu-badge badge-best">PERSISTENT</span>
+      </div>
+      <div class="gpu-body">
+        <p>Persistent training output stored across Modal runs. LoRA adapters and GGUF exports.</p>
+        <code style="display:block;background:#161b22;color:var(--cyan);padding:.5rem .8rem;border-radius:4px;font-size:.82rem;margin-bottom:1rem;">modal volume get hancock-models</code>
+        <a href="https://modal.com" target="_blank" class="btn-launch">Modal Dashboard →</a>
+      </div>
+    </div>
+
   </div>
 
   <h2>// modal.com setup (recommended)</h2>
