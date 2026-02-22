@@ -13,8 +13,9 @@ primary_region = "iad"   # US East — change to: lhr (London), fra (Frankfurt),
   HANCOCK_RATE_LIMIT = "60"
 
 # Secrets (never commit these — set via CLI):
-#   fly secrets set NVIDIA_API_KEY=nvapi-xxx
 #   fly secrets set HANCOCK_API_KEY=$(python -c "import secrets; print(secrets.token_urlsafe(32))")
+#   fly secrets set OPENAI_API_KEY=sk-...        # for cloud deployments (HANCOCK_LLM_BACKEND=openai)
+#   fly secrets set HANCOCK_LLM_BACKEND=openai  # Fly.io has no local Ollama; use OpenAI
 
 [http_service]
   internal_port = 5000

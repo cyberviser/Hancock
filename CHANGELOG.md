@@ -7,6 +7,31 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [0.5.0] — Ollama Primary Backend
+
+### Changed
+- **Primary inference backend switched from NVIDIA NIM → Ollama** (local LLM runtime)
+  - `HANCOCK_LLM_BACKEND=ollama` is now the default in `.env.example`
+  - Ollama exposes an OpenAI-compatible API at `http://localhost:11434/v1`; the existing
+    `openai` SDK client is reused — no new Python dependencies required
+  - `NVIDIA_API_KEY` is no longer required for local deployments
+- **`VERSION` bumped to `0.5.0`** in `hancock_agent.py`; `docker-compose.yml` label updated
+- **Fallback chain** updated: Ollama (or NIM) → OpenAI; error message now backend-agnostic
+
+### Added
+- **`make_ollama_client()`** — `OpenAI` client targeting `OLLAMA_BASE_URL` with `api_key="ollama"`
+- **`OLLAMA_BASE_URL`**, **`OLLAMA_MODEL`**, **`OLLAMA_CODER_MODEL`** constants read from env
+  - Defaults: `http://localhost:11434`, `llama3.1:8b`, `qwen2.5-coder:7b`
+- **Ollama model aliases** in `MODELS` dict: `llama3.1`, `llama3.2`, `mistral`, `qwen-coder`, `gemma3`
+- **Docker Compose `ollama` sidecar service** (`ollama/ollama:latest`) with persistent volume
+  `ollama_models`; Hancock `depends_on` it with `condition: service_healthy`
+- **`.env.example`** — `OLLAMA_*` variables documented; NVIDIA NIM + OpenAI marked optional
+- **`HANCOCK_LLM_BACKEND=nvidia`** still selectable for backward-compat NIM usage
+- **GitHub Actions CI** (`ci.yml`, `docker.yml`) — added to repo; CI env updated to
+  `HANCOCK_LLM_BACKEND: "ollama"` (was `NVIDIA_API_KEY: "nvapi-placeholder"`)
+- **Oracle Cloud setup script** installs Ollama + pulls `llama3.1:8b`; no NVIDIA key required
+- **Updated banner** — reflects Ollama + Llama 3.1 instead of NIM + Mistral
+
 ## [Unreleased] — v0.4.0
 
 ### Added

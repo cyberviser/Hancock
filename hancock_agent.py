@@ -203,16 +203,23 @@ DEFAULT_MODE = "auto"
 HANCOCK_SYSTEM = AUTO_SYSTEM
 
 NIM_BASE_URL    = "https://integrate.api.nvidia.com/v1"
-DEFAULT_MODEL   = "mistralai/mistral-7b-instruct-v0.3"
-CODER_MODEL     = "qwen/qwen2.5-coder-32b-instruct"
-VERSION         = "0.4.0"
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434") + "/v1"
+DEFAULT_MODEL   = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
+CODER_MODEL     = os.getenv("OLLAMA_CODER_MODEL", "qwen2.5-coder:7b")
+VERSION         = "0.5.0"
 
 # ── Available models ──────────────────────────────────────────────────────────
 MODELS = {
-    "mistral-7b":   "mistralai/mistral-7b-instruct-v0.3",
-    "qwen-coder":   "qwen/qwen2.5-coder-32b-instruct",
-    "llama-8b":     "meta/llama-3.1-8b-instruct",
-    "mixtral-8x7b": "mistralai/mixtral-8x7b-instruct-v0.1",
+    # Ollama models (local)
+    "llama3.1":     "llama3.1:8b",
+    "llama3.2":     "llama3.2:3b",
+    "mistral":      "mistral:7b",
+    "qwen-coder":   "qwen2.5-coder:7b",
+    "gemma3":       "gemma3:12b",
+    # NVIDIA NIM models (used when HANCOCK_LLM_BACKEND=nvidia)
+    "nim-mistral":  "mistralai/mistral-7b-instruct-v0.3",
+    "nim-qwen":     "qwen/qwen2.5-coder-32b-instruct",
+    "nim-llama":    "meta/llama-3.1-8b-instruct",
 }
 
 # ── OpenAI fallback ───────────────────────────────────────────────────────────
@@ -228,15 +235,21 @@ BANNER = """
 ║  ██║  ██║██║  ██║██║ ╚████║╚██████╗╚██████╔╝╚██████╗╚═╝║║
 ║  ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═════╝  ╚═════╝   ║
 ║          CyberViser — Pentest + SOC + CISO + Code        ║
-║   Mistral 7B · Qwen 2.5 Coder 32B · NVIDIA NIM          ║
+║   Llama 3.1 · Qwen 2.5 Coder · Ollama (local)           ║
 ╚══════════════════════════════════════════════════════════╝
   Modes : /mode pentest | soc | auto | code | ciso | sigma | yara
-  Models: /model mistral-7b | qwen-coder | llama-8b | mixtral-8x7b
+  Models: /model llama3.1 | llama3.2 | mistral | qwen-coder | gemma3
   Other : /clear  /history  /exit
 """
 
 
+def make_ollama_client() -> OpenAI:
+    """Returns an OpenAI-compatible client pointed at the local Ollama server."""
+    return OpenAI(base_url=OLLAMA_BASE_URL, api_key="ollama")
+
+
 def make_client(api_key: str) -> OpenAI:
+    """Returns an OpenAI-compatible client pointed at NVIDIA NIM (legacy)."""
     return OpenAI(base_url=NIM_BASE_URL, api_key=api_key)
 
 
@@ -255,11 +268,11 @@ def chat(client: OpenAI, history: list[dict], model: str, stream: bool = True,
     messages = [{"role": "system", "content": system}] + history
     try:
         return _do_chat(client, messages, model, stream)
-    except Exception as nim_err:
-        # Auto-fallback to OpenAI if NIM fails
+    except Exception as primary_err:
+        # Auto-fallback to OpenAI if primary backend (Ollama or NIM) fails
         fallback = make_openai_client()
         if fallback:
-            print(f"\n[Hancock] NIM error ({nim_err}) — falling back to OpenAI {OPENAI_MODEL}...")
+            print(f"\n[Hancock] Backend error ({primary_err}) — falling back to OpenAI {OPENAI_MODEL}...")
             return _do_chat(fallback, messages, OPENAI_MODEL, stream)
         raise
 
@@ -290,7 +303,11 @@ def _do_chat(client: OpenAI, messages: list[dict], model: str, stream: bool) -> 
 def run_cli(client: OpenAI, model: str):
     print(BANNER)
     print(f"  Model : {model}")
-    print(f"  Endpoint: {NIM_BASE_URL}")
+    backend = os.getenv("HANCOCK_LLM_BACKEND", "ollama").lower()
+    if backend == "ollama":
+        print(f"  Endpoint: {OLLAMA_BASE_URL}")
+    elif backend == "nvidia":
+        print(f"  Endpoint: {NIM_BASE_URL}")
     print(f"  Mode  : auto (Pentest + SOC)")
     print()
 
@@ -942,23 +959,32 @@ def run_server(client, model: str, port: int):
 # ── Entry point ───────────────────────────────────────────────────────────────
 def main():
     parser = argparse.ArgumentParser(description="Hancock — CyberViser AI Agent")
-    parser.add_argument("--api-key", default=os.getenv("NVIDIA_API_KEY"), help="NVIDIA NIM API key")
-    parser.add_argument("--model",   default=DEFAULT_MODEL, help="Model ID")
+    parser.add_argument("--api-key", default=os.getenv("NVIDIA_API_KEY"), help="NVIDIA NIM API key (only needed for --backend nvidia)")
+    parser.add_argument("--model",   default=None, help="Model ID (overrides backend default)")
     parser.add_argument("--server",  action="store_true", help="Run as REST API server")
     parser.add_argument("--port",    type=int, default=int(os.getenv("HANCOCK_PORT", "5000")))
     args = parser.parse_args()
 
-    backend = os.getenv("HANCOCK_LLM_BACKEND", "nvidia").lower()
+    backend = os.getenv("HANCOCK_LLM_BACKEND", "ollama").lower()
 
-    if backend == "openai" or not args.api_key:
+    if backend == "ollama":
+        client = make_ollama_client()
+        model  = args.model or DEFAULT_MODEL
+        print(f"[Hancock] Using Ollama backend ({OLLAMA_BASE_URL}).")
+    elif backend == "nvidia" and args.api_key:
+        client = make_client(args.api_key)
+        model  = args.model or os.getenv("HANCOCK_MODEL", "mistralai/mistral-7b-instruct-v0.3")
+        print("[Hancock] Using NVIDIA NIM backend.")
+    else:
         client = make_openai_client()
         if not client:
-            sys.exit("ERROR: Set NVIDIA_API_KEY (NIM) or OPENAI_API_KEY (fallback)")
-        model = OPENAI_MODEL
+            sys.exit(
+                "ERROR: No backend configured.\n"
+                "  Option A (local): Install Ollama (https://ollama.com) and set HANCOCK_LLM_BACKEND=ollama\n"
+                "  Option B (cloud): Set OPENAI_API_KEY or NVIDIA_API_KEY + HANCOCK_LLM_BACKEND=nvidia"
+            )
+        model = args.model or OPENAI_MODEL
         print("[Hancock] Using OpenAI backend.")
-    else:
-        client = make_client(args.api_key)
-        model  = args.model
 
     if args.server:
         run_server(client, model, args.port)

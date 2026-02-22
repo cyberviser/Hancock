@@ -1,6 +1,21 @@
 version: "3.9"
 
 services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
   hancock:
     build: .
     image: cyberviser/hancock:latest
@@ -9,10 +24,15 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - NVIDIA_API_KEY=${NVIDIA_API_KEY}
-      - HANCOCK_MODEL=${HANCOCK_MODEL:-mistralai/mistral-7b-instruct-v0.3}
+      - HANCOCK_LLM_BACKEND=ollama
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.1:8b}
+      - OLLAMA_CODER_MODEL=${OLLAMA_CODER_MODEL:-qwen2.5-coder:7b}
     env_file:
       - .env
+    depends_on:
+      ollama:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
       interval: 30s
@@ -20,4 +40,7 @@ services:
       retries: 3
     labels:
       - "com.cyberviser.project=hancock"
-      - "com.cyberviser.version=0.1.0"
+      - "com.cyberviser.version=0.5.0"
+
+volumes:
+  ollama_models:
