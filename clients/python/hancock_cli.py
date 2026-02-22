@@ -34,7 +34,7 @@ def main() -> None:
     print(f"""
 ╔══════════════════════════════════════════════════════════╗
 ║   HANCOCK  —  AI Cybersecurity Agent  (Python client)   ║
-║   Powered by NVIDIA NIM + CyberViser                    ║
+║   Powered by CyberViser — Multi-Backend AI              ║
 ╚══════════════════════════════════════════════════════════╝
 Mode: {args.mode} | Model: {args.model}
 Commands: /mode security | /mode code | /model <alias> | /exit
