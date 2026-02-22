@@ -8,7 +8,7 @@
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)](https://python.org)
 [![Model](https://img.shields.io/badge/Model-Mistral%207B-orange?logo=huggingface)](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3)
 [![NVIDIA NIM](https://img.shields.io/badge/NVIDIA-NIM-76b900?logo=nvidia)](https://build.nvidia.com)
-[![GitHub Pages](https://img.shields.io/badge/Website-Live-00ff88?logo=github)](https://cyberviser.github.io/Hancock/)
+[![GitHub Pages](https://img.shields.io/badge/Website-Live-00ff88?logo=github)](https://cyberviser.ai/)
 [![Netlify](https://img.shields.io/badge/Netlify-Live-00C7B7?style=flat-square&logo=netlify)](https://cyberviser.ai)
 
 **Automate cybersecurity through specialized LLMs — from pentesting to SOC analysis.**

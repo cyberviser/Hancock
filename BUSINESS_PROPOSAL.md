@@ -250,7 +250,7 @@ If you want to be part of the company that protects every business on Earth, let
 ## Contact
 
 **GitHub:** [github.com/cyberviser/Hancock](https://github.com/cyberviser/Hancock)
-**Website:** [cyberviser.github.io/Hancock](https://cyberviser.github.io/Hancock)
+**Website:** [cyberviser.ai](https://cyberviser.ai)
 **Email:** contact@cyberviser.ai
 
 ---
