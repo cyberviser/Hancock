@@ -48,6 +48,11 @@ Write production-ready YARA rules with meta, string patterns ($hex, $ascii, $reg
 and condition logic. Use pe/elf modules when appropriate.
 After the rule, explain what it detects and list known false positive sources.`;
 
+const IOC_SYSTEM = `You are Hancock IOC, CyberViser's threat intelligence analyst.
+When given an indicator of compromise (IP, domain, URL, hash, or email), produce a structured
+enrichment report: indicator type, threat intel context, associated MITRE ATT&CK techniques,
+risk score 1-10 with justification, recommended defensive actions, and relevant CVEs/GHSA.`;
+
 // ── NIM Client ──────────────────────────────────────────────────────────────
 function createClient() {
   const apiKey = process.env.NVIDIA_API_KEY;
@@ -67,9 +72,10 @@ async function ask(client, prompt, mode = 'security') {
   const isSigma = mode === 'sigma';
   const isCiso  = mode === 'ciso';
   const isYara  = mode === 'yara';
+  const isIoc   = mode === 'ioc';
   const model   = isCode ? CODER_MODEL : DEFAULT_MODEL;
-  const system  = isCode ? CODE_SYSTEM : isSigma ? SIGMA_SYSTEM : isCiso ? CISO_SYSTEM : isYara ? YARA_SYSTEM : SECURITY_SYSTEM;
-  const temp    = isCode || isSigma || isYara ? 0.2 : isCiso ? 0.3 : 0.7;
+  const system  = isCode ? CODE_SYSTEM : isSigma ? SIGMA_SYSTEM : isCiso ? CISO_SYSTEM : isYara ? YARA_SYSTEM : isIoc ? IOC_SYSTEM : SECURITY_SYSTEM;
+  const temp    = isCode || isSigma || isYara ? 0.2 : isCiso || isIoc ? 0.3 : 0.7;
   const topP    = isCode || isSigma || isYara ? 0.7 : 0.95;
   const maxTok  = isCode || isSigma || isCiso || isYara ? 2048 : 1024;
 
@@ -99,9 +105,10 @@ async function askStream(client, prompt, mode = 'security') {
   const isSigma = mode === 'sigma';
   const isCiso  = mode === 'ciso';
   const isYara  = mode === 'yara';
+  const isIoc   = mode === 'ioc';
   const model   = isCode ? CODER_MODEL : DEFAULT_MODEL;
-  const system  = isCode ? CODE_SYSTEM : isSigma ? SIGMA_SYSTEM : isCiso ? CISO_SYSTEM : isYara ? YARA_SYSTEM : SECURITY_SYSTEM;
-  const temp    = isCode || isSigma || isYara ? 0.2 : isCiso ? 0.3 : 0.7;
+  const system  = isCode ? CODE_SYSTEM : isSigma ? SIGMA_SYSTEM : isCiso ? CISO_SYSTEM : isYara ? YARA_SYSTEM : isIoc ? IOC_SYSTEM : SECURITY_SYSTEM;
+  const temp    = isCode || isSigma || isYara ? 0.2 : isCiso || isIoc ? 0.3 : 0.7;
   const topP    = isCode || isSigma || isYara ? 0.7 : 0.95;
   const maxTok  = isCode || isSigma || isCiso || isYara ? 2048 : 1024;
 
@@ -136,7 +143,7 @@ async function interactiveCLI(client, initialMode) {
 ╚══════════════════════════════════════════════════════════╝
 Mode: ${mode} | Model: ${mode === 'code' ? CODER_MODEL : DEFAULT_MODEL}
 
-Commands: /mode security | /mode code | /mode sigma | /mode ciso | /mode yara | /model <alias> | /exit
+Commands: /mode security | /mode code | /mode sigma | /mode ciso | /mode yara | /mode ioc | /model <alias> | /exit
 Aliases:  mistral-7b | qwen-coder | llama-8b | mixtral-8x7b
 `);
 

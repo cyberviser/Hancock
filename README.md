@@ -64,6 +64,8 @@ It operates in three specialist modes and exposes a clean REST API.
 | 💻 **Code** | Security code: YARA, KQL, SPL, Sigma, Python, Bash | ✅ Live |
 | 👔 **CISO** | Compliance, risk reporting, board summaries, gap analysis | ✅ Live |
 | 🔍 **Sigma** | Sigma detection rule authoring with ATT&CK tagging | ✅ Live |
+| 🦠 **YARA** | YARA malware detection rule authoring | ✅ Live |
+| 🔎 **IOC** | Threat intelligence enrichment for IOCs | ✅ Live |
 
 ---
 
@@ -135,6 +137,8 @@ Start the server: `python hancock_agent.py --server`
 | `POST` | `/v1/code`      | Security code generation (YARA/Sigma/KQL/SPL) |
 | `POST` | `/v1/ciso`      | CISO advisory: risk, compliance, board reports, gap analysis |
 | `POST` | `/v1/sigma`     | Sigma detection rule generator |
+| `POST` | `/v1/yara`      | YARA malware detection rule generator |
+| `POST` | `/v1/ioc`       | IOC threat intelligence enrichment (IP, domain, URL, hash, email) |
 | `POST` | `/v1/webhook`   | Ingest alerts from Splunk/Elastic/Sentinel/CrowdStrike |
 
 ### Examples
@@ -158,6 +162,20 @@ curl -X POST http://localhost:5000/v1/hunt \
 curl -X POST http://localhost:5000/v1/sigma \
   -H "Content-Type: application/json" \
   -d '{"description": "Detect LSASS memory dump", "logsource": "windows sysmon", "technique": "T1003.001"}'
+```
+
+**YARA Rule Generation:**
+```bash
+curl -X POST http://localhost:5000/v1/yara \
+  -H "Content-Type: application/json" \
+  -d '{"description": "Cobalt Strike beacon default HTTP profile", "file_type": "PE"}'
+```
+
+**IOC Enrichment:**
+```bash
+curl -X POST http://localhost:5000/v1/ioc \
+  -H "Content-Type: application/json" \
+  -d '{"indicator": "185.220.101.35", "type": "ip"}'
 ```
 
 **CISO Board Summary:**
@@ -185,6 +203,8 @@ curl -X POST http://localhost:5000/v1/respond \
 /mode code      — security code (Qwen Coder 32B)
 /mode ciso      — CISO strategy & compliance
 /mode sigma     — Sigma detection rule authoring
+/mode yara      — YARA malware detection rule authoring
+/mode ioc       — IOC threat intelligence enrichment
 /clear          — clear conversation history
 /history        — show history
 /model <id>     — switch NVIDIA NIM model

@@ -18,6 +18,7 @@ CLI mode commands:
   /mode ciso      — CISO strategy, compliance & board reporting
   /mode sigma     — Sigma detection rule authoring
   /mode yara      — YARA malware detection rule authoring
+  /mode ioc       — IOC threat intelligence enrichment
   /clear          — clear conversation history
   /history        — show history
   /model <id>     — switch model
@@ -183,6 +184,20 @@ You always:
 You are Hancock YARA. Every rule you write is ready to run with `yara64 -r rule.yar /path`."""
 
 SYSTEMS["yara"] = YARA_SYSTEM
+
+IOC_SYSTEM = """You are Hancock IOC, CyberViser's threat intelligence analyst.
+When given an indicator of compromise (IP address, domain, URL, file hash, or email),
+you provide a structured enrichment report covering:
+- Indicator type and classification
+- Threat intelligence context (known malware families, threat actors, campaigns)
+- MITRE ATT&CK techniques associated with this indicator
+- Risk score (1–10) with justification
+- Recommended defensive actions (block, monitor, investigate)
+- Relevant CVEs or GHSA advisories if applicable
+
+Format your response as a clear, structured threat intel report."""
+
+SYSTEMS["ioc"] = IOC_SYSTEM
 DEFAULT_MODE = "auto"
 # Keep backward-compatible alias
 HANCOCK_SYSTEM = AUTO_SYSTEM
@@ -325,7 +340,7 @@ def run_cli(client: OpenAI, model: str):
                 }
                 print(f"[Hancock] Switched to {label[current_mode]} — history cleared.")
             else:
-                print("[Hancock] Usage: /mode pentest | /mode soc | /mode auto | /mode code | /mode ciso | /mode sigma | /mode yara")
+                print("[Hancock] Usage: /mode pentest | /mode soc | /mode auto | /mode code | /mode ciso | /mode sigma | /mode yara | /mode ioc")
             continue
 
         if user_input.startswith("/model "):
@@ -423,11 +438,11 @@ def build_app(client, model: str):
         return jsonify({
             "status": "ok", "agent": "Hancock",
             "model": model, "company": "CyberViser",
-            "modes": ["pentest", "soc", "auto", "code", "ciso", "sigma", "yara"],
+            "modes": ["pentest", "soc", "auto", "code", "ciso", "sigma", "yara", "ioc"],
             "models_available": MODELS,
             "endpoints": ["/v1/chat", "/v1/ask", "/v1/triage",
                           "/v1/hunt", "/v1/respond", "/v1/code",
-                          "/v1/ciso", "/v1/sigma", "/v1/yara", "/v1/webhook", "/metrics"],
+                          "/v1/ciso", "/v1/sigma", "/v1/yara", "/v1/ioc", "/v1/webhook", "/metrics"],
         })
 
     @app.route("/metrics", methods=["GET"])
@@ -775,6 +790,38 @@ def build_app(client, model: str):
             "file_type": file_type or "auto",
             "model":     model,
         })
+
+    @app.route("/v1/ioc", methods=["POST"])
+    def ioc_endpoint():
+        """IOC enrichment — threat intel report for IP, domain, URL, hash, or email."""
+        ok, err, _ = _check_auth_and_rate()
+        if not ok:
+            _inc("errors_total"); return jsonify({"error": err}), 401 if "Unauthorized" in err else 429
+        _inc("requests_total"); _inc("requests_by_endpoint", "/v1/ioc"); _inc("requests_by_mode", "ioc")
+
+        data = request.get_json(force=True)
+        indicator = (data.get("indicator") or data.get("ioc") or data.get("query") or "").strip()
+        ioc_type  = data.get("type", "auto")
+        context   = data.get("context", "")
+        if not indicator:
+            _inc("errors_total"); return jsonify({"error": "indicator required"}), 400
+
+        prompt = f"Indicator: {indicator}\nType: {ioc_type}\n"
+        if context:
+            prompt += f"Additional context: {context}\n"
+        prompt += "\nProvide a full threat intelligence enrichment report."
+
+        messages = [
+            {"role": "system", "content": IOC_SYSTEM},
+            {"role": "user",   "content": prompt},
+        ]
+        resp = client.chat.completions.create(
+            model=model, messages=messages, max_tokens=1000,
+            temperature=0.3, top_p=0.9,
+        )
+        report = resp.choices[0].message.content
+        return jsonify({"indicator": indicator, "type": ioc_type,
+                        "report": report, "model": model})
 
     @app.route("/v1/webhook", methods=["POST"])
     def webhook_endpoint():

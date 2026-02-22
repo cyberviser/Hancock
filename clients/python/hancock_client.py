@@ -65,6 +65,13 @@ CODE_SYSTEM = (
     "secure code review, IDS signatures, threat hunting queries. Always include comments."
 )
 
+IOC_SYSTEM = (
+    "You are Hancock IOC, CyberViser's threat intelligence analyst. "
+    "When given an indicator of compromise (IP, domain, URL, hash, or email), produce a structured "
+    "enrichment report: indicator type, threat intel context, associated MITRE ATT&CK techniques, "
+    "risk score 1-10 with justification, recommended defensive actions, and relevant CVEs/GHSA."
+)
+
 
 class HancockClient:
     """Synchronous Hancock client backed by NVIDIA NIM."""
@@ -212,6 +219,15 @@ class HancockClient:
         )
         return self._complete(YARA_SYSTEM, prompt, self.model,
                               temperature=0.2, top_p=0.7, max_tokens=2048)
+
+    def ioc(self, indicator: str, ioc_type: str = "auto", context: str = "") -> str:
+        """Threat intelligence enrichment for an IOC (IP, domain, URL, hash, or email)."""
+        prompt = f"Indicator: {indicator}\nType: {ioc_type}\n"
+        if context:
+            prompt += f"Additional context: {context}\n"
+        prompt += "\nProvide a full threat intelligence enrichment report."
+        return self._complete(IOC_SYSTEM, prompt, self.model,
+                              temperature=0.3, top_p=0.9, max_tokens=1000)
 
     def chat(self, message: str, history: Optional[list] = None, mode: str = "auto") -> str:
         """Multi-turn conversation with history."""

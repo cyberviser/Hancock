@@ -117,3 +117,63 @@ class TestHancockClient:
             context="50-person SaaS, AWS, no certifications",
         )
         assert isinstance(result, str)
+
+
+class TestYaraSDK:
+    @pytest.fixture
+    def client(self, monkeypatch):
+        from unittest.mock import MagicMock, patch
+        mock_openai = MagicMock()
+        mock_resp   = MagicMock()
+        mock_resp.choices[0].message.content = "Mocked YARA rule response."
+        mock_openai.return_value.chat.completions.create.return_value = mock_resp
+        with patch("hancock_client.OpenAI", mock_openai):
+            from hancock_client import HancockClient
+            return HancockClient(api_key="nvapi-test-key")
+
+    def test_yara_returns_string(self, client):
+        result = client.yara("Detect Cobalt Strike beacon")
+        assert isinstance(result, str)
+        assert len(result) > 0
+
+    def test_yara_with_file_type(self, client):
+        result = client.yara("Ransomware file encryptor", file_type="PE")
+        assert isinstance(result, str)
+
+    def test_yara_with_hash(self, client):
+        result = client.yara(
+            "WannaCry SMB exploit",
+            file_type="PE",
+            sample_hash="ed01ebfbc9eb5bbea545af4d01bf5f1071661840480439c6e5babe8e080e41aa",
+        )
+        assert isinstance(result, str)
+
+
+class TestIocSDK:
+    @pytest.fixture
+    def client(self, monkeypatch):
+        from unittest.mock import MagicMock, patch
+        mock_openai = MagicMock()
+        mock_resp   = MagicMock()
+        mock_resp.choices[0].message.content = "Mocked IOC enrichment report."
+        mock_openai.return_value.chat.completions.create.return_value = mock_resp
+        with patch("hancock_client.OpenAI", mock_openai):
+            from hancock_client import HancockClient
+            return HancockClient(api_key="nvapi-test-key")
+
+    def test_ioc_returns_string(self, client):
+        result = client.ioc("185.220.101.35")
+        assert isinstance(result, str)
+        assert len(result) > 0
+
+    def test_ioc_with_type(self, client):
+        result = client.ioc("cobaltstrikebeacon.com", ioc_type="domain")
+        assert isinstance(result, str)
+
+    def test_ioc_with_context(self, client):
+        result = client.ioc(
+            "d41d8cd98f00b204e9800998ecf8427e",
+            ioc_type="md5",
+            context="Found in ransomware incident, EDR quarantined on 3 hosts",
+        )
+        assert isinstance(result, str)

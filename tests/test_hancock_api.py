@@ -612,3 +612,35 @@ class TestWebhookHMAC:
                            data=json.dumps({"alert": "test"}),
                            content_type="application/json")
                 assert r.status_code == 401
+
+
+class TestIoc:
+    def test_ioc_basic(self, client):
+        r = client.post("/v1/ioc",
+                     data=json.dumps({"indicator": "185.220.101.35"}),
+                     content_type="application/json")
+        assert r.status_code == 200
+        d = r.get_json()
+        assert "report" in d
+        assert "indicator" in d
+
+    def test_ioc_alias_ioc_field(self, client):
+        r = client.post("/v1/ioc",
+                     data=json.dumps({"ioc": "cobaltstrikebeacon.com", "type": "domain"}),
+                     content_type="application/json")
+        assert r.status_code == 200
+        assert r.get_json()["indicator"] == "cobaltstrikebeacon.com"
+
+    def test_ioc_missing_indicator_returns_400(self, client):
+        r = client.post("/v1/ioc",
+                     data=json.dumps({}),
+                     content_type="application/json")
+        assert r.status_code == 400
+
+    def test_ioc_with_type(self, client):
+        r = client.post("/v1/ioc",
+                     data=json.dumps({"indicator": "d41d8cd98f00b204e9800998ecf8427e", "type": "md5"}),
+                     content_type="application/json")
+        assert r.status_code == 200
+        d = r.get_json()
+        assert d["type"] == "md5"

@@ -331,6 +331,10 @@ paths:
   /v1/webhook:
     post:
       summary: SIEM/EDR push webhook — auto-triage incoming alerts
+      description: |
+        Auto-triage SIEM/EDR alerts. Set `HANCOCK_WEBHOOK_SECRET` env var to enable
+        HMAC-SHA256 signature verification. Sign requests with header:
+        `X-Hancock-Signature: sha256=<hmac_hex>`
       tags: [SOC]
       requestBody:
         required: true
@@ -357,3 +361,37 @@ paths:
                       source:   { type: string }
                       severity: { type: string }
                       triage:   { type: string }
+
+  /v1/yara:
+    post:
+      summary: YARA malware detection rule generator
+      tags: [Detection]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  description: "Malware family or behaviour. Also accepts 'malware' or 'query' as alias."
+                file_type:
+                  type: string
+                  description: "File type hint — PE, Office macro, PDF, script, shellcode, memory"
+                hash:
+                  type: string
+                  description: "Known SHA256 sample hash — included in rule meta section"
+      responses:
+        "200":
+          description: YARA rule + tuning notes
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ModelRef"
+                  - type: object
+                    properties:
+                      rule:      { type: string, description: Full YARA rule + explanation }
+                      file_type: { type: string }
+        "400": { description: Bad request }

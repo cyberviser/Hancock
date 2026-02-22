@@ -10,6 +10,23 @@ Versioning: [Semantic Versioning](https://semver.org/)
 ## [Unreleased] — v0.4.0
 
 ### Added
+- **IOC mode** (`/mode ioc`) — threat intelligence enrichment for IP, domain, URL, hash, or email:
+  risk score, MITRE ATT&CK mapping, recommended defensive actions, related CVEs/GHSA
+- **`/v1/ioc` REST endpoint** — IOC enrichment endpoint; accepts `indicator`, `type`, `context`;
+  supports `ioc` and `query` as field aliases
+- **YARA mode** (`/mode yara`) — YARA malware detection rule authoring: PE/ELF modules, hex/ascii/
+  regex/wide string patterns, condition logic, meta section; ready for `yara64 -r`
+- **`/v1/yara` REST endpoint** — YARA rule generator; accepts `description`/`malware`/`query`,
+  `file_type` (PE, Office macro, PDF, script, shellcode, memory), optional `hash` for meta
+- **HMAC-SHA256 webhook verification** — set `HANCOCK_WEBHOOK_SECRET` env var to enforce
+  `X-Hancock-Signature: sha256=<hmac>` verification on all `/v1/webhook` requests
+- **`VERSION = "0.4.0"`** constant in `hancock_agent.py`; `pyproject.toml` version bumped to 0.4.0
+- **`clients/python/__init__.py`** — `__version__ = "0.4.0"`, exports `__version__`
+- **Python SDK** `yara()` + `ioc()` methods; `YARA_SYSTEM` + `IOC_SYSTEM` prompts added
+- **Node.js SDK** `yara` + `ioc` mode dispatch in `ask()` + `askStream()`; `YARA_SYSTEM` +
+  `IOC_SYSTEM` constants; CLI `/mode ioc` added
+- **HuggingFace Space** (`spaces_app.py`) — 9-tab Gradio demo: +YARA Rules tab, +IOC Enrichment tab
+- **`docs/openapi.yaml`** — `/v1/yara` and `/v1/ioc` endpoints added; webhook HMAC note
 - **Sigma mode** (`/mode sigma`) — Sigma detection rule authoring: correct YAML syntax, MITRE ATT&CK
   tagging, logsource selection, false-positive analysis, ready-to-deploy rules
 - **`/v1/sigma` REST endpoint** — generate Sigma rules from a TTP description; accepts `logsource`
@@ -21,7 +38,8 @@ Versioning: [Semantic Versioning](https://semver.org/)
 - **`docs/openapi.yaml`** — full OpenAPI 3.1.0 specification for all 9 endpoints
 - **`fly.toml`** — Fly.io free-tier deployment config: auto-stop/start, health check on `/health`
 - **`Makefile` targets**: `pipeline-v3` (phase 3 only), `test-cov` (HTML coverage), `fly-deploy`
-- **56 tests** (was 50): `TestSigma` (4), `TestRateLimitHeaders` (2)
+- **56 tests** (was 50): `TestSigma` (4), `TestRateLimitHeaders` (2); **75 total** by end of v0.4.0:
+  `TestYara` (4), `TestWebhookHMAC` (2), `TestIoc` (4) + SDK tests `TestYaraSDK` (3), `TestIocSDK` (3)
 - **CISO mode** (`/mode ciso`) — AI Chief Information Security Officer advisor: risk management,
   ISO 27001/SOC 2/NIST CSF/PCI-DSS compliance, board reporting, TPRM, FAIR risk analysis
 - **`/v1/ciso` REST endpoint** — dedicated CISO advisor endpoint with `output` param:
@@ -43,8 +61,8 @@ Versioning: [Semantic Versioning](https://semver.org/)
   `HANCOCK_LLM_BACKEND`, `OPENAI_API_KEY`, `OPENAI_ORG_ID`, `OPENAI_MODEL` env vars
 - **`oracle-cloud-setup.sh`** — full Oracle Cloud Always-Free VM setup: Docker, Nginx,
   systemd `hancock.service` (auto-start on reboot), firewall (UFW + iptables), HTTPS-ready
-- **HuggingFace Space** (`spaces_app.py`) — 6-tab Gradio demo: SOC Triage, Pentest/CVE,
-  Threat Hunting, Security Code, CISO Advisor, IR Playbook
+- **HuggingFace Space** (`spaces_app.py`) — 9-tab Gradio demo: SOC Triage, Pentest/CVE,
+  Threat Hunting, Security Code, CISO Advisor, Sigma Rules, IR Playbook, YARA Rules, IOC Enrichment
 
 ### Fixed
 - `hancock_pipeline.py` — v3 functions defined after `if __name__ == "__main__"` caused

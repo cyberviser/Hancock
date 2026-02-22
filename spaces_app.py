@@ -77,6 +77,12 @@ def run_yara(description: str, file_type: str) -> str:
     return _post("/v1/yara", {"description": description, "file_type": file_type})
 
 
+def run_ioc(indicator: str, ioc_type: str) -> str:
+    if not indicator.strip():
+        return "⚠️  Please enter an indicator (IP, domain, URL, hash, or email)."
+    return _post("/v1/ioc", {"indicator": indicator, "type": ioc_type})
+
+
 def run_respond(incident: str) -> str:
     if not incident.strip():
         return "⚠️  Please describe the incident."
@@ -200,6 +206,20 @@ with gr.Blocks(title="Hancock — CyberViser", theme=gr.themes.Monochrome(), css
                 ["PowerShell script with base64-encoded download cradle and bypass AMSI", "script"],
                 ["PDF with embedded JavaScript that exploits CVE-2023-21608", "PDF"],
             ], [yara_desc, yara_ft])
+
+        with gr.Tab("🔎 IOC Enrichment"):
+            gr.Markdown("**Threat intelligence enrichment** for an indicator of compromise — IP, domain, URL, hash, or email.")
+            ioc_input = gr.Textbox(lines=1, placeholder="e.g. 185.220.101.35 or cobaltstrikebeacon.com or d41d8cd98f00b204...", label="Indicator of Compromise")
+            ioc_type  = gr.Dropdown(["auto", "ip", "domain", "url", "sha256", "md5", "email"], value="auto", label="Indicator Type")
+            ioc_btn   = gr.Button("🔎 Enrich IOC", variant="primary")
+            ioc_out   = gr.Textbox(lines=20, label="Threat Intel Report", interactive=False)
+            ioc_btn.click(run_ioc, [ioc_input, ioc_type], ioc_out)
+            gr.Examples([
+                ["185.220.101.35", "ip"],
+                ["cobaltstrikebeacon.com", "domain"],
+                ["d41d8cd98f00b204e9800998ecf8427e", "md5"],
+                ["https://malicious-cdn.com/beacon.exe", "url"],
+            ], [ioc_input, ioc_type])
 
     gr.Markdown("""
 ---
