@@ -215,6 +215,29 @@ def main():
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
+    # Write metrics to a separate CSV so they survive tqdm overwrite
+    metrics_csv = OUTPUT_DIR / "training_metrics.csv"
+    import csv
+
+    class MetricsLogger:
+        def __init__(self, path):
+            self.path = path
+            self._header_written = False
+        def on_log(self, args, state, control, logs=None, **kwargs):
+            if not logs:
+                return
+            with open(self.path, "a", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=list(logs.keys()))
+                if not self._header_written:
+                    writer.writeheader()
+                    self._header_written = True
+                writer.writerow(logs)
+
+    from transformers import TrainerCallback
+    class MetricsLoggerCallback(TrainerCallback, MetricsLogger):
+        def __init__(self, path):
+            MetricsLogger.__init__(self, path)
+
     sft_config = SFTConfig(
         output_dir=str(OUTPUT_DIR),
         max_steps=args.max_steps,
@@ -248,7 +271,10 @@ def main():
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
         args=sft_config,
-        callbacks=[EarlyStoppingCallback(early_stopping_patience=args.patience)],
+        callbacks=[
+            EarlyStoppingCallback(early_stopping_patience=args.patience),
+            MetricsLoggerCallback(metrics_csv),
+        ],
     )
 
     t_start = time.time()
