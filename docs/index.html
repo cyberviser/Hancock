@@ -509,11 +509,11 @@
  ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═════╝  ╚═════╝╚═╝  ╚═╝</pre>
 
   <h1>
-    Your AI <span class="accent-green">Cybersecurity</span><br />
-    Co-Pilot — <span class="accent-cyan">Built for Operators</span>
+    The AI <span class="accent-green">Cybersecurity</span><br />
+    Platform — <span class="accent-cyan">Built for Operators</span>
   </h1>
   <p class="hero-sub">
-    Hancock is <strong>CyberViser's</strong> elite AI security agent — fine-tuned on Mistral 7B with MITRE ATT&CK, NVD/CVE, and real-world pentest knowledge. Automate pentesting, SOC analysis, and incident response with a single API.
+    <strong>CyberViser</strong> is building the platform that replaces 15–30 disconnected security tools with a single AI-native intelligence layer. Fine-tuned on MITRE ATT&CK, NVD/CVE, CISA KEV, and Atomic Red Team. 12 API endpoints. Deploy anywhere.
   </p>
 
   <div class="btn-group">
@@ -530,12 +530,13 @@
     </div>
     <div class="terminal-body">
       <div><span class="t-prompt">$ </span><span class="t-cmd">python hancock_agent.py --server</span></div>
-      <div><span class="t-out">[CyberViser] Hancock API starting on port 5000</span></div>
-      <div><span class="t-out">  POST /v1/chat     — conversational (pentest|soc|auto)</span></div>
-      <div><span class="t-out">  POST /v1/triage   — SOC alert triage</span></div>
-      <div><span class="t-out">  POST /v1/hunt     — threat hunting query generator</span></div>
-      <div><span class="t-out">  POST /v1/respond  — IR playbook (PICERL)</span></div>
-      <div><span class="t-ok">  ✓ Hancock online. Model: mistralai/mistral-7b-instruct-v0.3</span></div>
+      <div><span class="t-out">[CyberViser] Hancock Platform starting on port 5000</span></div>
+      <div><span class="t-out">  12 endpoints loaded — offense | defense | compliance | code</span></div>
+      <div><span class="t-out">  POST /v1/triage   — SOC alert triage + MITRE mapping</span></div>
+      <div><span class="t-out">  POST /v1/hunt     — SIEM query generator (Splunk/Elastic/Sentinel)</span></div>
+      <div><span class="t-out">  POST /v1/sigma    — Sigma detection rule generator</span></div>
+      <div><span class="t-out">  POST /v1/yara     — YARA malware detection rules</span></div>
+      <div><span class="t-ok">  ✓ Hancock online. Deploy anywhere. Defend everything.</span></div>
       <div><span class="t-prompt">$ </span><span class="cursor"></span></div>
     </div>
   </div>
@@ -545,8 +546,8 @@
 <section id="features">
   <div class="container">
     <div class="section-label">// capabilities</div>
-    <h2 class="section-title">Two Specialists. One Agent.</h2>
-    <p class="section-sub">Hancock switches modes on command — red team or blue team, it adapts to your mission.</p>
+    <h2 class="section-title">Eight Specialists. One Platform.</h2>
+    <p class="section-sub">Hancock covers the full security spectrum — offense, defense, compliance, and code — in a single deployable agent.</p>
     <div class="glow-line"></div>
 
     <div class="card-grid">
@@ -574,15 +575,15 @@
       <div class="card">
         <span class="card-tag tag-live">🔌 Live</span>
         <div class="card-icon">🌐</div>
-        <h3>REST API Ready</h3>
-        <p>Drop Hancock into any workflow. Seven endpoints: <code style="color:var(--green)">/v1/chat</code>, <code style="color:var(--green)">/v1/ask</code>, <code style="color:var(--green)">/v1/triage</code>, <code style="color:var(--green)">/v1/hunt</code>, <code style="color:var(--green)">/v1/respond</code>, <code style="color:var(--green)">/v1/code</code>, <code style="color:var(--green)">/v1/webhook</code>. JSON in, answers out.</p>
+        <h3>REST API — 12 Endpoints</h3>
+        <p>Drop Hancock into any workflow. Twelve endpoints: <code style="color:var(--green)">/v1/chat</code>, <code style="color:var(--green)">/v1/triage</code>, <code style="color:var(--green)">/v1/hunt</code>, <code style="color:var(--green)">/v1/respond</code>, <code style="color:var(--green)">/v1/sigma</code>, <code style="color:var(--green)">/v1/yara</code>, <code style="color:var(--green)">/v1/ioc</code>, <code style="color:var(--green)">/v1/ciso</code>, and more.</p>
       </div>
 
       <div class="card">
         <span class="card-tag tag-live">🟢 Live</span>
         <div class="card-icon">🐍</div>
         <h3>Python &amp; Node.js SDKs</h3>
-        <p>Official clients in <code style="color:var(--cyan)">clients/python/</code> and <code style="color:var(--cyan)">clients/nodejs/</code>. One-line install, all 7 endpoints, interactive CLI, streaming output, model alias switching.</p>
+        <p>Official clients in <code style="color:var(--cyan)">clients/python/</code> and <code style="color:var(--cyan)">clients/nodejs/</code>. One-line install, all 12 endpoints, interactive CLI, streaming output, model alias switching.</p>
       </div>
 
       <div class="card">
@@ -593,17 +594,24 @@
       </div>
 
       <div class="card">
-        <span class="card-tag tag-soon">🟡 Soon</span>
+        <span class="card-tag tag-live">👔 Live</span>
         <div class="card-icon">👔</div>
-        <h3>CISO Strategy Mode</h3>
-        <p>Board-level risk reporting, compliance gap analysis (SOC2, ISO 27001, NIST CSF), security program roadmaps, and executive summaries — coming in Phase 3.</p>
+        <h3>CISO Strategy &amp; Compliance</h3>
+        <p>Board-level risk reporting, compliance gap analysis (SOC 2, ISO 27001, NIST CSF, CMMC), security program roadmaps, budget justification, and executive summaries.</p>
+      </div>
+
+      <div class="card">
+        <span class="card-tag tag-live">🔍 Live</span>
+        <div class="card-icon">🔍</div>
+        <h3>Sigma, YARA &amp; IOC</h3>
+        <p>Sigma detection rule authoring with ATT&CK tagging, YARA malware detection rules, and IOC threat intelligence enrichment for IPs, domains, URLs, hashes, and emails.</p>
       </div>
 
       <div class="card">
         <span class="card-tag tag-planned">📋 Planned</span>
         <div class="card-icon">🔗</div>
-        <h3>Burp Suite Integration</h3>
-        <p>Native Burp Suite extension for real-time AI analysis of web app findings, automated report generation, and payload suggestion during active engagements.</p>
+        <h3>SIEM/SOAR Integrations</h3>
+        <p>Native integrations with Splunk, Elastic, Microsoft Sentinel, Palo Alto XSOAR, Swimlane, and Tines. Autonomous alert ingestion, triage, and response orchestration.</p>
       </div>
     </div>
 
@@ -613,7 +621,7 @@
         <span class="stat-label">Mistral Parameters</span>
       </div>
       <div class="stat">
-        <span class="stat-num">4</span>
+        <span class="stat-num">8</span>
         <span class="stat-label">Specialist Modes</span>
       </div>
       <div class="stat">
@@ -621,8 +629,8 @@
         <span class="stat-label">API Endpoints</span>
       </div>
       <div class="stat">
-        <span class="stat-num">8</span>
-        <span class="stat-label">Specialist Modes</span>
+        <span class="stat-num">100%</span>
+        <span class="stat-label">Open Source</span>
       </div>
     </div>
   </div>
@@ -674,8 +682,33 @@
       </div>
       <div class="endpoint">
         <span class="method method-post">POST</span>
+        <span class="ep-path">/v1/ciso</span>
+        <span class="ep-desc">CISO advisory — risk, compliance, board reports, gap analysis</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-post">POST</span>
+        <span class="ep-path">/v1/sigma</span>
+        <span class="ep-desc">Sigma detection rule generator with ATT&CK tagging</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-post">POST</span>
+        <span class="ep-path">/v1/yara</span>
+        <span class="ep-desc">YARA malware detection rule generator</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-post">POST</span>
+        <span class="ep-path">/v1/ioc</span>
+        <span class="ep-desc">IOC threat intelligence enrichment (IP, domain, URL, hash, email)</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-post">POST</span>
         <span class="ep-path">/v1/webhook</span>
         <span class="ep-desc">SIEM push webhook — auto-triage + optional Slack/Teams notification</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-get">GET</span>
+        <span class="ep-path">/metrics</span>
+        <span class="ep-desc">Prometheus-compatible request counters</span>
       </div>
 
     <div style="margin-top: 2rem;">
@@ -698,7 +731,6 @@
         </div>
       </div>
     </div>
-    </div>
   </div>
 </section>
 
@@ -706,28 +738,40 @@
 <section id="roadmap">
   <div class="container">
     <div class="section-label">// roadmap</div>
-    <h2 class="section-title">Building the Full Security Stack</h2>
-    <p class="section-sub">Three phases. One mission: automate cybersecurity from red team to the boardroom.</p>
+    <h2 class="section-title">The Roadmap to Fortune 500</h2>
+    <p class="section-sub">Five phases. One mission: build the defining cybersecurity intelligence platform.</p>
     <div class="glow-line"></div>
 
     <div class="roadmap">
       <div class="roadmap-item">
         <div class="roadmap-dot active"></div>
-        <div class="roadmap-phase">Phase 1 — 🔨 Building</div>
-        <h3>Pentest Specialist</h3>
-        <p>Fine-tuned Mistral 7B on MITRE ATT&CK, NVD/CVE, and pentest knowledge bases. CLI + REST API with Pentest and SOC modes. NVIDIA NIM inference backend.</p>
+        <div class="roadmap-phase">Phase 1 — ✅ Complete</div>
+        <h3>Foundation — Build the Weapon</h3>
+        <p>Core Hancock agent with 8 specialist modes, 12 API endpoints, fine-tuned on MITRE ATT&CK + NVD/CVE + CISA KEV + Atomic Red Team + GHSA. Python + Node.js SDKs. Multi-backend inference.</p>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot active"></div>
+        <div class="roadmap-phase">Phase 2 — 🔨 Building</div>
+        <h3>Commercialize — Prove the Market</h3>
+        <p>Hancock Pro launch. Enterprise pilot program with 10 design partners. SIEM/SOAR integrations (Splunk, Elastic, Sentinel, XSOAR). AWS + Azure + GCP Marketplace listings. SOC 2 Type II.</p>
       </div>
       <div class="roadmap-item">
         <div class="roadmap-dot planned"></div>
-        <div class="roadmap-phase">Phase 2 — Planned</div>
-        <h3>SOC Analyst Deep Specialization</h3>
-        <p>Expanded fine-tuning on detection engineering, threat intel feeds (MISP/TAXII/STIX), UEBA patterns, and automated Sigma/YARA rule generation pipelines.</p>
+        <div class="roadmap-phase">Phase 3 — Planned</div>
+        <h3>Scale — Own the Category</h3>
+        <p>GRC automation (SOC 2, ISO 27001, NIST CSF, CMMC, FedRAMP). Hancock Autonomous Mode. Threat Intelligence Network (data flywheel). Federal/DoD sales. International expansion.</p>
       </div>
       <div class="roadmap-item">
         <div class="roadmap-dot future"></div>
-        <div class="roadmap-phase">Phase 3 — Planned</div>
-        <h3>CISO Strategy &amp; Compliance</h3>
-        <p>Executive reporting, compliance automation (SOC2, ISO 27001, NIST CSF), risk scoring, security program KPIs, and board-ready presentation generation.</p>
+        <div class="roadmap-phase">Phase 4 — Planned</div>
+        <h3>Dominate — Become Infrastructure</h3>
+        <p>Multi-model architecture. Real-time autonomous SOC. Strategic acquisitions. Partnerships with NVIDIA, AWS, Microsoft, and major MSSPs. Path to $250M ARR.</p>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot future"></div>
+        <div class="roadmap-phase">Phase 5 — Vision</div>
+        <h3>Fortune 500 — Define the Industry</h3>
+        <p>IPO. Platform consolidation — the operating system for enterprise security. Expand into fraud detection, compliance-as-a-service, and cyber insurance underwriting.</p>
       </div>
     </div>
   </div>
@@ -737,7 +781,7 @@
 <section id="cta">
   <div class="container">
     <h2>Deploy Hancock Today</h2>
-    <p>Source available. Runs locally or in the cloud via NVIDIA NIM. Free for personal use.</p>
+    <p>The AI cybersecurity platform. Free to start. Enterprise-ready to scale.</p>
     <div class="btn-group" style="justify-content:center;">
       <a href="https://github.com/cyberviser/Hancock" target="_blank" class="btn btn-primary">⭐ View on GitHub</a>
       <a href="https://github.com/cyberviser/Hancock/blob/main/README.md" target="_blank" class="btn btn-outline">Read the Docs</a>
@@ -752,7 +796,7 @@
   <span>
     <a href="https://github.com/cyberviser/Hancock" target="_blank">GitHub</a> ·
     <a href="sponsors.html">Sponsors</a> ·
-    <a href="https://github.com/cyberviser/Hancock/blob/main/BUSINESS_PROPOSAL.md" target="_blank">Business Proposal</a>
+    <a href="https://github.com/cyberviser/Hancock/blob/main/BUSINESS_PROPOSAL.md" target="_blank">Our Mission</a>
   </span>
 </footer>
 

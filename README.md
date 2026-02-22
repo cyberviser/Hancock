@@ -13,7 +13,7 @@
 
 **Automate cybersecurity through specialized LLMs — from pentesting to SOC analysis.**
 
-[🌐 Website](https://cyberviser.netlify.app) · [📖 API Docs](https://cyberviser.netlify.app/api) · [📋 Business Proposal](BUSINESS_PROPOSAL.md) · [🐛 Report Bug](https://github.com/cyberviser/Hancock/issues) · [✨ Request Feature](https://github.com/cyberviser/Hancock/issues)
+[🌐 Website](https://cyberviser.netlify.app) · [📖 API Docs](https://cyberviser.netlify.app/api) · [🚀 Our Mission](BUSINESS_PROPOSAL.md) · [🐛 Report Bug](https://github.com/cyberviser/Hancock/issues) · [✨ Request Feature](https://github.com/cyberviser/Hancock/issues)
 
 </div>
 
@@ -84,14 +84,24 @@ pip install -r requirements.txt
 
 ```bash
 cp .env.example .env
-# Edit .env and add your NVIDIA API key
-# Get one free at: https://build.nvidia.com
+# Choose a free backend — Groq is recommended (no credit card needed):
+#   HANCOCK_LLM_BACKEND=groq + GROQ_API_KEY  → free at https://console.groq.com
+#   HANCOCK_LLM_BACKEND=together + TOGETHER_API_KEY  → free credits at https://api.together.xyz
+#   HANCOCK_LLM_BACKEND=openrouter + OPENROUTER_API_KEY  → free at https://openrouter.ai
+#   HANCOCK_LLM_BACKEND=nvidia + NVIDIA_API_KEY  → free credits at https://build.nvidia.com
 ```
 
 ### 3. Run the CLI
 
 ```bash
+# Groq (free):
+export GROQ_API_KEY="gsk_..."
+export HANCOCK_LLM_BACKEND=groq
+python hancock_agent.py
+
+# NVIDIA NIM:
 export NVIDIA_API_KEY="nvapi-..."
+export HANCOCK_LLM_BACKEND=nvidia
 python hancock_agent.py
 ```
 
@@ -295,6 +305,56 @@ formatter/
 ├── to_mistral_jsonl_v2.py      # v2 formatter
 └── formatter_v3.py             # v3 formatter — merges all sources
 ```
+
+---
+
+## ☁️ Free Hosting & GPU Resources
+
+CyberViser runs on a 100% free stack for development and demos:
+
+### 🔥 Free LLM Inference APIs (no GPU needed)
+
+| Provider | Free Tier | Models | Speed | Sign Up |
+|----------|-----------|--------|-------|---------|
+| **Groq** ⭐ | ~14,400 req/day | Llama 3.3 70B, Mixtral 8x7B | 300–800 tok/s | [console.groq.com](https://console.groq.com) |
+| **Together AI** | $1–$25 credits | Mistral 7B, Llama 3, Qwen | Fast | [api.together.xyz](https://api.together.xyz) |
+| **OpenRouter** | Free rotating models | 100+ models | Varies | [openrouter.ai](https://openrouter.ai) |
+| **Hugging Face** | Monthly quota | Any public model | Moderate | [huggingface.co](https://huggingface.co) |
+| **NVIDIA NIM** | Free credits | Mistral 7B, Llama, Qwen Coder | Fast | [build.nvidia.com](https://build.nvidia.com) |
+
+```bash
+# Switch backends with one env var — no code changes needed:
+HANCOCK_LLM_BACKEND=groq       GROQ_API_KEY=gsk_...
+HANCOCK_LLM_BACKEND=together   TOGETHER_API_KEY=...
+HANCOCK_LLM_BACKEND=openrouter OPENROUTER_API_KEY=sk-or-...
+HANCOCK_LLM_BACKEND=nvidia     NVIDIA_API_KEY=nvapi-...
+HANCOCK_LLM_BACKEND=ollama     # local, zero cost
+```
+
+### 🖥️ Free Agent API Hosting (Flask REST)
+
+| Platform | Free Tier | Notes | Config |
+|----------|-----------|-------|--------|
+| **Koyeb** ⭐ | Always-on, 256MB RAM | No cold starts — best for demos | `koyeb.yaml` |
+| **Fly.io** | 3 VMs, 160GB egress/month | Multi-region, auto-sleep | `fly.toml` |
+| **Render** | 750h/month, 512MB RAM | Sleeps after 15min idle | Docker |
+| **Railway** | $5 credit/month | Fast GitHub deploy | Docker |
+
+```bash
+# Deploy to Koyeb (always-on free):
+koyeb app init hancock-cyberviser --manifest koyeb.yaml
+
+# Deploy to Fly.io (existing config):
+fly deploy
+```
+
+### 🔧 Free GPU for Fine-Tuning
+
+| Platform | GPU | Free Limits | Notebook |
+|----------|-----|-------------|---------|
+| **Google Colab** | T4 / V100 | 12h sessions | `Hancock_Colab_Finetune_v3.ipynb` |
+| **Kaggle Kernels** | T4 / P100 | 30h GPU/week | `Hancock_Kaggle_Finetune.ipynb` |
+| **Modal** | A10G | ~$30 free credits/month | `train_modal.py` |
 
 ---
 
