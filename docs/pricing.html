@@ -4,13 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pricing — CyberViser Hancock</title>
-  <meta name="description" content="CyberViser Hancock pricing — Community free tier, Pro $299/mo, Enterprise custom, API $0.008/req. AI-powered pentest and SOC automation." />
+  <meta name="description" content="CyberViser Hancock pricing — Community free tier, Pro $499/mo, Enterprise $50K–$500K/yr, API usage-based. AI-powered cybersecurity platform." />
   <meta name="author" content="CyberViser" />
   <link rel="canonical" href="https://cyberviser.ai/pricing" />
   <meta property="og:type"        content="website" />
   <meta property="og:url"         content="https://cyberviser.ai/pricing" />
   <meta property="og:title"       content="Pricing — CyberViser Hancock" />
-  <meta property="og:description" content="Community free tier, Pro $299/mo, Enterprise custom, API $0.008/req." />
+  <meta property="og:description" content="Community free tier, Pro $499/mo, Enterprise $50K–$500K/yr, API usage-based." />
   <meta property="og:image"       content="https://cyberviser.ai/og-image.png" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -88,7 +88,7 @@
   <div class="container">
     <div class="section-label">// pricing</div>
     <h1>Simple, Transparent Pricing</h1>
-    <p class="sub">Start free. Scale with your team. All plans include the full Hancock API — pentest, SOC, and auto modes.</p>
+    <p class="sub">Start free. Scale to Fortune 500. All plans include the full Hancock platform — 12 security endpoints across offense, defense, compliance, and code.</p>
 
     <div class="plans">
 
@@ -96,12 +96,13 @@
       <div class="plan">
         <div class="plan-name">Community</div>
         <div class="plan-price">$0<span>/mo</span></div>
-        <p class="plan-desc">Self-hosted. Full source code. No limits on personal or research use. Bring your own NVIDIA API key.</p>
+        <p class="plan-desc">Self-hosted. Full source code. No limits on personal or research use. Multi-backend inference (NVIDIA NIM, Groq, Together AI, Ollama).</p>
         <ul class="features">
           <li>Full source code on GitHub</li>
-          <li>CLI + REST API (all 7 endpoints)</li>
-          <li>Pentest + SOC + Auto modes</li>
-          <li>NVIDIA NIM inference</li>
+          <li>CLI + REST API (all 12 endpoints)</li>
+          <li>All 8 modes: pentest, SOC, CISO, code, Sigma, YARA, IOC, auto</li>
+          <li>Multi-backend inference</li>
+          <li>Python + Node.js SDKs</li>
           <li>Community support (GitHub Issues)</li>
           <li class="no">Managed cloud hosting</li>
           <li class="no">SLA / uptime guarantee</li>
@@ -114,16 +115,17 @@
       <div class="plan featured">
         <div class="badge">Most Popular</div>
         <div class="plan-name">Pro</div>
-        <div class="plan-price">$299<span>/mo per seat</span></div>
-        <p class="plan-desc">Managed cloud deployment. No GPU required. Plug into your existing security stack in minutes.</p>
+        <div class="plan-price">$499<span>/mo per seat</span></div>
+        <p class="plan-desc">Managed cloud deployment. No GPU required. Advanced models, extended context, production-ready for security teams.</p>
         <ul class="features">
           <li>Everything in Community</li>
-          <li>Managed NVIDIA NIM hosting</li>
+          <li>Managed cloud hosting (NVIDIA NIM)</li>
           <li>99.9% uptime SLA</li>
           <li>Priority support (&lt;4h response)</li>
           <li>Audit logs + RBAC + SSO</li>
           <li>Commercial use license</li>
-          <li>API rate limits: 10,000 req/mo</li>
+          <li>SIEM webhook ingestion</li>
+          <li>API rate limits: 25,000 req/mo</li>
           <li class="no">Custom fine-tuning</li>
         </ul>
         <a href="contact.html" class="btn btn-primary">Start Free Trial →</a>
@@ -132,16 +134,17 @@
       <!-- Enterprise -->
       <div class="plan">
         <div class="plan-name">Enterprise</div>
-        <div class="plan-price">Custom<span></span></div>
-        <p class="plan-desc">On-premise or private cloud. Fine-tuned on your internal security data. Dedicated support.</p>
+        <div class="plan-price">$50K+<span>/year</span></div>
+        <p class="plan-desc">On-premise or private cloud. Fine-tuned on your proprietary threat data. Air-gap compatible. Dedicated support team.</p>
         <ul class="features">
           <li>Everything in Pro</li>
-          <li>On-premise / private cloud deploy</li>
+          <li>On-premise / private cloud / air-gapped deploy</li>
           <li>Custom fine-tuning on your data</li>
           <li>Dedicated model instance</li>
-          <li>SIEM/SOAR integrations</li>
+          <li>SIEM/SOAR/GRC integrations</li>
           <li>Unlimited API requests</li>
-          <li>Professional services + training</li>
+          <li>Threat Intelligence Network feed</li>
+          <li>Professional services + onboarding</li>
           <li>White-label option available</li>
         </ul>
         <a href="contact.html" class="btn btn-outline">Contact Sales →</a>
@@ -151,14 +154,14 @@
       <div class="plan">
         <div class="plan-name">API Usage</div>
         <div class="plan-price">$0.008<span>/req</span></div>
-        <p class="plan-desc">Pay-per-use. No seat licenses. Perfect for developers building security tools and integrations.</p>
+        <p class="plan-desc">Pay-per-use. No seat licenses. Embed security intelligence into your own products via API. Listed on AWS, Azure, and GCP Marketplaces.</p>
         <ul class="features">
-          <li>All 7 API endpoints</li>
+          <li>All 12 API endpoints</li>
           <li>Python SDK + Node.js SDK</li>
           <li>SIEM webhook integration</li>
           <li>No minimum commitment</li>
           <li>Volume discounts at 100k+ req/mo</li>
-          <li>Splunk / Elastic integrations</li>
+          <li>Marketplace billing (AWS/Azure/GCP)</li>
           <li>JSON + SSE streaming</li>
           <li class="no">SLA guarantee</li>
           <li class="no">Custom fine-tuning</li>
@@ -175,23 +178,27 @@
 
       <div class="faq-item">
         <div class="faq-q">Do I need a GPU to run Hancock?</div>
-        <div class="faq-a">Not for inference. The Community plan uses NVIDIA NIM cloud inference — you just need an NVIDIA API key (free tier available at build.nvidia.com). For local fine-tuning, a GPU with 16GB+ VRAM is recommended.</div>
+        <div class="faq-a">Not for inference. Hancock supports multiple cloud backends — NVIDIA NIM, Groq (free), Together AI, OpenRouter — or run locally with Ollama. No GPU required. For fine-tuning on your own data, a GPU with 16GB+ VRAM is recommended, or use our free Colab/Kaggle notebooks.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-q">Can I use Hancock in commercial pentests?</div>
-        <div class="faq-a">Yes — with a Pro or Enterprise license. The Community plan is for personal/research use only. Commercial use requires a signed license agreement.</div>
+        <div class="faq-q">Can I use Hancock in production SOC / commercial pentests?</div>
+        <div class="faq-a">Yes — with a Pro or Enterprise license. The Community plan is for personal/research use. Enterprise deployments run entirely on your infrastructure with zero data egress, air-gap support, and SOC 2 compliance.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-q">Is Hancock safe to use in a production SOC?</div>
-        <div class="faq-a">The Enterprise plan includes on-premise deployment, so your alerts and data never leave your environment. Pro plan traffic is encrypted in transit and at rest. We do not log conversation content.</div>
+        <div class="faq-q">How is this different from Microsoft Security Copilot or CrowdStrike Charlotte AI?</div>
+        <div class="faq-a">Hancock is purpose-built — fine-tuned on curated security datasets, not a generic LLM with a security prompt. It deploys anywhere (laptop, air-gapped, sovereign cloud), covers offense + defense + compliance in one platform, and costs a fraction of enterprise alternatives. Open-source core means your team can verify what the AI actually does.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-q">What SIEM platforms does Hancock integrate with?</div>
-        <div class="faq-a">Hancock generates native queries for Splunk SPL, Elastic KQL, and Microsoft Sentinel KQL out of the box via the /v1/hunt endpoint. Direct integrations (Splunk app, Elastic plugin) are on the roadmap.</div>
+        <div class="faq-q">What SIEM/SOAR platforms does Hancock integrate with?</div>
+        <div class="faq-a">Hancock generates native queries for Splunk SPL, Elastic KQL, and Microsoft Sentinel KQL. The /v1/webhook endpoint ingests alerts from Splunk, Elastic, Sentinel, and CrowdStrike. Direct SOAR integrations (Palo Alto XSOAR, Swimlane, Tines) are on the enterprise roadmap.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">What about compliance and data privacy?</div>
+        <div class="faq-a">Enterprise deployments run 100% on your infrastructure — no data ever leaves your environment. All training data comes from public, legally sourced cybersecurity knowledge bases. We're pursuing SOC 2 Type II and FedRAMP authorization.</div>
       </div>
       <div class="faq-item">
         <div class="faq-q">How does billing work?</div>
-        <div class="faq-a">Pro is billed monthly per seat. Usage-based billing is metered per API request. Enterprise is annual contract. All plans can be cancelled anytime — no lock-in.</div>
+        <div class="faq-a">Pro is billed monthly per seat ($499/mo). API usage is metered per request ($0.008/req). Enterprise is annual contract ($50K–$500K/yr). All plans can be cancelled anytime — no lock-in.</div>
       </div>
     </div>
 
