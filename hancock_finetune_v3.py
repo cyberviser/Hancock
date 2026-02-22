@@ -29,6 +29,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+try:
+    from google.cloud import storage as gcs_storage
+    GCS_AVAILABLE = True
+except ImportError:
+    GCS_AVAILABLE = False
+
 # ── Config ────────────────────────────────────────────────────────────────────
 MODEL_NAME    = "mistralai/Mistral-7B-Instruct-v0.3"
 OUTPUT_DIR    = Path("hancock-adapter-v3")
@@ -36,9 +42,29 @@ HF_REPO       = "cyberviser/hancock-v3"
 DATASET_URL   = "https://raw.githubusercontent.com/cyberviser/Hancock/main/data/hancock_v3.jsonl"
 DATASET_LOCAL = Path("data/hancock_v3.jsonl")
 MAX_SEQ_LEN   = 4096
+GCS_BUCKET    = os.environ.get("GCS_BUCKET", "cyberviser-models")
+GCS_PREFIX    = os.environ.get("GCS_PREFIX", "v3")
 
 
 # ── Environment detection ─────────────────────────────────────────────────────
+def upload_to_gcs(local_dir, bucket_name, prefix):
+    """Upload all files in local_dir to gs://{bucket_name}/{prefix}/."""
+    try:
+        client = gcs_storage.Client()
+        bucket = client.bucket(bucket_name)
+        local_path = Path(local_dir)
+        files = [f for f in local_path.rglob("*") if f.is_file()]
+        print(f"[v3] Uploading {len(files)} files to gs://{bucket_name}/{prefix}/ ...")
+        for f in files:
+            blob_name = f"{prefix}/{f.relative_to(local_path)}"
+            blob = bucket.blob(blob_name)
+            blob.upload_from_filename(str(f))
+            print(f"[v3]   ↑ {blob_name}")
+        print(f"[v3] ✅ GCS upload complete → gs://{bucket_name}/{prefix}/")
+    except Exception as e:
+        print(f"[v3] ⚠️  GCS upload failed (non-fatal): {e}")
+
+
 def detect_env() -> dict:
     env = {"colab": False, "kaggle": False, "gpu": None, "vram_gb": 0}
     try:
@@ -276,6 +302,15 @@ def main():
             model.push_to_hub(args.hf_repo, token=hf_token, private=True)
             tokenizer.push_to_hub(args.hf_repo, token=hf_token, private=True)
             print(f"[v3] ✅ Pushed → https://huggingface.co/{args.hf_repo}")
+
+    # ── Upload to Google Cloud Storage ────────────────────────
+    if GCS_AVAILABLE and os.environ.get("GCS_BUCKET"):
+        print(f"\n[v3] Uploading to GCS bucket '{GCS_BUCKET}' ...")
+        upload_to_gcs(str(OUTPUT_DIR), GCS_BUCKET, GCS_PREFIX)
+        if args.export_gguf:
+            gguf_file = OUTPUT_DIR.parent / "hancock-v3-Q4_K_M.gguf"
+            if gguf_file.exists():
+                upload_to_gcs(str(gguf_file.parent), GCS_BUCKET, f"{GCS_PREFIX}/gguf")
 
     print("\n[v3] ══════════════════════════════════════════")
     print(f"[v3]  Training complete!")
