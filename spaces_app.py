@@ -223,7 +223,7 @@ with gr.Blocks(title="Hancock — CyberViser", theme=gr.themes.Monochrome(), css
 
     gr.Markdown("""
 ---
-🔗 [GitHub](https://github.com/cyberviser/Hancock) · [API Docs](https://cyberviser.netlify.app/api) · [CyberViser](https://cyberviser.netlify.app) · contact@cyberviser.ai
+🔗 [GitHub](https://github.com/cyberviser/Hancock) · [API Docs](https://cyberviser.ai/api) · [CyberViser](https://cyberviser.ai) · contact@cyberviser.ai
     """)
 
 demo.launch()

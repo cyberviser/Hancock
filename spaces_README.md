@@ -19,7 +19,7 @@ tags:
 
 # 🛡️ Hancock — AI Cybersecurity Agent
 
-> **by [CyberViser](https://cyberviser.netlify.app)** — Mistral 7B fine-tuned on MITRE ATT&CK, NVD/CVE, CISA KEV, and Atomic Red Team data.
+> **by [CyberViser](https://cyberviser.ai)** — AI cybersecurity platform fine-tuned on MITRE ATT&CK, NVD/CVE, CISA KEV, and Atomic Red Team data.
 
 ## Modes
 
@@ -43,7 +43,7 @@ Set two Space Secrets (`Settings → Variables and secrets`):
 
 ## Links
 
-- 🌐 [Website](https://cyberviser.netlify.app)
-- 📖 [API Docs](https://cyberviser.netlify.app/api)
+- 🌐 [Website](https://cyberviser.ai)
+- 📖 [API Docs](https://cyberviser.ai/api)
 - 💻 [GitHub](https://github.com/cyberviser/Hancock)
 - 📧 contact@cyberviser.ai

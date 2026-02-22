@@ -9,7 +9,7 @@
 # Then add cyberviser.ai in Netlify → Site settings → Domain management
 
 [[redirects]]
-  from   = "https://cyberviser.netlify.app/*"
+  from   = "https://cyberviser.ai/*"
   to     = "https://cyberviser.ai/:splat"
   status = 301
   force  = true

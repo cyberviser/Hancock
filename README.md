@@ -8,12 +8,12 @@
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)](https://python.org)
 [![Model](https://img.shields.io/badge/Model-Mistral%207B-orange?logo=huggingface)](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3)
 [![NVIDIA NIM](https://img.shields.io/badge/NVIDIA-NIM-76b900?logo=nvidia)](https://build.nvidia.com)
-[![Website](https://img.shields.io/badge/Website-Live-00ff88?logo=netlify)](https://cyberviser.netlify.app)
-[![Netlify](https://img.shields.io/badge/Netlify-Live-00C7B7?style=flat-square&logo=netlify)](https://cyberviser.netlify.app)
+[![GitHub Pages](https://img.shields.io/badge/Website-Live-00ff88?logo=github)](https://cyberviser.github.io/Hancock/)
+[![Netlify](https://img.shields.io/badge/Netlify-Live-00C7B7?style=flat-square&logo=netlify)](https://cyberviser.ai)
 
 **Automate cybersecurity through specialized LLMs — from pentesting to SOC analysis.**
 
-[🌐 Website](https://cyberviser.netlify.app) · [📖 API Docs](https://cyberviser.netlify.app/api) · [🚀 Our Mission](BUSINESS_PROPOSAL.md) · [🐛 Report Bug](https://github.com/cyberviser/Hancock/issues) · [✨ Request Feature](https://github.com/cyberviser/Hancock/issues)
+[🌐 Website](https://cyberviser.ai) · [📖 API Docs](https://cyberviser.ai/api) · [🚀 Our Mission](BUSINESS_PROPOSAL.md) · [🐛 Report Bug](https://github.com/cyberviser/Hancock/issues) · [✨ Request Feature](https://github.com/cyberviser/Hancock/issues)
 
 </div>
 
@@ -202,7 +202,7 @@ curl -X POST http://localhost:5000/v1/respond \
   -d '{"incident": "ransomware"}'
 ```
 
-> 📖 Full OpenAPI 3.1.0 spec: [`docs/openapi.yaml`](docs/openapi.yaml) · [Interactive API Docs](https://cyberviser.netlify.app/api)
+> 📖 Full OpenAPI 3.1.0 spec: [`docs/openapi.yaml`](docs/openapi.yaml) · [Interactive API Docs](https://cyberviser.ai/api)
 
 ### CLI Commands
 
@@ -364,7 +364,7 @@ fly deploy
 |-------|-------|--------|
 | **Phase 1** | Pentest Specialist + SOC REST API | ✅ Live |
 | **Phase 2** | SOC deep specialization + v3 dataset (KEV/Atomic/GHSA) | ✅ Live |
-| **Phase 3** | CISO strategy + compliance automation | ✅ Live |
+| **Phase 3** | CISO strategy + compliance automation | 📋 Planned |
 | **Phase 4** | Enterprise platform + SIEM/SOAR integrations | 📋 Planned |
 
 ---
