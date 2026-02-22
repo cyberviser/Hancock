@@ -1,13 +1,22 @@
 # Hancock Node.js Client
 
-Interact with NVIDIA NIM models directly from Node.js.
+Interact with Hancock's AI security platform from Node.js. Supports multiple LLM backends.
 
 ## Setup
 
 ```bash
 cd clients/nodejs
 npm install
-export NVIDIA_API_KEY=nvapi-YOUR_KEY_HERE
+```
+
+Set one backend API key:
+
+```bash
+export HANCOCK_LLM_BACKEND=groq    && export GROQ_API_KEY=gsk_xxx        # Free 14,400 req/day
+export HANCOCK_LLM_BACKEND=nvidia  && export NVIDIA_API_KEY=nvapi-xxx     # Free 1,000 req/day
+export HANCOCK_LLM_BACKEND=together && export TOGETHER_API_KEY=xxx        # Free credits
+export HANCOCK_LLM_BACKEND=openrouter && export OPENROUTER_API_KEY=xxx    # Free rotating models
+export HANCOCK_LLM_BACKEND=ollama                                         # Local, no key needed
 ```
 
 ## Usage
@@ -45,6 +54,10 @@ node hancock.js --mode code --task "write a YARA rule for Emotet"
 
 | Var | Default |
 |-----|---------|
-| `NVIDIA_API_KEY` | *(required)* |
+| `HANCOCK_LLM_BACKEND` | `nvidia` |
+| `NVIDIA_API_KEY` | *(required for nvidia backend)* |
+| `GROQ_API_KEY` | *(required for groq backend)* |
+| `TOGETHER_API_KEY` | *(required for together backend)* |
+| `OPENROUTER_API_KEY` | *(required for openrouter backend)* |
 | `HANCOCK_MODEL` | mistralai/mistral-7b-instruct-v0.3 |
 | `HANCOCK_CODER_MODEL` | qwen/qwen2.5-coder-32b-instruct |

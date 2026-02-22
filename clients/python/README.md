@@ -4,7 +4,16 @@
 
 ```bash
 pip install openai python-dotenv
-export NVIDIA_API_KEY=nvapi-YOUR_KEY_HERE
+```
+
+Set one backend API key:
+
+```bash
+export HANCOCK_LLM_BACKEND=groq    && export GROQ_API_KEY=gsk_xxx        # Free 14,400 req/day
+export HANCOCK_LLM_BACKEND=nvidia  && export NVIDIA_API_KEY=nvapi-xxx     # Free 1,000 req/day
+export HANCOCK_LLM_BACKEND=together && export TOGETHER_API_KEY=xxx        # Free credits
+export HANCOCK_LLM_BACKEND=openrouter && export OPENROUTER_API_KEY=xxx    # Free rotating models
+export HANCOCK_LLM_BACKEND=ollama                                         # Local, no key needed
 ```
 
 ## Quick Start
@@ -29,6 +38,18 @@ print(h.respond("ransomware"))
 # Security code generation (Qwen 2.5 Coder 32B)
 print(h.code("YARA rule for Emotet dropper", language="yara"))
 print(h.code("KQL query to detect Pass-the-Hash attacks", language="kql"))
+
+# CISO advisory
+print(h.ciso("What controls for ISO 27001?", output="gap-analysis"))
+
+# Sigma detection rules
+print(h.sigma("Detect PowerShell encoded command", logsource="windows sysmon"))
+
+# YARA malware rules
+print(h.yara("Cobalt Strike beacon HTTP profile", file_type="PE"))
+
+# IOC enrichment
+print(h.ioc("185.220.101.35", ioc_type="ip"))
 ```
 
 ## CLI
@@ -64,4 +85,8 @@ python hancock_cli.py --model mixtral-8x7b --task "CISO risk framework"
 | `h.triage(alert)` | SOC alert triage + MITRE mapping |
 | `h.hunt(target, siem="splunk")` | Threat hunting query generation |
 | `h.respond(incident)` | Full PICERL IR playbook |
+| `h.ciso(question, output, context)` | CISO advisory — compliance, risk, board reports |
+| `h.sigma(description, logsource, technique)` | Sigma detection rule generation |
+| `h.yara(description, file_type, hash)` | YARA malware detection rule generation |
+| `h.ioc(indicator, ioc_type, context)` | IOC enrichment — IPs, domains, hashes, emails |
 | `h.chat(message, history=[])` | Multi-turn conversation |

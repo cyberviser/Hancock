@@ -398,5 +398,5 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
 ---
 
 <div align="center">
-Built by <a href="https://github.com/cyberviser">CyberViser</a> · Powered by NVIDIA NIM · Mistral 7B · LoRA
+Built by <a href="https://github.com/cyberviser">CyberViser</a> · Mistral 7B · LoRA · Multi-Backend (NVIDIA · Groq · Together · Ollama)
 </div>
