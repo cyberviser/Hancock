@@ -109,7 +109,7 @@
 <nav class="sidebar">
   <div class="sidebar-logo">
     <a href="index.html">CYBER<span>VISER</span></a>
-    <div class="version">Hancock v0.4.0 API</div>
+    <div class="version">Hancock v0.5.0 API</div>
   </div>
   <div class="nav-section">Overview</div>
   <a href="#intro">Introduction</a>
@@ -138,13 +138,13 @@
 
 <!-- Main -->
 <main class="main">
-  <a href="index.html" class="back">← Back to cyberviser.netlify.app</a>
+  <a href="index.html" class="back">← Back to cyberviser.ai</a>
 
   <h1 id="intro">Hancock API</h1>
   <p class="tagline">REST API reference for the CyberViser Hancock AI Security Agent</p>
 
   <div class="alert alert-info">
-    Start the server with <code>python hancock_agent.py --server</code> or <code>make server</code>. Requires a valid <code>NVIDIA_API_KEY</code> in your <code>.env</code>.
+    Start the server with <code>python hancock_agent.py --server</code> or <code>make server</code>. Supports multiple LLM backends — set <code>HANCOCK_LLM_BACKEND</code> to <code>nvidia</code>, <code>ollama</code>, <code>groq</code>, <code>together</code>, or <code>openrouter</code>.
   </div>
 
   <!-- Base URL -->
@@ -172,8 +172,8 @@
     &nbsp;&nbsp;<span class="t-key">"agent"</span>: <span class="t-str">"Hancock"</span>,<br/>
     &nbsp;&nbsp;<span class="t-key">"model"</span>: <span class="t-str">"mistralai/mistral-7b-instruct-v0.3"</span>,<br/>
     &nbsp;&nbsp;<span class="t-key">"company"</span>: <span class="t-str">"CyberViser"</span>,<br/>
-    &nbsp;&nbsp;<span class="t-key">"modes"</span>: [<span class="t-str">"pentest"</span>, <span class="t-str">"soc"</span>, <span class="t-str">"auto"</span>],<br/>
-    &nbsp;&nbsp;<span class="t-key">"endpoints"</span>: [<span class="t-str">"/v1/chat"</span>, <span class="t-str">"/v1/ask"</span>, <span class="t-str">"/v1/triage"</span>, <span class="t-str">"/v1/hunt"</span>, <span class="t-str">"/v1/respond"</span>]<br/>
+    &nbsp;&nbsp;<span class="t-key">"modes"</span>: [<span class="t-str">"pentest"</span>, <span class="t-str">"soc"</span>, <span class="t-str">"auto"</span>, <span class="t-str">"code"</span>, <span class="t-str">"ciso"</span>, <span class="t-str">"sigma"</span>, <span class="t-str">"yara"</span>, <span class="t-str">"ioc"</span>],<br/>
+    &nbsp;&nbsp;<span class="t-key">"endpoints"</span>: [<span class="t-str">"/v1/chat"</span>, <span class="t-str">"/v1/ask"</span>, <span class="t-str">"/v1/triage"</span>, <span class="t-str">"/v1/hunt"</span>, <span class="t-str">"/v1/respond"</span>, <span class="t-str">"/v1/code"</span>, <span class="t-str">"/v1/ciso"</span>, <span class="t-str">"/v1/sigma"</span>, <span class="t-str">"/v1/yara"</span>, <span class="t-str">"/v1/ioc"</span>, <span class="t-str">"/v1/webhook"</span>]<br/>
     }
   </div>
 
@@ -189,7 +189,7 @@
     <span class="t-cmt">// Request body</span><br/>
     {<br/>
     &nbsp;&nbsp;<span class="t-key">"message"</span>: <span class="t-str">"How do I enumerate SMB shares on a target?"</span>,<br/>
-    &nbsp;&nbsp;<span class="t-key">"mode"</span>: <span class="t-str">"pentest"</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-cmt">// "auto" | "pentest" | "soc"</span><br/>
+    &nbsp;&nbsp;<span class="t-key">"mode"</span>: <span class="t-str">"pentest"</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-cmt">// "auto" | "pentest" | "soc" | "code" | "ciso" | "sigma" | "yara" | "ioc"</span><br/>
     &nbsp;&nbsp;<span class="t-key">"history"</span>: [],&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-cmt">// array of {role, content} pairs</span><br/>
     &nbsp;&nbsp;<span class="t-key">"stream"</span>: <span class="t-bool">false</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-cmt">// true for SSE streaming</span><br/>
     }
@@ -197,7 +197,7 @@
   <table class="params">
     <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
     <tr><td><code>message</code></td><td class="type">string</td><td class="req">required</td><td>User's message</td></tr>
-    <tr><td><code>mode</code></td><td class="type">string</td><td class="opt">optional</td><td><code>auto</code> (default), <code>pentest</code>, or <code>soc</code></td></tr>
+    <tr><td><code>mode</code></td><td class="type">string</td><td class="opt">optional</td><td><code>auto</code> (default), <code>pentest</code>, <code>soc</code>, <code>code</code>, <code>ciso</code>, <code>sigma</code>, <code>yara</code>, or <code>ioc</code></td></tr>
     <tr><td><code>history</code></td><td class="type">array</td><td class="opt">optional</td><td>Previous conversation turns</td></tr>
     <tr><td><code>stream</code></td><td class="type">boolean</td><td class="opt">optional</td><td>Enable SSE streaming (default: false)</td></tr>
   </table>
@@ -472,6 +472,10 @@
     <tr><td><code>soc</code></td><td>Alert triage, SIEM queries, IR, threat hunting</td><td>SOC Tier-2/3 analyst</td><td>Mistral 7B</td></tr>
     <tr><td><code>auto</code></td><td>Mixed tasks — auto-detects context</td><td>Combined persona</td><td>Mistral 7B</td></tr>
     <tr><td><code>code</code></td><td>YARA/Sigma rules, KQL/SPL, exploit PoCs, CTF scripts</td><td>Security code specialist</td><td>Qwen 2.5 Coder 32B</td></tr>
+    <tr><td><code>ciso</code></td><td>Risk management, compliance, board reporting, gap analysis</td><td>AI CISO advisor</td><td>Mistral 7B</td></tr>
+    <tr><td><code>sigma</code></td><td>Sigma detection rule generation from TTP descriptions</td><td>Detection engineer</td><td>Mistral 7B</td></tr>
+    <tr><td><code>yara</code></td><td>YARA malware detection rules from sample analysis</td><td>Malware analyst</td><td>Mistral 7B</td></tr>
+    <tr><td><code>ioc</code></td><td>IOC enrichment — IPs, domains, hashes, emails</td><td>Threat intel analyst</td><td>Mistral 7B</td></tr>
   </table>
 
   <!-- Errors -->

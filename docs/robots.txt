@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://cyberviser.netlify.app/sitemap.xml
+Sitemap: https://cyberviser.ai/sitemap.xml
