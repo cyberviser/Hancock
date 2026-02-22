@@ -190,20 +190,43 @@ def format_existing_v2(samples: list) -> list:
     return [s for s in samples if s.get("messages")]
 
 
+def format_kb_samples(samples: list) -> list:
+    """Pass through pre-formatted KB samples (already have messages structure)."""
+    return [s for s in samples if s.get("messages")]
+
+
 # ── Main formatter ────────────────────────────────────────────────────────────
 def format_all():
     print("[fmt-v3] Loading raw data sources...")
-    nvd_cves   = load_json(DATA_DIR / "raw_cve.json")
-    kev_entries = load_json(DATA_DIR / "raw_kev.json")
-    ghsa_advs  = load_json(DATA_DIR / "raw_ghsa.json")
+    nvd_cves     = load_json(DATA_DIR / "raw_cve.json")
+    kev_entries  = load_json(DATA_DIR / "raw_kev.json")
+    ghsa_advs    = load_json(DATA_DIR / "raw_ghsa.json")
     atomic_tests = load_json(DATA_DIR / "raw_atomic.json")
-    v2_samples = load_jsonl(DATA_DIR / "hancock_v2.jsonl")
+    v2_samples   = load_jsonl(DATA_DIR / "hancock_v2.jsonl")
+
+    # New mode knowledge bases — generate fresh on each run
+    from collectors.ciso_kb  import generate as gen_ciso
+    from collectors.sigma_kb import generate as gen_sigma
+    from collectors.yara_kb  import generate as gen_yara
+    from collectors.ioc_kb   import generate as gen_ioc
+    from collectors.code_kb  import generate as gen_code
+
+    ciso_samples  = gen_ciso()
+    sigma_samples = gen_sigma()
+    yara_samples  = gen_yara()
+    ioc_samples   = gen_ioc()
+    code_samples  = gen_code()
 
     print(f"[fmt-v3]  NVD CVEs:       {len(nvd_cves)}")
     print(f"[fmt-v3]  CISA KEV:       {len(kev_entries)}")
     print(f"[fmt-v3]  GHSA:           {len(ghsa_advs)}")
     print(f"[fmt-v3]  Atomic Tests:   {len(atomic_tests)}")
     print(f"[fmt-v3]  v2 samples:     {len(v2_samples)}")
+    print(f"[fmt-v3]  CISO KB:        {len(ciso_samples)}")
+    print(f"[fmt-v3]  Sigma KB:       {len(sigma_samples)}")
+    print(f"[fmt-v3]  YARA KB:        {len(yara_samples)}")
+    print(f"[fmt-v3]  IOC KB:         {len(ioc_samples)}")
+    print(f"[fmt-v3]  Code KB:        {len(code_samples)}")
 
     all_samples = []
     all_samples.extend(format_existing_v2(v2_samples))
@@ -211,6 +234,11 @@ def format_all():
     all_samples.extend(format_kev_entries(kev_entries))
     all_samples.extend(format_ghsa_advisories(ghsa_advs))
     all_samples.extend(format_atomic_tests(atomic_tests))
+    all_samples.extend(format_kb_samples(ciso_samples))
+    all_samples.extend(format_kb_samples(sigma_samples))
+    all_samples.extend(format_kb_samples(yara_samples))
+    all_samples.extend(format_kb_samples(ioc_samples))
+    all_samples.extend(format_kb_samples(code_samples))
 
     # Deduplicate
     seen, unique = set(), []
@@ -235,4 +263,6 @@ def format_all():
 
 
 if __name__ == "__main__":
+    import sys
+    sys.path.insert(0, str(Path(__file__).parent.parent))
     format_all()

@@ -1,0 +1,65 @@
+# Koyeb deployment config for Hancock — CyberViser
+# Docs: https://www.koyeb.com/docs/reference/koyeb-manifest
+# Deploy: koyeb app init hancock-cyberviser --manifest koyeb.yaml
+#
+# Free tier: 2 always-on services, 256MB RAM, no sleep, 1GB DB
+# Sign up: https://app.koyeb.com/auth/signup
+
+name: hancock-cyberviser
+
+services:
+  - name: hancock-api
+    type: web
+    image: cyberviser/hancock:latest      # or "github" build (see below)
+    instance_type: free                   # free tier: 0.1 vCPU, 256MB RAM
+
+    # To build from GitHub instead of a pre-built image, replace `image` with:
+    # git:
+    #   repository: github.com/cyberviser/Hancock
+    #   branch: main
+    #   build_command: ""
+    #   run_command: "python hancock_agent.py --server"
+
+    ports:
+      - port: 5000
+        protocol: http
+
+    routes:
+      - path: /
+        port: 5000
+
+    env:
+      # ── LLM Backend (choose one free option) ─────────────────────────────────
+      - key: HANCOCK_LLM_BACKEND
+        value: groq                       # Options: groq | together | openrouter | nvidia | openai
+
+      # ── Free Tier API Keys (set as secrets in Koyeb dashboard) ───────────────
+      # Groq: free ~14,400 req/day — https://console.groq.com
+      - key: GROQ_API_KEY
+        secret: groq-api-key             # Set via: koyeb secret create groq-api-key --value "gsk_..."
+
+      # Together AI: free $1-$25 credits — https://api.together.xyz
+      # - key: TOGETHER_API_KEY
+      #   secret: together-api-key
+
+      # OpenRouter: free rotating models — https://openrouter.ai
+      # - key: OPENROUTER_API_KEY
+      #   secret: openrouter-api-key
+
+      # ── Hancock Config ────────────────────────────────────────────────────────
+      - key: HANCOCK_PORT
+        value: "5000"
+      - key: HANCOCK_RATE_LIMIT
+        value: "60"
+
+      # Groq default model (best free model for security work)
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+
+    health_checks:
+      - path: /health
+        port: 5000
+        protocol: http
+        interval: 30
+        timeout: 10
+        grace_period: 60
