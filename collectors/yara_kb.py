@@ -1006,6 +1006,44 @@ KB = [
             "```"
         ),
     },
+    # ── ADDITIONAL RULES ─────────────────────────────────────────────────────
+    {
+        "user": "Write a YARA rule to detect QakBot (QBot) banking trojan samples.",
+        "assistant": '```yara\nrule QakBot_Trojan {\n    meta:\n        description = "Detects QakBot banking trojan"\n        author = "Hancock CyberViser"\n        mitre_attack = "T1055, T1021.002"\n\n    strings:\n        $reg1   = "SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run" wide\n        $cmd1   = "cmd /c ping" ascii nocase\n        $inject = { 64 A1 30 00 00 00 8B 40 0C 8B 40 1C }\n        $str1   = "qbot" ascii nocase\n        $str2   = "qakbot" ascii nocase\n\n    condition:\n        uint16(0) == 0x5A4D and\n        filesize < 2MB and\n        ($reg1 or $inject) and\n        1 of ($str*)\n}\n```',
+    },
+    {
+        "user": "Write a YARA rule to detect AsyncRAT remote access trojan.",
+        "assistant": '```yara\nrule AsyncRAT {\n    meta:\n        description = "Detects AsyncRAT .NET RAT"\n        author = "Hancock CyberViser"\n        mitre_attack = "T1219"\n\n    strings:\n        $s1 = "AsyncClient" ascii wide\n        $s2 = "AsyncRAT" ascii wide\n        $s3 = "Stub.exe" ascii wide\n        $mutex = { 41 00 73 00 79 00 6E 00 63 00 52 00 41 00 54 00 }\n        $dotnet = { 4D 5A 90 00 03 00 00 00 04 00 00 00 FF FF }\n\n    condition:\n        $dotnet at 0 and filesize < 5MB and\n        (2 of ($s*)) and $mutex\n}\n```',
+    },
+    {
+        "user": "Write a YARA rule to detect malicious LNK shortcut files used in phishing (T1204.002).",
+        "assistant": '```yara\nrule Malicious_LNK_Phishing {\n    meta:\n        description = "Detects malicious LNK files executing PowerShell or cmd"\n        author = "Hancock CyberViser"\n        mitre_attack = "T1204.002"\n\n    strings:\n        $lnk_magic = { 4C 00 00 00 01 14 02 00 }\n        $ps1 = "powershell" ascii wide nocase\n        $cmd1 = "cmd.exe" ascii wide nocase\n        $dl1 = "http://" ascii wide nocase\n        $dl2 = "https://" ascii wide nocase\n        $hidden = "-WindowStyle Hidden" ascii wide nocase\n\n    condition:\n        $lnk_magic at 0 and filesize < 5MB and\n        (1 of ($ps*, $cmd*)) and\n        (1 of ($dl*, $hidden))\n}\n```',
+    },
+    {
+        "user": "Write a YARA rule to detect Metasploit Meterpreter shellcode.",
+        "assistant": '```yara\nrule Metasploit_Meterpreter {\n    meta:\n        description = "Detects Meterpreter reverse shell shellcode"\n        author = "Hancock CyberViser"\n        mitre_attack = "T1059, T1055"\n\n    strings:\n        $met1 = { FC E8 8? 00 00 00 60 89 E5 31 D2 64 8B }\n        $met2 = { FC 48 83 E4 F0 E8 C? 00 00 00 41 51 41 50 52 51 }\n        $mets1 = "metsrv.x64.dll" ascii\n        $mets2 = "ReflectiveLoader" ascii\n        $mets3 = "Meterpreter" ascii\n\n    condition:\n        (1 of ($met*)) or (2 of ($mets*))\n}\n```',
+    },
+    {
+        "user": "Write a YARA rule to detect generic cryptominers (XMR pools, stratum protocol, T1496).",
+        "assistant": '```yara\nrule CryptoMiner_Generic {\n    meta:\n        description = "Detects cryptominer pool strings and tools"\n        author = "Hancock CyberViser"\n        mitre_attack = "T1496"\n\n    strings:\n        $pool1 = "pool.minexmr.com" ascii nocase\n        $pool2 = "supportxmr.com" ascii nocase\n        $stratum1 = "stratum+tcp://" ascii nocase\n        $stratum2 = "stratum+ssl://" ascii nocase\n        $xmrig = "XMRig" ascii\n        $arg1 = "--donate-level" ascii\n        $arg2 = "-o stratum" ascii nocase\n\n    condition:\n        filesize < 50MB and (\n            1 of ($pool*) or\n            1 of ($stratum*) or\n            ($xmrig and 1 of ($arg*))\n        )\n}\n```',
+    },
+    {
+        "user": "Write a YARA rule to detect Golang-compiled malware (common in ransomware and C2 implants).",
+        "assistant": '```yara\nrule Golang_Compiled_Malware {\n    meta:\n        description = "Detects Go-compiled executables — common in ransomware/RATs"\n        author = "Hancock CyberViser"\n        mitre_attack = "T1027"\n\n    strings:\n        $go1 = "Go build ID:" ascii\n        $go2 = "runtime.panic" ascii\n        $go3 = "runtime.throw" ascii\n        $go4 = "main.main" ascii\n        $gopath1 = "/usr/local/go/src" ascii\n        $gopath2 = "C:/Go/src" ascii\n\n    condition:\n        uint16(0) == 0x5A4D and filesize > 1MB and\n        (2 of ($go*) or $gopath1 or $gopath2)\n}\n```',
+    },
+    {
+        "user": "What are YARA rule performance best practices to avoid slow scans on large corpora?",
+        "assistant": '# YARA Rule Performance Best Practices\n\n## Performance hierarchy (fast → slow)\n```\nfilesize → uint16/magic → string matching → regex → PE/ELF modules\n```\n\n## 1. Always filter with filesize and magic first\n```yara\ncondition:\n    filesize < 5MB and           // Eliminates 90%+ of files\n    uint16(0) == 0x5A4D and      // PE magic check\n    $suspicious_string            // Expensive string match last\n```\n\n## 2. Anchor strings to specific offsets\n```yara\n$header at 0                     // Much faster than anywhere search\n$footer in (filesize-100..filesize)\n```\n\n## 3. Use \'N of ($strings*)\' over boolean chains\n```yara\n// Slower: ($a or $b or $c or $d)\n// Faster:\n1 of ($indicators*)\n3 of ($strings*)\n```\n\n## 4. Avoid regex — prefer fixed strings\n```yara\n// Slow: $r = /https?:\\/\\/[0-9.]+/\n// Better:\n$h1 = "http://"\n$h2 = "https://"\n```\n\n## 5. Use hex for binary patterns\n```yara\n$sc = { FC E8 8? 00 00 00 60 89 E5 }  // Wildcard bytes with ?\n```\n\n## 6. Minimize \'nocase\' and \'wide\' modifiers\nEach doubles scan time — use only when required.\n\n## 7. Profile your rules\n```bash\nyara --benchmark rule.yar /corpus/\n```',
+    },
+    {
+        "user": "Write a YARA rule to detect common packers (UPX, ASPack) used to obfuscate malware (T1027.002).",
+        "assistant": '```yara\nrule Packed_Executable {\n    meta:\n        description = "Detects common packers (UPX, ASPack) used to obfuscate malware"\n        author = "Hancock CyberViser"\n        mitre_attack = "T1027.002"\n\n    strings:\n        $upx0 = "UPX0" ascii\n        $upx1 = "UPX1" ascii\n        $upx2 = "UPX!" ascii\n        $aspack = "ASPack" ascii\n        $nspack = "NsPacK" ascii\n        $fsg = { 60 BE ?? ?? ?? 00 8D BE ?? ?? ?? FF 57 83 CD FF }\n\n    condition:\n        uint16(0) == 0x5A4D and filesize < 10MB and\n        (1 of ($upx*) or $aspack or $nspack or $fsg)\n}\n```',
+    },
+    {
+        "user": "Write a YARA rule to detect malicious DLL side-loading (T1574.002).",
+        "assistant": '```yara\nrule DLL_SideLoading_Artifact {\n    meta:\n        description = "Detects DLLs with side-loading indicators"\n        author = "Hancock CyberViser"\n        mitre_attack = "T1574.002"\n\n    strings:\n        $exp1 = "DllMain" ascii\n        $dl1 = "http://" ascii wide nocase\n        $dl2 = "URLDownloadToFile" ascii wide\n        $ps1 = "powershell" ascii wide nocase\n        $launch = "CreateProcess" ascii wide\n        $inject = "VirtualAllocEx" ascii wide\n\n    condition:\n        uint16(0) == 0x5A4D and\n        (uint16(uint32(0x3c) + 0x16) & 0x2000) != 0 and\n        $exp1 and\n        (1 of ($dl*, $ps*)) and\n        ($launch or $inject)\n}\n```',
+    },
+
 ]
 
 

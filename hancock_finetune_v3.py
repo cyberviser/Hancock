@@ -39,7 +39,7 @@ except ImportError:
 MODEL_NAME    = "mistralai/Mistral-7B-Instruct-v0.3"
 OUTPUT_DIR    = Path("hancock-adapter-v3")
 HF_REPO       = "cyberviser/hancock-v3"
-DATASET_URL   = "https://raw.githubusercontent.com/cyberviser/Hancock/main/data/hancock_v3.jsonl"
+DATASET_HF    = "cyberviser/hancock-v3-dataset"   # HuggingFace dataset (public, optional)
 DATASET_LOCAL = Path("data/hancock_v3.jsonl")
 MAX_SEQ_LEN   = 4096
 GCS_BUCKET    = os.environ.get("GCS_BUCKET", "cyberviser-models")
@@ -115,26 +115,121 @@ def get_lora_config(vram_gb: float) -> dict:
 
 
 # ── Dataset ───────────────────────────────────────────────────────────────────
-def load_dataset_from_github() -> list:
-    import urllib.request
-    print(f"[v3] Downloading dataset from GitHub...")
-    with urllib.request.urlopen(DATASET_URL) as r:
-        lines = r.read().decode("utf-8").splitlines()
-    samples = [json.loads(l) for l in lines if l.strip()]
-    print(f"[v3] Downloaded {len(samples):,} samples")
-    return samples
+def load_dataset_from_hf() -> list:
+    """Load from HuggingFace datasets hub (public dataset)."""
+    try:
+        from datasets import load_dataset as hf_load
+        print(f"[v3] Loading dataset from HuggingFace: {DATASET_HF}")
+        ds = hf_load(DATASET_HF, split="train")
+        samples = [{"messages": row["messages"]} for row in ds]
+        print(f"[v3] Loaded {len(samples):,} samples from HF Hub")
+        return samples
+    except Exception as e:
+        print(f"[v3] HF Hub load failed: {e}")
+        return []
+
+
+def regenerate_dataset() -> list:
+    """Regenerate dataset locally by running the formatter (no internet needed)."""
+    print("[v3] Regenerating dataset from embedded knowledge bases...")
+    try:
+        repo_root = Path(__file__).parent
+        sys.path.insert(0, str(repo_root))
+        from collectors.formatter_v3 import format_all
+        format_all()
+        if DATASET_LOCAL.exists():
+            with open(DATASET_LOCAL) as f:
+                samples = [json.loads(l) for l in f if l.strip()]
+            print(f"[v3] Regenerated {len(samples):,} samples")
+            return samples
+    except Exception as e:
+        print(f"[v3] Regeneration failed: {e}")
+    return []
 
 
 def load_dataset() -> list:
+    """Load dataset: local file → HF Hub → regenerate locally."""
+    # 1. Local file (fastest path — always try first)
     if DATASET_LOCAL.exists():
         with open(DATASET_LOCAL) as f:
             samples = [json.loads(l) for l in f if l.strip()]
         print(f"[v3] Loaded {len(samples):,} samples from {DATASET_LOCAL}")
         return samples
-    return load_dataset_from_github()
+
+    # 2. HuggingFace Hub (for Colab/Kaggle when repo is cloned without data/)
+    samples = load_dataset_from_hf()
+    if samples:
+        return samples
+
+    # 3. Regenerate locally from formatter (works fully offline)
+    samples = regenerate_dataset()
+    if samples:
+        return samples
+
+    sys.exit(
+        "[v3] ERROR: Could not load dataset.\n"
+        "     Either:\n"
+        "       a) Run: python3 -c 'from collectors.formatter_v3 import format_all; format_all()'\n"
+        "       b) Set HF_TOKEN and ensure HF dataset exists\n"
+        "       c) Download data/hancock_v3.jsonl manually"
+    )
 
 
-def build_dataset(tokenizer, samples: list, max_seq_len: int):
+def classify_mode(sample: dict) -> str:
+    """Classify a sample by its system prompt into one of Hancock's 8 modes."""
+    p = sample.get("messages", [{}])[0].get("content", "").lower()
+    if "soc" in p[:80] or "tier-2" in p[:80] or "incident responder" in p[:80]:
+        return "soc"
+    if "ciso" in p[:80]:
+        return "ciso"
+    if "sigma" in p[:80]:
+        return "sigma"
+    if "yara" in p[:80]:
+        return "yara"
+    if "ioc" in p[:80] or "indicator of compromise" in p[:80]:
+        return "ioc"
+    if "developer" in p[:80] or "code review" in p[:80] or "secure code" in p[:80] or "hancock code" in p[:80]:
+        return "code"
+    if "pentest" in p[:80] or "penetration tester" in p[:80]:
+        return "pentest"
+    return "auto"
+
+
+def balance_dataset(samples: list, cap: int = 400, floor: int = 150, seed: int = 42) -> list:
+    """
+    Balance dataset across Hancock modes:
+    - Cap majority classes (pentest/auto) at `cap` samples each
+    - Oversample minority classes up to `floor` samples (with repetition if needed)
+    """
+    import random, collections
+    rng = random.Random(seed)
+
+    by_mode = collections.defaultdict(list)
+    for s in samples:
+        by_mode[classify_mode(s)].append(s)
+
+    print("[v3] Mode distribution before balancing:")
+    for mode, items in sorted(by_mode.items(), key=lambda x: -len(x[1])):
+        print(f"     {mode:12s}: {len(items):4d}")
+
+    balanced = []
+    for mode, items in by_mode.items():
+        if len(items) >= cap:
+            # Cap majority class — random sample for diversity
+            balanced.extend(rng.sample(items, cap))
+        elif len(items) < floor:
+            # Oversample minority class (repeat + shuffle)
+            repeated = items * (floor // len(items) + 1)
+            balanced.extend(repeated[:floor])
+        else:
+            balanced.extend(items)
+
+    rng.shuffle(balanced)
+    print(f"[v3] Balanced dataset: {len(balanced):,} samples")
+    return balanced
+
+
+def build_dataset(tokenizer, samples: list, max_seq_len: int, balance: bool = True):
     from datasets import Dataset
     # Deduplicate
     seen, unique = set(), []
@@ -145,6 +240,10 @@ def build_dataset(tokenizer, samples: list, max_seq_len: int):
             seen.add(key)
             unique.append(s)
     print(f"[v3] After dedup: {len(unique):,} unique samples")
+
+    if balance:
+        unique = balance_dataset(unique)
+
     ds = Dataset.from_list(unique)
     ds = ds.map(
         lambda s: {"text": tokenizer.apply_chat_template(
@@ -182,6 +281,7 @@ def main():
     parser.add_argument("--export-gguf", action="store_true",       help="Export merged GGUF after training")
     parser.add_argument("--hf-repo",     default=HF_REPO,           help=f"HF Hub repo (default: {HF_REPO})")
     parser.add_argument("--dry-run",     action="store_true",       help="Load model + dataset only, no training")
+    parser.add_argument("--no-balance",  action="store_true",       help="Disable class balancing (use raw dataset)")
     args = parser.parse_args()
 
     # ── Environment ───────────────────────────────────────────
@@ -236,7 +336,7 @@ def main():
 
     # ── Dataset ───────────────────────────────────────────────
     samples = load_dataset()
-    split   = build_dataset(tokenizer, samples, MAX_SEQ_LEN)
+    split   = build_dataset(tokenizer, samples, MAX_SEQ_LEN, balance=not args.no_balance)
     print(f"[v3] Train: {len(split['train']):,} | Eval: {len(split['test']):,}")
 
     if args.dry_run:
@@ -245,6 +345,10 @@ def main():
 
     # ── Training ──────────────────────────────────────────────
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    import torch
+    use_bf16 = torch.cuda.is_available() and torch.cuda.is_bf16_supported()
+    print(f"[v3] Precision: {'bf16' if use_bf16 else 'fp16'}")
+
     training_args = TrainingArguments(
         output_dir=str(OUTPUT_DIR),
         max_steps=args.steps,
@@ -252,12 +356,13 @@ def main():
         gradient_accumulation_steps=lora["grad_accum"],
         warmup_ratio=0.05,
         learning_rate=2e-4,
-        fp16=True,
+        bf16=use_bf16,
+        fp16=not use_bf16,
         logging_steps=10,
-        evaluation_strategy="steps",
+        eval_strategy="steps",
         eval_steps=50,
         save_strategy="steps",
-        save_steps=100,
+        save_steps=50,
         save_total_limit=2,
         load_best_model_at_end=True,
         metric_for_best_model="eval_loss",
@@ -274,8 +379,10 @@ def main():
         eval_dataset=split["test"],
         dataset_text_field="text",
         max_seq_length=MAX_SEQ_LEN,
+        packing=True,
+        neftune_noise_alpha=5,
         args=training_args,
-        callbacks=[EarlyStoppingCallback(early_stopping_patience=5)],
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=2)],
     )
 
     eff_batch = lora["batch"] * lora["grad_accum"]

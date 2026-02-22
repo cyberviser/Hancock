@@ -203,11 +203,14 @@ DEFAULT_MODE = "auto"
 # Keep backward-compatible alias
 HANCOCK_SYSTEM = AUTO_SYSTEM
 
-NIM_BASE_URL    = "https://integrate.api.nvidia.com/v1"
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434") + "/v1"
-DEFAULT_MODEL   = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
-CODER_MODEL     = os.getenv("OLLAMA_CODER_MODEL", "qwen2.5-coder:7b")
-VERSION         = "0.5.0"
+NIM_BASE_URL        = "https://integrate.api.nvidia.com/v1"
+OLLAMA_BASE_URL     = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434") + "/v1"
+GROQ_BASE_URL       = "https://api.groq.com/openai/v1"
+TOGETHER_BASE_URL   = "https://api.together.xyz/v1"
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+DEFAULT_MODEL       = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
+CODER_MODEL         = os.getenv("OLLAMA_CODER_MODEL", "qwen2.5-coder:7b")
+VERSION             = "0.5.0"
 
 # ── Available models ──────────────────────────────────────────────────────────
 MODELS = {
@@ -221,7 +224,23 @@ MODELS = {
     "nim-mistral":  "mistralai/mistral-7b-instruct-v0.3",
     "nim-qwen":     "qwen/qwen2.5-coder-32b-instruct",
     "nim-llama":    "meta/llama-3.1-8b-instruct",
+    # Groq models (free tier — https://console.groq.com)
+    "groq-llama":   "llama-3.3-70b-versatile",
+    "groq-mixtral": "mixtral-8x7b-32768",
+    "groq-gemma":   "gemma2-9b-it",
+    # Together AI models (free credits — https://api.together.xyz)
+    "together-mistral": "mistralai/Mistral-7B-Instruct-v0.3",
+    "together-llama":   "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+    "together-qwen":    "Qwen/Qwen2.5-Coder-32B-Instruct",
+    # OpenRouter models (free rotating — https://openrouter.ai)
+    "or-llama":     "meta-llama/llama-3.3-70b-instruct:free",
+    "or-mistral":   "mistralai/mistral-7b-instruct:free",
 }
+
+# Default models per free-tier backend
+GROQ_DEFAULT_MODEL       = os.getenv("GROQ_MODEL",       "llama-3.3-70b-versatile")
+TOGETHER_DEFAULT_MODEL   = os.getenv("TOGETHER_MODEL",   "mistralai/Mistral-7B-Instruct-v0.3")
+OPENROUTER_DEFAULT_MODEL = os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct:free")
 
 # ── OpenAI fallback ───────────────────────────────────────────────────────────
 OPENAI_MODEL      = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
@@ -261,6 +280,34 @@ def make_openai_client() -> OpenAI | None:
     if not key or key.startswith("sk-your"):
         return None
     return OpenAI(api_key=key, organization=org or None)
+
+
+def make_groq_client() -> OpenAI | None:
+    """Returns an OpenAI-compatible client for Groq (free tier, ~14,400 req/day)."""
+    key = os.getenv("GROQ_API_KEY", "")
+    if not key:
+        return None
+    return OpenAI(base_url=GROQ_BASE_URL, api_key=key)
+
+
+def make_together_client() -> OpenAI | None:
+    """Returns an OpenAI-compatible client for Together AI (free credits)."""
+    key = os.getenv("TOGETHER_API_KEY", "")
+    if not key:
+        return None
+    return OpenAI(base_url=TOGETHER_BASE_URL, api_key=key)
+
+
+def make_openrouter_client() -> OpenAI | None:
+    """Returns an OpenAI-compatible client for OpenRouter (free rotating models)."""
+    key = os.getenv("OPENROUTER_API_KEY", "")
+    if not key:
+        return None
+    return OpenAI(
+        base_url=OPENROUTER_BASE_URL,
+        api_key=key,
+        default_headers={"HTTP-Referer": "https://cyberviser.ai", "X-Title": "Hancock-CyberViser"},
+    )
 
 
 def chat(client: OpenAI, history: list[dict], model: str, stream: bool = True,
@@ -309,6 +356,12 @@ def run_cli(client: OpenAI, model: str):
         print(f"  Endpoint: {OLLAMA_BASE_URL}")
     elif backend == "nvidia":
         print(f"  Endpoint: {NIM_BASE_URL}")
+    elif backend == "groq":
+        print(f"  Endpoint: {GROQ_BASE_URL}  [free ~14,400 req/day]")
+    elif backend == "together":
+        print(f"  Endpoint: {TOGETHER_BASE_URL}  [free credits]")
+    elif backend == "openrouter":
+        print(f"  Endpoint: {OPENROUTER_BASE_URL}  [free rotating models]")
     print(f"  Mode  : auto (Pentest + SOC)")
     print()
 
@@ -976,13 +1029,37 @@ def main():
         client = make_client(args.api_key)
         model  = args.model or os.getenv("HANCOCK_MODEL", "mistralai/mistral-7b-instruct-v0.3")
         print("[Hancock] Using NVIDIA NIM backend.")
+    elif backend == "groq":
+        client = make_groq_client()
+        if not client:
+            sys.exit("ERROR: Set GROQ_API_KEY (free at https://console.groq.com)")
+        model = args.model or GROQ_DEFAULT_MODEL
+        print(f"[Hancock] Using Groq backend (free ~14,400 req/day). Model: {model}")
+    elif backend == "together":
+        client = make_together_client()
+        if not client:
+            sys.exit("ERROR: Set TOGETHER_API_KEY (free credits at https://api.together.xyz)")
+        model = args.model or TOGETHER_DEFAULT_MODEL
+        print(f"[Hancock] Using Together AI backend. Model: {model}")
+    elif backend == "openrouter":
+        client = make_openrouter_client()
+        if not client:
+            sys.exit("ERROR: Set OPENROUTER_API_KEY (free at https://openrouter.ai)")
+        model = args.model or OPENROUTER_DEFAULT_MODEL
+        print(f"[Hancock] Using OpenRouter backend (free models). Model: {model}")
     else:
         client = make_openai_client()
         if not client:
             sys.exit(
                 "ERROR: No backend configured.\n"
-                "  Option A (local): Install Ollama (https://ollama.com) and set HANCOCK_LLM_BACKEND=ollama\n"
-                "  Option B (cloud): Set OPENAI_API_KEY or NVIDIA_API_KEY + HANCOCK_LLM_BACKEND=nvidia"
+                "  Free options:\n"
+                "    HANCOCK_LLM_BACKEND=groq       + GROQ_API_KEY       (14,400 req/day free)\n"
+                "    HANCOCK_LLM_BACKEND=together   + TOGETHER_API_KEY   (free credits)\n"
+                "    HANCOCK_LLM_BACKEND=openrouter + OPENROUTER_API_KEY (free rotating models)\n"
+                "  Local option:\n"
+                "    HANCOCK_LLM_BACKEND=ollama (install Ollama from https://ollama.com)\n"
+                "  Cloud option:\n"
+                "    OPENAI_API_KEY or NVIDIA_API_KEY + HANCOCK_LLM_BACKEND=nvidia"
             )
         model = args.model or OPENAI_MODEL
         print("[Hancock] Using OpenAI backend.")

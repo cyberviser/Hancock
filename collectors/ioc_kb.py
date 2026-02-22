@@ -542,6 +542,431 @@ KB = [
             "```"
         ),
     },
+    # ── THREAT ACTOR PIVOTING ─────────────────────────────────────────────────
+    {
+        "category": "threat_actor",
+        "user": "I found a C2 IP: 91.92.109.44. How do I pivot from this single IOC to map the full threat actor infrastructure?",
+        "assistant": (
+            "# IOC Pivoting — Threat Actor Infrastructure Mapping\n\n"
+            "## Step 1 — Enrich the seed IOC\n"
+            "```\nVirustotal: relations → communicating files, downloaded files, referrer files\n"
+            "Shodan: open ports, banners, SSL certs, ASN, history\n"
+            "Censys: TLS certificate subjects, issuer, fingerprint (jarm)\n"
+            "RiskIQ / Silentpush: passive DNS, host pairs, trackers\n```\n\n"
+            "## Step 2 — Certificate pivoting (most powerful)\n"
+            "```\n1. Look up SSL cert on Censys/Shodan for 91.92.109.44\n"
+            "2. Note Subject CN / SANs / serial number\n"
+            "3. Search Censys for other IPs sharing the same cert fingerprint\n"
+            "4. Each match = another server in the C2 cluster\n```\n\n"
+            "## Step 3 — JARM fingerprint pivoting\n"
+            "```bash\npython3 jarm.py 91.92.109.44 443\n"
+            "# Hash identifies TLS stack config → search Shodan: ssl.jarm:<hash>\n```\n\n"
+            "## Step 4 — Passive DNS\n"
+            "- What domains resolved to this IP historically?\n"
+            "- What other IPs did those domains resolve to?\n"
+            "- Expand the cluster iteratively\n\n"
+            "## Step 5 — ASN / hosting pivoting\n"
+            "```\nASN lookup → identify the bullet-proof hosting provider\n"
+            "Search Shodan/Censys for same port+banner pattern across the ASN\n```\n\n"
+            "## Step 6 — Behavioral pivoting\n"
+            "- Extract malware samples that contact this IP (MalwareBazaar, VirusTotal)\n"
+            "- Identify C2 framework (Cobalt Strike? Metasploit? Sliver?) via banner\n"
+            "- Search GitHub/Pastebin for config fragments\n\n"
+            "## Output: Infrastructure map\n"
+            "Document as a graph: IPs → Domains → Certs → ASNs → Malware samples → TTPs\n"
+            "Share via MISP or OpenCTI for team correlation."
+        ),
+    },
+    {
+        "category": "threat_actor",
+        "user": "What is diamond model analysis and how do I apply it to an incident?",
+        "assistant": (
+            "# Diamond Model of Intrusion Analysis\n\n"
+            "## The Four Vertices\n"
+            "```\n        Adversary\n           /\\\n          /  \\\n         /    \\\n   Infra — Capability\n         \\    /\n          \\  /\n           \\/\n          Victim\n```\n\n"
+            "| Vertex | What it captures |\n|--------|------------------|\n"
+            "| **Adversary** | Threat actor identity, motivation, intent |\n"
+            "| **Infrastructure** | IPs, domains, hosting, C2, email providers |\n"
+            "| **Capability** | Tools, malware, exploits, TTPs |\n"
+            "| **Victim** | Target org, sector, geography, technology |\n\n"
+            "## Applying it to an incident\n"
+            "1. **Populate each vertex from evidence:**\n"
+            "   - Adversary: threat actor group if attributed (e.g., APT29, FIN7)\n"
+            "   - Infrastructure: all C2 IPs, domains, email senders\n"
+            "   - Capability: malware family, exploits used, lateral movement tools\n"
+            "   - Victim: your org, sector, specific assets targeted\n\n"
+            "2. **Draw edges** between vertices — each edge = an activity thread\n\n"
+            "3. **Pivot across vertices** to find related incidents:\n"
+            "   - Same infrastructure → same actor different campaign\n"
+            "   - Same capability → different infrastructure (actor changed infra)\n"
+            "   - Same victim profile → different actors targeting your sector\n\n"
+            "## Intelligence value\n"
+            "- Infrastructure and Capability change frequently (easy to swap)\n"
+            "- Adversary and Victim profiles are more stable\n"
+            "- Focus defenses on the Capability vertex — hardest for actor to change\n\n"
+            "**Tools:** MISP galaxy, OpenCTI graph, Maltego, Analyst Notebook"
+        ),
+    },
+    # ── MISP / TI PLATFORMS ───────────────────────────────────────────────────
+    {
+        "category": "ti_platform",
+        "user": "How do I set up MISP for my SOC to share threat intelligence internally and with ISACs?",
+        "assistant": (
+            "# MISP Deployment for SOC TI Sharing\n\n"
+            "## Quick install (Docker)\n"
+            "```bash\ngit clone https://github.com/MISP/misp-docker\ncd misp-docker\ncp template.env .env\n# Edit .env: set MISP_BASEURL, admin email/password\ndocker-compose up -d\n```\n\n"
+            "## Core configuration\n"
+            "1. **Organizations** — create your org, add partner orgs\n"
+            "2. **Sharing groups** — define who sees what (internal, ISAC, community)\n"
+            "3. **Feeds** — add free TI feeds:\n"
+            "   ```\n   CIRCL OSINT Feed, Botvrij.eu, Abuse.ch (URLhaus, MalwareBazaar)\n"
+            "   MITRE ATT&CK galaxy, CIRCL CVE feed\n   ```\n"
+            "4. **Sync** — connect to partner MISP instances or ISACs via sync agreements\n\n"
+            "## Event workflow\n"
+            "```\nCreate Event → Add Attributes (IOCs) → Add Tags (TLP, PAP, ATT&CK)\n"
+            "→ Add Galaxy clusters (threat actor, malware family) → Publish\n```\n\n"
+            "## SIEM integration\n"
+            "```bash\n# Export IOCs as STIX2 or CSV for SIEM\ncurl -H 'Authorization: <key>' \\\n"
+            "  'https://misp/events/restSearch/json' \\\n  -d '{\"returnFormat\":\"csv\",\"type\":\"ip-dst\",\"to_ids\":true}'\n```\n\n"
+            "## TLP tagging\n"
+            "| TLP | Share with |\n|-----|------------|\n"
+            "| RED | Named individuals only |\n| AMBER | Organization + partners |\n"
+            "| GREEN | Community/ISAC |\n| WHITE/CLEAR | Public |"
+        ),
+    },
+    {
+        "category": "ti_platform",
+        "user": "How do I query OpenCTI or MISP API to automate IOC lookups in my SOAR playbook?",
+        "assistant": (
+            "# Automating IOC Lookups via MISP / OpenCTI API\n\n"
+            "## MISP API — Python lookup\n"
+            "```python\nfrom pymisp import PyMISP\n\nmisp = PyMISP('https://misp.corp', 'API_KEY', ssl=True)\n\ndef lookup_ioc(value, ioc_type='ip-dst'):\n"
+            "    result = misp.search(value=value, type_attribute=ioc_type,\n"
+            "                         to_ids=True, pythonify=True)\n"
+            "    if result:\n        for attr in result:\n            print(f'Match: {attr.event_id} | {attr.comment}')\n"
+            "        return True\n    return False\n\nlookup_ioc('185.220.101.45', 'ip-dst')\n```\n\n"
+            "## OpenCTI API — GraphQL lookup\n"
+            "```python\nfrom pycti import OpenCTIApiClient\n\nctI = OpenCTIApiClient('https://opencti.corp', 'TOKEN')\n\ndef lookup_observable(value):\n"
+            "    obs = cti.stix_cyber_observable.read(filters=[\n"
+            "        {'key': 'value', 'values': [value]}\n    ])\n"
+            "    return obs\n```\n\n"
+            "## SOAR integration pattern\n"
+            "```\nAlert fires → Extract IOCs (IPs/domains/hashes)\n"
+            "→ Query MISP/OpenCTI API → Enrich alert context\n"
+            "→ If known malicious: auto-block + escalate\n"
+            "→ If unknown: submit to sandbox + TI enrichment\n"
+            "→ Update MISP event with new findings\n```\n\n"
+            "## Rate limiting / caching\n"
+            "- Cache MISP lookups in Redis (TTL 1h) to avoid hammering API\n"
+            "- Batch lookups: MISP `/attributes/restSearch` accepts arrays\n"
+            "- For VT: use 4 lookups/min free tier; cache results 24h"
+        ),
+    },
+    # ── SANDBOX ANALYSIS ──────────────────────────────────────────────────────
+    {
+        "category": "sandbox_analysis",
+        "user": "A suspicious .exe was attached to a phishing email. Walk me through analyzing it with a sandbox and extracting IOCs.",
+        "assistant": (
+            "# Malware Sandbox Analysis Workflow\n\n"
+            "## Step 1 — Pre-analysis (static, safe)\n"
+            "```bash\n# Hash and check VirusTotal first\nsha256sum suspicious.exe\n"
+            "curl -s 'https://www.virustotal.com/api/v3/files/<sha256>' \\\n  -H 'x-apikey: VT_KEY'\n\n"
+            "# File type identification\nfile suspicious.exe\nexiftool suspicious.exe\nstrings suspicious.exe | grep -E 'http|cmd|powershell|reg'\n```\n\n"
+            "## Step 2 — Sandbox submission\n"
+            "**Free sandboxes:**\n"
+            "| Sandbox | Strength |\n|---------|----------|\n"
+            "| Any.run | Interactive, real-time, free tier |\n"
+            "| Joe Sandbox Cloud | Deep behavioral analysis |\n"
+            "| Triage (tria.ge) | Fast, CAPE-based, API available |\n"
+            "| Hybrid Analysis | VxStream, good static+dynamic |\n\n"
+            "## Step 3 — Extract IOCs from report\n"
+            "```\nNetwork: C2 IPs/domains/URLs, DNS queries, HTTP requests\n"
+            "Files: dropped files (hashes), modified registry keys, new services\n"
+            "Processes: spawned child processes, injected processes\n"
+            "Mutex: unique mutex names (persistence fingerprint)\n```\n\n"
+            "## Step 4 — ATT&CK mapping\n"
+            "Map behaviors to MITRE ATT&CK:\n"
+            "- Process injection → T1055\n- Persistence via Run key → T1547.001\n"
+            "- C2 over HTTP → T1071.001\n- Credential dumping → T1003\n\n"
+            "## Step 5 — Block and document\n"
+            "```\nBlock C2 IPs/domains → Firewall / DNS sinkhole\n"
+            "Block file hash → EDR exclusion list\nAdd to MISP event\nNotify affected users\n```"
+        ),
+    },
+    {
+        "category": "sandbox_analysis",
+        "user": "How do I set up a local Cuckoo or CAPE sandbox for offline malware analysis?",
+        "assistant": (
+            "# Local Malware Sandbox Setup — CAPE Sandbox\n\n"
+            "## Why CAPE over Cuckoo\n"
+            "CAPE (Cuckoo Analysis + Payload Extraction) is the actively maintained fork:\n"
+            "- Automated payload extraction (unpacking)\n- Config extraction for 100+ malware families\n"
+            "- Actively maintained (Cuckoo is EOL)\n\n"
+            "## Setup (Ubuntu 22.04 host)\n"
+            "```bash\n# Prerequisites\napt install python3 python3-pip git mongodb postgresql\n\n"
+            "# Clone CAPE\ngit clone https://github.com/kevoreilly/CAPEv2\ncd CAPEv2\npip3 install -r requirements.txt\n\n"
+            "# Create Windows 10 guest VM in KVM/VirtualBox\n# Install Python 2.7 + CAPE agent on guest\n"
+            "# Snapshot: cuckoo1\n\n# Configure cape.conf\n[cuckoo]\nmachinery = kvm\n[resultserver]\nip = 192.168.56.1\n```\n\n"
+            "## Network isolation (critical)\n"
+            "```\nHost: NAT interface (host can reach internet, sandbox cannot)\n"
+            "Guest-only network: 192.168.56.0/24\n"
+            "INetSim on host: simulates internet services (DNS, HTTP, SMTP)\n"
+            "Fake internet: malware makes C2 requests → captured by INetSim\n```\n\n"
+            "## Submitting samples\n"
+            "```bash\ncape submit /path/to/sample.exe\ncape submit --url 'http://phishing.example/payload'\n"
+            "# Web UI at http://localhost:8000\n```\n\n"
+            "## Key output: extracted configs\n"
+            "CAPE automatically extracts C2 configs from common families:\n"
+            "Cobalt Strike, Emotet, Qakbot, Remcos, AsyncRAT, NjRAT"
+        ),
+    },
+    # ── HASH / FILE ANALYSIS ─────────────────────────────────────────────────
+    {
+        "category": "hash_analysis",
+        "user": "How do I use SSDEEP and TLSH fuzzy hashing to find malware variants that evade exact hash detection?",
+        "assistant": (
+            "# Fuzzy Hash Malware Detection — SSDEEP & TLSH\n\n"
+            "## Why fuzzy hashing?\n"
+            "Malware authors change one byte → SHA256 changes completely.\n"
+            "Fuzzy hashes measure **similarity** (0–100%) between files.\n\n"
+            "## SSDEEP\n"
+            "```bash\n# Install\napt install ssdeep\n\n# Hash a file\nssdeep -r /malware/ > malware.ssdeep\n\n"
+            "# Compare a sample against known hashes\nssdeep -m malware.ssdeep unknown_sample.exe\n\n"
+            "# Output: score 0-100 (>50 = likely variant)\nssdeep -m baseline.ssdeep new_sample.bin\n"
+            "  new_sample.bin matches known_mal.exe (score: 78)\n```\n\n"
+            "## TLSH (Trend Micro Locality Sensitive Hash)\n"
+            "```python\nimport tlsh\n\nwith open('sample1.exe', 'rb') as f:\n    h1 = tlsh.hash(f.read())\n"
+            "with open('sample2.exe', 'rb') as f:\n    h2 = tlsh.hash(f.read())\n\ndiff = tlsh.diff(h1, h2)\nprint(f'TLSH diff score: {diff}')  # <300 = similar\n```\n\n"
+            "## Building a hunt\n"
+            "```python\nimport ssdeep, os\n\nbaseline_hash = ssdeep.hash(open('cobalt_strike.exe', 'rb').read())\n\nfor root, dirs, files in os.walk('/samples'):\n"
+            "    for fname in files:\n        fpath = os.path.join(root, fname)\n"
+            "        candidate = ssdeep.hash(open(fpath, 'rb').read())\n"
+            "        score = ssdeep.compare(baseline_hash, candidate)\n"
+            "        if score > 40:\n            print(f'Variant: {fpath} (score {score})')\n```\n\n"
+            "## VirusTotal integration\n"
+            "VT stores SSDEEP hashes — use `/files/{hash}/similar_files` endpoint\n"
+            "to find family variants automatically."
+        ),
+    },
+    # ── CVE / VULNERABILITY IOC ───────────────────────────────────────────────
+    {
+        "category": "vuln_ioc",
+        "user": "CVE-2024-3400 is being actively exploited in my industry. How do I generate threat intelligence and detection rules from a CVE?",
+        "assistant": (
+            "# CVE-to-Detection Intelligence Pipeline\n\n"
+            "## Step 1 — Understand the CVE\n"
+            "```bash\n# NIST NVD\ncurl 'https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=CVE-2024-3400'\n\n"
+            "# CISA KEV — is it in active exploitation list?\ncurl 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json' | \\\n"
+            "  python3 -c \"import json,sys; d=json.load(sys.stdin); [print(v['cveID']) for v in d['vulnerabilities'] if 'CVE-2024-3400' in v['cveID']]\"\n```\n\n"
+            "## Step 2 — Find exploitation indicators\n"
+            "Sources for exploit IOCs:\n"
+            "- GitHub: search `CVE-2024-3400 exploit` for PoC code\n"
+            "- ExploitDB: `searchsploit CVE-2024-3400`\n"
+            "- Greynoise/Shodan: scan activity targeting the port/service\n"
+            "- Twitter/X / Mastodon: threat intel community sharing\n\n"
+            "## Step 3 — Extract network indicators\n"
+            "From PoC code and live reports:\n"
+            "- Attacker IPs hitting the vulnerable endpoint\n"
+            "- Payloads in HTTP requests (User-Agent, URL paths, POST body patterns)\n"
+            "- C2 domains/IPs dropped post-exploitation\n\n"
+            "## Step 4 — Create detection rules\n"
+            "```yaml\n# Sigma rule for CVE-2024-3400 (PAN-OS command injection)\ntitle: PAN-OS CVE-2024-3400 Exploit Attempt\nstatus: experimental\nlogsource:\n"
+            "    category: webserver\ndetection:\n    selection:\n        cs-uri-query|contains:\n"
+            "            - '/../../../'\n            - '%2F..%2F..%2F'\n        cs-uri-stem: '/ssl-vpn/hipreport.esp'\n"
+            "    condition: selection\n```\n\n"
+            "## Step 5 — Assess your exposure\n"
+            "```bash\n# Check if you have vulnerable systems\nnmap -p 443 --script http-title <range> | grep 'GlobalProtect'\n"
+            "# Or query your asset inventory for PAN-OS versions\n```"
+        ),
+    },
+    # ── EMAIL IOC ──────────────────────────────────────────────────────────────
+    {
+        "category": "email_ioc",
+        "user": "How do I extract and analyze IOCs from a .eml phishing email file?",
+        "assistant": (
+            "# Phishing Email IOC Extraction\n\n"
+            "## Tools\n"
+            "```bash\npip install oletools PhishingKitHunter\napt install mailutils\n```\n\n"
+            "## Step 1 — Parse email headers\n"
+            "```python\nimport email, re\n\nwith open('phishing.eml') as f:\n    msg = email.message_from_file(f)\n\n"
+            "print('From:', msg['From'])\nprint('Reply-To:', msg['Reply-To'])\nprint('X-Originating-IP:', msg.get('X-Originating-IP'))\n\n"
+            "# Extract all Received headers for hop analysis\nfor header in msg.get_all('Received', []):\n    print('Received:', header)\n```\n\n"
+            "## Step 2 — Extract URLs\n"
+            "```python\nfrom bs4 import BeautifulSoup\n\nbody = ''\nfor part in msg.walk():\n"
+            "    if part.get_content_type() == 'text/html':\n        body += part.get_payload(decode=True).decode('utf-8', errors='ignore')\n\n"
+            "soup = BeautifulSoup(body, 'html.parser')\nurls = [a['href'] for a in soup.find_all('a', href=True)]\nprint('URLs:', urls)\n```\n\n"
+            "## Step 3 — Analyze attachments\n"
+            "```python\nfor part in msg.walk():\n    if part.get_filename():\n"
+            "        payload = part.get_payload(decode=True)\n        import hashlib\n"
+            "        sha256 = hashlib.sha256(payload).hexdigest()\n"
+            "        print(f'Attachment: {part.get_filename()} SHA256: {sha256}')\n"
+            "        with open(f'/tmp/{part.get_filename()}', 'wb') as f:\n            f.write(payload)\n```\n\n"
+            "## Step 4 — Check SPF/DKIM/DMARC\n"
+            "```bash\n# Validate sender authentication\npython3 -m spf 'ip' 'sender@domain.com' 'domain.com'\n"
+            "# Check DKIM signature in headers\ngrep -i 'dkim-signature' phishing.eml\n```\n\n"
+            "## IOC summary template\n"
+            "```\nSender IP: x.x.x.x (SPF: fail/pass)\nSender domain: phishing.com (registered: 2024-01-01)\n"
+            "URLs: [list]\nAttachments: [filename, sha256, type]\nSubject: [subject]\n```"
+        ),
+    },
+    # ── NETWORK IOC ───────────────────────────────────────────────────────────
+    {
+        "category": "network_ioc",
+        "user": "How do I create and maintain a blocklist using threat intel IOCs in my firewall and DNS?",
+        "assistant": (
+            "# Automated IOC Blocklist Management\n\n"
+            "## Architecture\n"
+            "```\nTI Feeds → Aggregator Script → Deduplicate/Validate\n"
+            "         → Firewall API  (IP blocks)\n"
+            "         → DNS RPZ       (domain sinkhole)\n"
+            "         → Proxy policy  (URL blocks)\n```\n\n"
+            "## IP blocklist script\n"
+            "```python\nimport requests, ipaddress\n\nFEEDS = {\n"
+            "    'emerging_threats': 'https://rules.emergingthreats.net/fwrules/emerging-Block-IPs.txt',\n"
+            "    'abuse_ch_feodo': 'https://feodotracker.abuse.ch/downloads/ipblocklist.txt',\n"
+            "    'cinsscore': 'http://cinsscore.com/list/ci-badguys.txt',\n}\n\n"
+            "def fetch_ips(url):\n    r = requests.get(url, timeout=30)\n"
+            "    ips = []\n    for line in r.text.splitlines():\n"
+            "        line = line.strip()\n        if line and not line.startswith('#'):\n"
+            "            try:\n                ipaddress.ip_address(line)\n                ips.append(line)\n"
+            "            except ValueError: pass\n    return ips\n\n"
+            "all_ips = set()\nfor name, url in FEEDS.items():\n    ips = fetch_ips(url)\n"
+            "    all_ips.update(ips)\n    print(f'{name}: {len(ips)} IPs')\n\n"
+            "with open('/etc/firewall/blocklist.txt', 'w') as f:\n    f.write('\\n'.join(sorted(all_ips)))\n```\n\n"
+            "## DNS Response Policy Zone (RPZ)\n"
+            "```bind\n; /etc/bind/rpz.zone\n$TTL 60\n@ IN SOA localhost. root.localhost. ( 1 1h 15m 30d 2h )\n"
+            "  IN NS  localhost.\n\n; Malicious domains → NXDOMAIN\nphishing.example.com  CNAME .\nevil-c2.net            CNAME .\n```\n\n"
+            "## Automation\n"
+            "```bash\n# Cron job: refresh blocklists every 4h\n0 */4 * * * python3 /opt/ti/update_blocklist.py && \\\n"
+            "           rndc reload rpz && \\\n           ipset restore < /etc/firewall/blocklist.ipset\n```"
+        ),
+    },
+    {
+        "category": "network_ioc",
+        "user": "What is passive DNS and how do I use it to investigate suspicious domain activity?",
+        "assistant": (
+            "# Passive DNS for Threat Investigation\n\n"
+            "## What is Passive DNS?\n"
+            "A historical database of DNS resolutions observed in the wild:\n"
+            "- **When** a domain resolved to an IP\n- **What IP** it resolved to\n"
+            "- **How long** the resolution was active (first/last seen)\n\n"
+            "Collected by DNS sensors on resolver networks worldwide.\n\n"
+            "## Free PDNS sources\n"
+            "| Source | Coverage | API |\n|--------|----------|-----|\n"
+            "| SecurityTrails | Excellent | Free tier: 50/mo |\n| VirusTotal | Good | Free tier: 4/min |\n"
+            "| Shodan | Limited | Free account |\n| PassiveTotal (RiskIQ) | Excellent | Free tier |\n"
+            "| CIRCL PDNS | EU-focused | Free, REST API |\n\n"
+            "## Investigation workflow\n"
+            "```python\nimport requests\n\n# VirusTotal PDNS\ndef vt_pdns_domain(domain, api_key):\n"
+            "    url = f'https://www.virustotal.com/api/v3/domains/{domain}/resolutions'\n"
+            "    r = requests.get(url, headers={'x-apikey': api_key})\n"
+            "    return r.json()\n\ndef vt_pdns_ip(ip, api_key):\n"
+            "    url = f'https://www.virustotal.com/api/v3/ip_addresses/{ip}/resolutions'\n"
+            "    r = requests.get(url, headers={'x-apikey': api_key})\n"
+            "    return r.json()\n```\n\n"
+            "## Key analysis questions\n"
+            "- What IPs did this domain resolve to historically? → find previous C2 infra\n"
+            "- When was the domain registered vs. first DNS activity? → fresh domains = suspicious\n"
+            "- What other domains shared this IP? → identify related campaigns\n"
+            "- Did the IP change recently? → possible infrastructure migration\n\n"
+            "## Red flags\n"
+            "- Domain registered <30 days ago with C2-like traffic\n"
+            "- IP shared by 50+ suspicious domains (shared bulletproof hosting)\n"
+            "- Domain uses fast-flux (IP changes every few minutes)"
+        ),
+    },
+    # ── STIX/TAXII ────────────────────────────────────────────────────────────
+    {
+        "category": "ti_standards",
+        "user": "Explain STIX 2.1 and TAXII 2.1 and show me how to publish and consume threat intel with them.",
+        "assistant": (
+            "# STIX 2.1 + TAXII 2.1 — Structured Threat Intel Exchange\n\n"
+            "## STIX 2.1 — Threat Intelligence Language\n"
+            "Objects (SDOs): Indicator, Malware, ThreatActor, AttackPattern, Campaign, "
+            "CourseOfAction, Tool, Vulnerability, Report, Identity, Relationship\n\n"
+            "```python\nimport json\nfrom stix2 import Indicator, Malware, Relationship, Bundle\n\n"
+            "malware = Malware(name='QakBot', malware_types=['trojan'], is_family=True)\n\n"
+            "indicator = Indicator(\n    name='QakBot C2 IP',\n"
+            "    pattern=\"[ipv4-addr:value = '91.92.109.44']\",\n"
+            "    pattern_type='stix',\n    valid_from='2024-01-01T00:00:00Z',\n"
+            "    indicator_types=['malicious-activity'],\n)\n\n"
+            "rel = Relationship(relationship_type='indicates',\n"
+            "                   source_ref=indicator.id,\n                   target_ref=malware.id)\n\n"
+            "bundle = Bundle(objects=[malware, indicator, rel])\nprint(bundle.serialize(pretty=True))\n```\n\n"
+            "## TAXII 2.1 — Transport Protocol\n"
+            "```python\nfrom taxii2client.v21 import Server\n\n"
+            "# Connect to TAXII server (e.g., MITRE ATT&CK)\nserver = Server('https://cti-taxii.mitre.org/taxii/',\n"
+            "                user='guest', password='guest')\n\ncollection = server.api_roots[0].collections[0]\n"
+            "for envelope in collection.get_objects():\n    for obj in envelope.get('objects', []):\n"
+            "        if obj['type'] == 'attack-pattern':\n            print(obj['name'])\n```\n\n"
+            "## SIEM ingestion of STIX\n"
+            "```bash\n# Elastic has native STIX integration\n# Or convert to CSV for Splunk:\npython3 -c \"\nimport json\nbundle = json.load(open('intel.json'))\n"
+            "for obj in bundle['objects']:\n    if obj['type'] == 'indicator':\n        print(obj['pattern'])\n\"\n```"
+        ),
+    },
+    # ── CERTIFICATE IOC ────────────────────────────────────────────────────────
+    {
+        "category": "cert_ioc",
+        "user": "How do I detect malicious or self-signed certificates used in C2 communications?",
+        "assistant": (
+            "# Malicious Certificate Detection for C2 Hunting\n\n"
+            "## Why attackers use TLS\n"
+            "- Encrypts C2 traffic (evades payload inspection)\n"
+            "- Blends with legitimate HTTPS traffic\n"
+            "- Self-signed or Let's Encrypt certs are free and easy\n\n"
+            "## Detection signals\n"
+            "### 1. JARM fingerprinting (framework detection)\n"
+            "```bash\npip install jarm-py\n\n# Fingerprint a suspicious server\npython3 jarm.py suspicious.server.com 443\n\n"
+            "# Compare against known C2 JARM hashes:\n# Cobalt Strike default: 07d14d16d21d21d07c42d41d00041d24a458a375eef0c576d23a7bab9a9fb1\n"
+            "# Metasploit:          07d19d1ad21d21d07c42d43d000000d24a458a375eef0c576d23a7bab9a9fb1\n```\n\n"
+            "### 2. Certificate transparency log hunting\n"
+            "```bash\n# crt.sh — search for suspicious cert patterns\ncurl 'https://crt.sh/?q=%25.evil-domain.com&output=json' | python3 -m json.tool\n\n"
+            "# Hunt for LOLDomain patterns (typosquatting, keyword abuse)\ncurl 'https://crt.sh/?q=%25microsoft-update%25&output=json'\n```\n\n"
+            "### 3. Zeek/Suricata SSL log analysis\n"
+            "```sql\n-- Zeek ssl.log: flag self-signed certs with short validity\nSELECT server_name, issuer, subject, not_valid_after\nFROM ssl_logs\nWHERE issuer = subject  -- self-signed\n"
+            "  AND DATEDIFF(not_valid_after, not_valid_before) < 365\n  AND server_name NOT IN (SELECT domain FROM whitelist)\n```\n\n"
+            "### 4. Certificate field anomalies\n"
+            "Red flags in TLS certs:\n"
+            "- Issuer = Subject (self-signed)\n- Subject CN = IP address\n"
+            "- Validity period exactly 1 year from today (auto-generated)\n"
+            "- Generic subject: `O=Internet Widgits, CN=example`\n"
+            "- Let's Encrypt cert on non-standard port\n\n"
+            "### 5. Network-level hunting with Suricata\n"
+            "```yaml\nalert tls any any -> any any (msg:'Self-Signed Cert Detected';\n"
+            "  tls.cert_issuer; content:'Internet Widgits';\n  classtype:policy-violation; sid:9001001;)\n```"
+        ),
+    },
+    # ── THREAT HUNTING IOC ────────────────────────────────────────────────────
+    {
+        "category": "threat_hunting",
+        "user": "How do I use threat intel IOCs to drive a proactive threat hunt in my environment?",
+        "assistant": (
+            "# IOC-Driven Threat Hunting\n\n"
+            "## Hunt workflow\n"
+            "```\n1. Select Intel → 2. Form Hypothesis → 3. Define Hunt Scope\n"
+            "→ 4. Query Data → 5. Triage Results → 6. Escalate or Document\n```\n\n"
+            "## Step 1 — Select high-confidence IOCs\n"
+            "Prioritize:\n"
+            "- IOCs from ISACs matching your industry\n- Actively exploited CVEs (CISA KEV)\n"
+            "- APT groups known to target your sector\n"
+            "- Behavioral patterns (TTPs) over fragile atomic IOCs (IPs rotate)\n\n"
+            "## Step 2 — Form hypothesis\n"
+            "Example: *'APT29 is known to use Cobalt Strike with JARM hash X. "
+            "If we're targeted, we'd see outbound TLS to non-categorized domains "
+            "with this JARM fingerprint.'*\n\n"
+            "## Step 3 — Query across data sources\n"
+            "```sql\n-- Splunk: hunt for known C2 IP in proxy logs\nindex=proxy dest_ip IN (\"91.92.109.44\",\"45.33.32.156\")\n| stats count by src_ip, dest_ip, dest_port\n\n"
+            "-- Hunt for DNS queries to known malicious domains\nindex=dns query IN (\"evil-c2.net\", \"update-microsoft-security.com\")\n```\n\n"
+            "## Step 4 — Behavioral hunt (TTPs)\n"
+            "```sql\n-- Beaconing detection: regular periodic outbound connections\nindex=netflow dest_port=443 NOT dest_ip IN (cloudflare_ranges)\n| bucket span=1h _time\n"
+            "| stats count by src_ip, dest_ip, _time\n| eventstats stdev(count) as stdev, avg(count) as avg by src_ip, dest_ip\n"
+            "| where stdev < 2 AND count > 10  -- low variance = beaconing\n```\n\n"
+            "## Step 5 — Document findings\n"
+            "- True positive → create incident, isolate host\n- False positive → add to tuning list\n"
+            "- No finding → document 'No evidence of compromise as of [date]'\n"
+            "All hunts should produce a hunt report regardless of outcome."
+        ),
+    },
 ]
 
 

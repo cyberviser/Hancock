@@ -210,12 +210,14 @@ def format_all():
     from collectors.yara_kb  import generate as gen_yara
     from collectors.ioc_kb   import generate as gen_ioc
     from collectors.code_kb  import generate as gen_code
+    from collectors.soc_kb   import generate as gen_soc
 
     ciso_samples  = gen_ciso()
     sigma_samples = gen_sigma()
     yara_samples  = gen_yara()
     ioc_samples   = gen_ioc()
     code_samples  = gen_code()
+    soc_samples   = gen_soc()
 
     print(f"[fmt-v3]  NVD CVEs:       {len(nvd_cves)}")
     print(f"[fmt-v3]  CISA KEV:       {len(kev_entries)}")
@@ -227,6 +229,7 @@ def format_all():
     print(f"[fmt-v3]  YARA KB:        {len(yara_samples)}")
     print(f"[fmt-v3]  IOC KB:         {len(ioc_samples)}")
     print(f"[fmt-v3]  Code KB:        {len(code_samples)}")
+    print(f"[fmt-v3]  SOC KB:         {len(soc_samples)}")
 
     all_samples = []
     all_samples.extend(format_existing_v2(v2_samples))
@@ -239,6 +242,7 @@ def format_all():
     all_samples.extend(format_kb_samples(yara_samples))
     all_samples.extend(format_kb_samples(ioc_samples))
     all_samples.extend(format_kb_samples(code_samples))
+    all_samples.extend(format_kb_samples(soc_samples))
 
     # Deduplicate
     seen, unique = set(), []

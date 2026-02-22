@@ -885,6 +885,20 @@ KB = [
 ]
 
 
+def generate() -> list:
+    """Return KB as list of {"messages": [...]} dicts for formatter_v3."""
+    return [
+        {
+            "messages": [
+                {"role": "system",    "content": HANCOCK_SYSTEM},
+                {"role": "user",      "content": entry["user"]},
+                {"role": "assistant", "content": entry["assistant"]},
+            ]
+        }
+        for entry in KB
+    ]
+
+
 def build():
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     data = {
@@ -895,7 +909,7 @@ def build():
     }
     with open(OUTPUT_FILE, "w") as f:
         json.dump(data, f, indent=2)
-    print(f"[soc-kb] Built {len(KB)} Q&A pairs across {len(data['categories'])} categories → {OUTPUT_FILE}")
+    print(f"[soc-kb] ✅ {len(KB)} samples → {OUTPUT_FILE}")
     return data
 
 

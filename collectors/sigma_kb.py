@@ -1068,6 +1068,189 @@ KB = [
             "```"
         ),
     },
+    # ── ADDITIONAL RULES ─────────────────────────────────────────────────────
+    {
+        "user": "Write a Sigma rule to detect credential access via Windows credential dumping tools like LaZagne, Mimikatz, or similar.",
+        "assistant": (
+            "```yaml\ntitle: Credential Dumping Tool Execution\nstatus: stable\n"
+            "tags:\n    - attack.credential_access\n    - attack.t1003\n"
+            "logsource:\n    category: process_creation\n    product: windows\n"
+            "detection:\n    selection_image:\n        Image|endswith:\n"
+            "            - '\\\\lazagne.exe'\n            - '\\\\mimikatz.exe'\n"
+            "            - '\\\\wce.exe'\n            - '\\\\pwdump.exe'\n"
+            "    selection_cmdline:\n        CommandLine|contains:\n"
+            "            - 'sekurlsa::'\n            - 'lsadump::'\n"
+            "            - 'kerberos::'\n            - 'privilege::debug'\n"
+            "    condition: 1 of selection_*\nfalsepositives:\n    - Security team testing\nlevel: critical\n```"
+        ),
+    },
+    {
+        "user": "Write a Sigma rule to detect suspicious use of certutil.exe for downloading payloads (T1105/T1140).",
+        "assistant": (
+            "```yaml\ntitle: Certutil Payload Download\nstatus: stable\n"
+            "tags:\n    - attack.defense_evasion\n    - attack.t1140\n    - attack.t1105\n"
+            "logsource:\n    category: process_creation\n    product: windows\n"
+            "detection:\n    selection:\n        Image|endswith: '\\\\certutil.exe'\n"
+            "        CommandLine|contains:\n            - '-urlcache'\n            - '-split'\n"
+            "            - '-decode'\n            - 'http://'\n            - 'https://'\n"
+            "    condition: selection\nfalsepositives:\n    - Certificate management operations\nlevel: high\n```"
+        ),
+    },
+    {
+        "user": "Write a Sigma rule to detect suspicious registry modifications for persistence (Run/RunOnce keys).",
+        "assistant": (
+            "```yaml\ntitle: Registry Run Key Persistence (T1547.001)\nstatus: stable\n"
+            "tags:\n    - attack.persistence\n    - attack.t1547.001\n"
+            "logsource:\n    category: registry_event\n    product: windows\n"
+            "detection:\n    selection:\n        EventType: SetValue\n"
+            "        TargetObject|contains:\n"
+            "            - '\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run'\n"
+            "            - '\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\RunOnce'\n"
+            "    filter_legit:\n        Image|contains:\n"
+            "            - '\\\\Program Files\\\\'\n            - 'C:\\\\Windows\\\\'\n"
+            "    condition: selection and not filter_legit\nfalsepositives:\n    - Software installation\nlevel: medium\n```"
+        ),
+    },
+    {
+        "user": "Write a Sigma rule to detect suspicious Parent-Child process relationships (T1055 process injection indicators).",
+        "assistant": (
+            "```yaml\ntitle: Suspicious Parent-Child Process Relationship\nstatus: experimental\n"
+            "tags:\n    - attack.defense_evasion\n    - attack.t1055\n    - attack.t1204\n"
+            "logsource:\n    category: process_creation\n    product: windows\n"
+            "detection:\n    selection_office_shell:\n"
+            "        ParentImage|endswith:\n"
+            "            - '\\\\winword.exe'\n            - '\\\\excel.exe'\n"
+            "            - '\\\\powerpnt.exe'\n            - '\\\\outlook.exe'\n"
+            "        Image|endswith:\n"
+            "            - '\\\\cmd.exe'\n            - '\\\\powershell.exe'\n"
+            "            - '\\\\wscript.exe'\n            - '\\\\mshta.exe'\n"
+            "    selection_browser_shell:\n"
+            "        ParentImage|endswith:\n"
+            "            - '\\\\chrome.exe'\n            - '\\\\msedge.exe'\n"
+            "        Image|endswith: '\\\\powershell.exe'\n"
+            "    condition: 1 of selection_*\nfalsepositives:\n    - Developer tooling\nlevel: high\n```"
+        ),
+    },
+    {
+        "user": "Write a Sigma rule to detect PowerShell download cradles (IEX, Invoke-WebRequest, Net.WebClient).",
+        "assistant": (
+            "```yaml\ntitle: PowerShell Download Cradle\nstatus: stable\n"
+            "tags:\n    - attack.execution\n    - attack.t1059.001\n    - attack.t1105\n"
+            "logsource:\n    category: process_creation\n    product: windows\n"
+            "detection:\n    selection:\n        Image|endswith: '\\\\powershell.exe'\n"
+            "        CommandLine|contains:\n"
+            "            - 'IEX'\n            - 'Invoke-Expression'\n"
+            "            - 'Net.WebClient'\n            - 'DownloadString'\n"
+            "            - 'DownloadFile'\n"
+            "    condition: selection\nfalsepositives:\n    - Legitimate PS scripts that download updates\nlevel: high\n```"
+        ),
+    },
+    {
+        "user": "Write a Sigma rule to detect Zerologon (CVE-2020-1472) exploitation attempts.",
+        "assistant": (
+            "```yaml\ntitle: Zerologon CVE-2020-1472 Exploitation Attempt\nstatus: stable\n"
+            "tags:\n    - attack.privilege_escalation\n    - attack.t1210\n"
+            "logsource:\n    product: windows\n    service: security\n"
+            "detection:\n    selection_acct:\n        EventID: 4742\n"
+            "        TargetUserName|endswith: '$'\n        PasswordLastSet: ''\n"
+            "    selection_netlogon:\n        EventID: 5805\n"
+            "    condition: 1 of selection_*\nfalsepositives:\n    - DC maintenance\nlevel: critical\n```"
+        ),
+    },
+    {
+        "user": "Write a Sigma rule to detect SMB lateral movement via remote service creation (PsExec/Impacket).",
+        "assistant": (
+            "```yaml\ntitle: SMB Lateral Movement via Remote Service Creation\nstatus: stable\n"
+            "tags:\n    - attack.lateral_movement\n    - attack.t1021.002\n"
+            "logsource:\n    product: windows\n    service: system\n"
+            "detection:\n    selection:\n        EventID: 7045\n"
+            "        ServiceFileName|contains:\n"
+            "            - '\\\\ADMIN$\\\\'\n            - 'PSEXESVC'\n"
+            "    condition: selection\nfalsepositives:\n    - Legitimate remote management (SCCM)\nlevel: high\n```"
+        ),
+    },
+    {
+        "user": "Write a Sigma rule to detect NTDS.dit credential theft (Active Directory database extraction).",
+        "assistant": (
+            "```yaml\ntitle: NTDS.dit Access / Extraction (T1003.003)\nstatus: stable\n"
+            "tags:\n    - attack.credential_access\n    - attack.t1003.003\n"
+            "logsource:\n    category: process_creation\n    product: windows\n"
+            "detection:\n    selection_file:\n        CommandLine|contains:\n"
+            "            - 'ntds.dit'\n            - 'NTDS.DIT'\n"
+            "    selection_shadow:\n        CommandLine|contains:\n"
+            "            - 'vssadmin create shadow'\n"
+            "            - 'wmic shadowcopy call create'\n"
+            "    selection_ntdsutil:\n        Image|endswith: '\\\\ntdsutil.exe'\n"
+            "        CommandLine|contains: 'ac i ntds'\n"
+            "    condition: 1 of selection_*\nfalsepositives:\n    - AD backup operations\nlevel: critical\n```"
+        ),
+    },
+    {
+        "user": "Write a Sigma rule to detect mshta.exe executing remote scripts (T1218.005).",
+        "assistant": (
+            "```yaml\ntitle: MSHTA Remote Script Execution\nstatus: stable\n"
+            "tags:\n    - attack.defense_evasion\n    - attack.t1218.005\n"
+            "logsource:\n    category: process_creation\n    product: windows\n"
+            "detection:\n    selection:\n        Image|endswith: '\\\\mshta.exe'\n"
+            "        CommandLine|contains:\n"
+            "            - 'http://'\n            - 'https://'\n"
+            "            - 'javascript:'\n            - 'vbscript:'\n"
+            "    condition: selection\nfalsepositives:\n    - Legacy enterprise HTA apps\nlevel: high\n```"
+        ),
+    },
+    {
+        "user": "Write a Sigma rule to detect rclone or similar tools used for data exfiltration to cloud storage (T1567.002).",
+        "assistant": (
+            "```yaml\ntitle: Data Exfiltration via Cloud Sync Tool\nstatus: stable\n"
+            "tags:\n    - attack.exfiltration\n    - attack.t1567.002\n"
+            "logsource:\n    category: process_creation\n    product: windows\n"
+            "detection:\n    selection_image:\n        Image|endswith: '\\\\rclone.exe'\n"
+            "    selection_cmdline:\n        CommandLine|contains:\n"
+            "            - 'mega:'\n            - 'drive:'\n            - 'dropbox:'\n"
+            "            - 'onedrive:'\n"
+            "    condition: 1 of selection_*\nfalsepositives:\n    - Legitimate rclone backup jobs\nlevel: high\n```"
+        ),
+    },
+    {
+        "user": "Write a Sigma rule for detecting BloodHound / SharpHound Active Directory enumeration.",
+        "assistant": (
+            "```yaml\ntitle: BloodHound / SharpHound AD Enumeration\nstatus: stable\n"
+            "tags:\n    - attack.discovery\n    - attack.t1069.002\n    - attack.t1087.002\n"
+            "logsource:\n    category: process_creation\n    product: windows\n"
+            "detection:\n    selection_image:\n        Image|endswith:\n"
+            "            - '\\\\SharpHound.exe'\n            - '\\\\BloodHound.exe'\n"
+            "    selection_cmdline:\n        CommandLine|contains:\n"
+            "            - 'SharpHound'\n            - '-CollectionMethod'\n"
+            "    condition: 1 of selection_*\nfalsepositives:\n    - Authorized red team assessments\nlevel: high\n```"
+        ),
+    },
+    {
+        "user": "Write a Sigma rule to detect suspicious use of wmic.exe for remote code execution (T1047).",
+        "assistant": (
+            "```yaml\ntitle: WMIC Remote Code Execution\nstatus: stable\n"
+            "tags:\n    - attack.execution\n    - attack.t1047\n    - attack.lateral_movement\n"
+            "logsource:\n    category: process_creation\n    product: windows\n"
+            "detection:\n    selection:\n        Image|endswith: '\\\\wmic.exe'\n"
+            "        CommandLine|contains:\n"
+            "            - '/node:'\n            - 'process call create'\n"
+            "    filter:\n        CommandLine|contains:\n"
+            "            - '127.0.0.1'\n            - 'localhost'\n"
+            "    condition: selection and not filter\nfalsepositives:\n    - Legitimate WMIC remote admin\nlevel: high\n```"
+        ),
+    },
+    {
+        "user": "Write a Sigma rule to detect suspicious use of regsvr32.exe for COM scriptlet execution (Squiblydoo T1218.010).",
+        "assistant": (
+            "```yaml\ntitle: Regsvr32 COM Scriptlet Execution (Squiblydoo)\nstatus: stable\n"
+            "tags:\n    - attack.defense_evasion\n    - attack.t1218.010\n"
+            "logsource:\n    category: process_creation\n    product: windows\n"
+            "detection:\n    selection:\n        Image|endswith: '\\\\regsvr32.exe'\n"
+            "        CommandLine|contains:\n"
+            "            - '/s'\n            - '/u'\n            - 'scrobj'\n"
+            "            - 'http://'\n            - 'https://'\n"
+            "    condition: selection\nfalsepositives:\n    - Legitimate COM registration\nlevel: high\n```"
+        ),
+    },
 ]
 
 
