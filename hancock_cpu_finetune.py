@@ -52,6 +52,12 @@ def parse_args():
                    help="Early stopping patience (default: 3)")
     p.add_argument("--max-samples", type=int, default=None,
                    help="Limit samples for quick tests (e.g. --max-samples 200)")
+    p.add_argument("--dataset", type=str, default=None,
+                   help="Path to training JSONL (default: data/hancock_v2.jsonl; use data/hancock_v3.jsonl for v3)")
+    p.add_argument("--max-seq-len", type=int, default=MAX_SEQ_LEN,
+                   help=f"Max sequence length (default: {MAX_SEQ_LEN}; use 512 to halve training time)")
+    p.add_argument("--hf-push", type=str, default=None,
+                   help="HuggingFace repo to push adapter after training (e.g. cyberviser/hancock-tinyllama)")
     p.add_argument("--debug", action="store_true",
                    help="Debug mode: 10 steps, 50 samples, verbose")
     return p.parse_args()
@@ -118,6 +124,15 @@ def main():
         args.max_steps = 10
         args.max_samples = 50
         print("[debug] Debug mode: 10 steps, 50 samples")
+
+    # Override global MAX_SEQ_LEN with CLI arg
+    global MAX_SEQ_LEN
+    MAX_SEQ_LEN = args.max_seq_len
+
+    # Override dataset path if specified
+    global DATASET_PATH
+    if args.dataset:
+        DATASET_PATH = Path(args.dataset)
 
     print_banner()
 
@@ -248,6 +263,16 @@ def main():
     # ── Save ───────────────────────────────────────────────────────────────────
     model.save_pretrained(str(OUTPUT_DIR))
     tokenizer.save_pretrained(str(OUTPUT_DIR))
+
+    # ── Optional HuggingFace push ───────────────────────────────────────────────
+    if getattr(args, "hf_push", None):
+        try:
+            print(f"\n[hf] Pushing adapter to HuggingFace: {args.hf_push} ...")
+            model.push_to_hub(args.hf_push)
+            tokenizer.push_to_hub(args.hf_push)
+            print(f"[hf] ✅ Pushed → https://huggingface.co/{args.hf_push}")
+        except Exception as e:
+            print(f"[hf] ⚠️  Push failed (non-fatal): {e}")
 
     # ── Summary ────────────────────────────────────────────────────────────────
     m, s = divmod(int(elapsed), 60)
