@@ -242,6 +242,19 @@ ollama run hancock
 
 ### Training Data
 
+| Dataset | Samples | Sources | Command |
+|---------|---------|---------|---------|
+| `hancock_v2.jsonl` | 1,375 | MITRE ATT&CK + NVD CVE + Pentest KB + SOC KB | `python hancock_pipeline.py --phase 2` |
+| `hancock_v3.jsonl` | 5,670 | v2 + CISA KEV + Atomic Red Team + GitHub Security Advisories | `python hancock_pipeline.py --phase 3` |
+
+```bash
+# Generate latest v3 dataset (internet required)
+python hancock_pipeline.py --phase 3
+
+# Or offline-only (static KB, no internet)
+python hancock_pipeline.py --kb-only
+```
+
 ```
 data/
 ├── hancock_pentest_v1.jsonl    # Pentest training data (MITRE + CVE + KB)
