@@ -11,14 +11,14 @@ Show HN: Hancock – fine-tuned LLM for pentest and SOC work (MITRE ATT&CK + CVE
 **Body:**
 I've been building Hancock — a Mistral 7B model fine-tuned specifically on MITRE ATT&CK, NVD/CVE data, and pentest/SOC knowledge bases.
 
-It ships as a REST API with 5 security-specific endpoints:
+It ships as a REST API with 12 security-specific endpoints, including:
 - /v1/triage — SOC alert triage with MITRE mapping + TP/FP verdict
 - /v1/hunt   — SIEM query generator (Splunk SPL / Elastic KQL / Sentinel)
 - /v1/respond — PICERL incident response playbooks
 - /v1/ask    — single-shot security Q&A
 - /v1/chat   — conversational mode with history
 
-v0.2.0 adds API key auth, per-IP rate limiting, and auto-deploy.
+v0.4.0 adds CISO advisory, Sigma/YARA rule generation, IOC enrichment, API key auth, rate limiting, and auto-deploy.
 
 The model is purpose-built — not ChatGPT with a security system prompt.
 Fine-tuning pipeline is open source if you want to train your own variant.
@@ -33,7 +33,7 @@ Happy to answer questions about the fine-tuning approach or architecture.
 
 ## 💼 LinkedIn Post
 
-🛡️ Launching Hancock v0.2.0 — AI Security Agent by CyberViser
+🛡️ Launching Hancock v0.4.0 — AI Security Agent by CyberViser
 
 After months of building, I'm releasing Hancock publicly.
 
@@ -46,10 +46,12 @@ What it does via REST API:
 → CVE analysis and exploitation guidance
 → Pentest recon, methodology, and report writing
 
-v0.2.0 ships with:
+v0.4.0 ships with:
+✅ 12 REST API endpoints (triage, hunt, respond, code, ciso, sigma, yara, ioc, webhook)
 ✅ Bearer token auth + rate limiting
 ✅ Auto-deploy CI/CD pipeline
 ✅ Interactive demo (no signup)
+✅ Python + Node.js SDKs
 ✅ Community tier — free, self-hosted
 
 If you're an MSSP, pentest firm, or SOC analyst drowning in alerts and report writing — this was built for you.
@@ -64,21 +66,23 @@ If you're an MSSP, pentest firm, or SOC analyst drowning in alerts and report wr
 
 ## 🔴 Reddit — r/netsec
 
-**Title:** Hancock – fine-tuned LLM for pentest + SOC work. Generates SIEM queries, triages alerts, writes IR playbooks. v0.2.0
+**Title:** Hancock – fine-tuned LLM for pentest + SOC work. Generates SIEM queries, triages alerts, writes IR playbooks. v0.4.0
 
 **Body:**
 Hey r/netsec,
 
-I've been building Hancock — a Mistral 7B model fine-tuned on MITRE ATT&CK, NVD/CVE, and pentest/SOC knowledge. Wanted to share v0.2.0 here.
+I've been building Hancock — a Mistral 7B model fine-tuned on MITRE ATT&CK, NVD/CVE, and pentest/SOC knowledge. Wanted to share v0.4.0 here.
 
 **What it does:**
 - REST API: triage alerts, generate Splunk/Elastic/Sentinel queries, write PICERL playbooks
 - CLI mode for interactive pentest assistance
 - Runs against NVIDIA NIM (or bring your own inference)
 
-**v0.2.0 adds:**
+**v0.4.0 adds:**
+- CISO advisory, Sigma/YARA rule generation, IOC enrichment
 - API key auth + per-IP rate limiting
 - Interactive browser demo (no signup needed)
+- Python + Node.js SDKs
 - Auto-deploy pipeline
 
 **Try it:** https://cyberviser.netlify.app/demo  
@@ -113,7 +117,7 @@ Demo (no account needed): https://cyberviser.netlify.app/demo
 ## 🐦 Twitter/X Thread
 
 Tweet 1:
-Shipping Hancock v0.2.0 — AI security agent fine-tuned on MITRE ATT&CK + 200k CVEs
+Shipping Hancock v0.4.0 — AI security agent fine-tuned on MITRE ATT&CK + 200k CVEs
 
 Not another "ChatGPT with a security prompt." Purpose-built for pentesters and SOC analysts.
 
@@ -128,11 +132,13 @@ What it actually does:
 → /v1/ask: security Q&A with context
 
 Tweet 3:
-v0.2.0 ships with:
+v0.4.0 ships with:
+✅ 12 API endpoints
 ✅ Bearer token auth
 ✅ Per-IP rate limiting  
 ✅ Interactive demo — no signup
 ✅ Auto-deploy pipeline
+✅ Python + Node.js SDKs
 ✅ Community tier free/self-hosted
 
 Code: https://github.com/cyberviser/Hancock

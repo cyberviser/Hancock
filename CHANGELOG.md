@@ -191,11 +191,10 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ## [Unreleased] — Planned
 
-### Planned (Phase 3)
+### Planned (Phase 4)
 - [ ] Burp Suite Python extension
 - [ ] Docker image on Docker Hub (`docker pull cyberviser/hancock`)
 - [ ] Threat intelligence integration (MISP/TAXII/STIX live feeds)
-- [ ] HuggingFace Space demo
 - [ ] SIEM native connectors (Splunk app, Elastic integration)
 
 ---

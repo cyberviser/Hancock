@@ -33,7 +33,7 @@ Automated offensive security guidance — recon, exploitation paths, CVE analysi
 ### 🔵 SOC Analyst Mode
 Real-time alert triage, SIEM query generation (Splunk SPL, Elastic KQL, Sentinel KQL), incident response playbooks (PICERL), threat hunting, and detection engineering (Sigma/YARA rules).
 
-### 👔 CISO Strategy Mode *(Phase 3)*
+### 👔 CISO Strategy Mode
 Board-level risk reporting, compliance automation (SOC2, ISO 27001, NIST CSF), security program roadmaps, and executive summaries.
 
 ---
@@ -46,12 +46,14 @@ Board-level risk reporting, compliance automation (SOC2, ISO 27001, NIST CSF), s
 │                                                     │
 │  ┌──────────┐  ┌──────────┐  ┌──────────────────┐  │
 │  │ Pentest  │  │   SOC    │  │  CISO Strategy   │  │
-│  │ Specialist│  │ Analyst  │  │  (Phase 3)       │  │
+│  │ Specialist│  │ Analyst  │  │                  │  │
 │  └──────────┘  └──────────┘  └──────────────────┘  │
 │                                                     │
 │  ┌─────────────────────────────────────────────┐    │
 │  │           REST API (Flask)                  │    │
 │  │  /v1/chat  /v1/triage  /v1/hunt  /v1/respond│    │
+│  │  /v1/code  /v1/ciso  /v1/sigma  /v1/yara   │    │
+│  │  /v1/ioc  /v1/webhook                       │    │
 │  └─────────────────────────────────────────────┘    │
 │                                                     │
 │  ┌─────────────────────────────────────────────┐    │
@@ -79,7 +81,7 @@ Board-level risk reporting, compliance automation (SOC2, ISO 27001, NIST CSF), s
 ## Revenue Model
 
 ### Tier 1 — Open Source (Community)
-- **Free** — self-hosted, MIT licensed
+- **Free** — self-hosted, CyberViser Proprietary License (free for personal/research use)
 - Drives adoption, community contributions, and talent pipeline
 - API-compatible for ecosystem integrations
 
@@ -126,10 +128,10 @@ Board-level risk reporting, compliance automation (SOC2, ISO 27001, NIST CSF), s
 
 | Phase | Focus | Timeline | Status |
 |-------|-------|----------|--------|
-| **Phase 1** | Pentest Specialist + SOC API | Q1 2025 | 🔨 Building |
-| **Phase 2** | SOC deep specialization + detection engineering | Q3 2025 | Planned |
-| **Phase 3** | CISO strategy + compliance automation | Q1 2026 | Planned |
-| **Phase 4** | Enterprise platform + SIEM/SOAR integrations | Q3 2026 | Planned |
+| **Phase 1** | Pentest Specialist + SOC API | Q1 2025 | ✅ Live |
+| **Phase 2** | SOC deep specialization + detection engineering | Q3 2025 | ✅ Live |
+| **Phase 3** | CISO strategy + compliance automation | Q1 2026 | ✅ Live |
+| **Phase 4** | Enterprise platform + SIEM/SOAR integrations | Q3 2026 | 🔨 Building |
 
 ---
 
@@ -184,18 +186,20 @@ CyberViser is seeking **$500,000 in seed funding** to accelerate:
 
 ## Traction
 
-- ✅ Working Pentest + SOC REST API (Phase 1 complete)
-- ✅ Fine-tuning pipeline on Mistral 7B with LoRA
-- ✅ MITRE ATT&CK + NVD/CVE dataset collection automated
-- ✅ CLI + API with 5 specialized security endpoints
+- ✅ Working Pentest + SOC + CISO + Code REST API (Phases 1–3 complete)
+- ✅ Fine-tuning pipeline on Mistral 7B with LoRA (v3 dataset: 5,670 samples)
+- ✅ MITRE ATT&CK + NVD/CVE + CISA KEV + Atomic Red Team + GHSA dataset collection automated
+- ✅ CLI + API with 12 specialized security endpoints
 - ✅ NVIDIA NIM inference integration
+- ✅ HuggingFace Space live demo (9 tabs)
+- ✅ Python + Node.js SDKs
 
 ---
 
 ## Contact
 
 **GitHub:** [github.com/cyberviser/Hancock](https://github.com/cyberviser/Hancock)  
-**Website:** [cyberviser.github.io/Hancock](https://cyberviser.github.io/Hancock)  
+**Website:** [cyberviser.netlify.app](https://cyberviser.netlify.app)  
 **Email:** contact@cyberviser.ai  
 
 ---
@@ -204,4 +208,4 @@ CyberViser is seeking **$500,000 in seed funding** to accelerate:
 
 ---
 
-*© 2025 CyberViser. All rights reserved. This document is confidential and intended for potential investors and partners only.*
+*© 2026 CyberViser. All rights reserved. This document is confidential and intended for potential investors and partners only.*

@@ -30,7 +30,10 @@ tags:
 | 🎯 Threat Hunting | SIEM query generation (Splunk/Elastic/Sentinel) |
 | 💻 Security Code | YARA, Sigma, KQL, SPL, Python, Bash |
 | 👔 CISO Advisor | Risk, compliance, board reporting |
+| 🔍 Sigma Rules | Sigma detection rule authoring |
 | 🚨 IR Playbook | PICERL incident response |
+| 🦠 YARA Rules | YARA malware detection rule authoring |
+| 🔎 IOC Enrichment | Threat intelligence for IPs, domains, hashes |
 
 ## Setup
 

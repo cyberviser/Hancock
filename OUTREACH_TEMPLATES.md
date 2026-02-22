@@ -38,7 +38,7 @@ Hi [Name], I saw your work on [post/company/CTF] — impressive stuff.
 
 I've been building Hancock, an AI agent fine-tuned specifically for pentest and SOC work. It generates SIEM queries, triages alerts, and writes PICERL playbooks via a simple REST API.
 
-Just shipped v0.1.0. Would love to get your honest feedback — free access, no strings.
+Just shipped v0.4.0. Would love to get your honest feedback — free access, no strings.
 
 → https://cyberviser.netlify.app
 
@@ -73,7 +73,7 @@ Hi [Name],
 I'm building CyberViser — an AI-powered cybersecurity platform that automates the work of pentesters, SOC analysts, and CISOs through specialized LLMs.
 
 **Traction:**
-- Hancock v0.1.0 shipped — working REST API with 5 security-specific endpoints
+- Hancock v0.4.0 shipped — working REST API with 12 security-specific endpoints
 - Fine-tuned Mistral 7B on MITRE ATT&CK, NVD/CVE, and pentest knowledge bases
 - Live website + proprietary IP protection + Docker deployment
 
