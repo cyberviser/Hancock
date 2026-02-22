@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Train Hancock — Free GPU Fine-Tuning | CyberViser</title>
-  <meta name="description" content="Fine-tune Hancock on free GPU infrastructure — Google Colab, Kaggle, Modal.com. 5,670 training samples from MITRE ATT&CK + CVE + CISA KEV + Atomic Red Team + GitHub Advisories." />
-  <link rel="canonical" href="https://cyberviser.netlify.app/train" />
+  <meta name="description" content="Fine-tune Hancock on free GPU infrastructure — Google Colab, Kaggle, Modal.com. 5,670 training samples from MITRE ATT&CK + CVE + CISA KEV + Atomic Red Team + GHSA + 8 specialist knowledge bases." />
+  <link rel="canonical" href="https://cyberviser.ai/train" />
   <meta property="og:title"       content="Train Hancock — Free GPU Fine-Tuning" />
-  <meta property="og:description" content="Run Hancock fine-tuning on free GPUs: Colab T4, Kaggle T4 (30h/week), Modal A10G ($30 free credit). 5,670 training samples." />
+  <meta property="og:description" content="Run Hancock fine-tuning on free GPUs: Colab T4, Kaggle T4 (30h/week), Modal A10G ($30 free credit)." />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root { --green:#00ff88; --cyan:#00e5ff; --red:#ff3366; --yellow:#ffbd2e; --dark:#080c10; --card:#0d1117; --border:#1a2332; --text:#c9d1d9; --muted:#586069; }
@@ -101,15 +101,15 @@
 <div class="hero">
   <div class="badge">🧠 FINE-TUNING PIPELINE</div>
   <h1>Train <span>Hancock</span> — Free GPUs</h1>
-  <p>5,670 training samples from MITRE ATT&CK, NVD/CVE, CISA KEV, Atomic Red Team, GitHub Security Advisories, pentest methodology, and SOC playbooks. Run on free GPU infrastructure in under 60 minutes.</p>
+  <p>5,670 training samples from MITRE ATT&CK, NVD/CVE, CISA KEV, Atomic Red Team, GHSA, and 8 specialist knowledge bases. Run on free GPU infrastructure in under 60 minutes.</p>
 </div>
 
 <div class="stats">
   <div class="stat"><div class="stat-num">5,670</div><div class="stat-label">Training Samples</div></div>
   <div class="stat"><div class="stat-num">691</div><div class="stat-label">MITRE ATT&amp;CK Techniques</div></div>
-  <div class="stat"><div class="stat-num">1,526</div><div class="stat-label">CISA KEV CVEs</div></div>
-  <div class="stat"><div class="stat-num">485</div><div class="stat-label">Atomic Red Team TTPs</div></div>
-  <div class="stat"><div class="stat-num">119</div><div class="stat-label">GitHub Advisories</div></div>
+  <div class="stat"><div class="stat-num">600</div><div class="stat-label">Critical/High CVEs</div></div>
+  <div class="stat"><div class="stat-num">8</div><div class="stat-label">Specialist Modes</div></div>
+  <div class="stat"><div class="stat-num">6 Sources</div><div class="stat-label">MITRE · CVE · KEV · Atomic · GHSA · KBs</div></div>
   <div class="stat"><div class="stat-num">~45min</div><div class="stat-label">T4 Training Time</div></div>
 </div>
 
@@ -118,13 +118,13 @@
   <div class="pipeline">
     <div class="pipe-step"><span class="pipe-icon">🔌</span><span class="pipe-label">MITRE ATT&amp;CK<br>TAXII API</span></div>
     <span class="pipe-arrow">→</span>
-    <div class="pipe-step"><span class="pipe-icon">🛡️</span><span class="pipe-label">NVD/CVE +<br>CISA KEV</span></div>
+    <div class="pipe-step"><span class="pipe-icon">🛡️</span><span class="pipe-label">NVD/CVE<br>Database</span></div>
     <span class="pipe-arrow">→</span>
-    <div class="pipe-step"><span class="pipe-icon">🔬</span><span class="pipe-label">Atomic Red Team<br>+ GHSA</span></div>
+    <div class="pipe-step"><span class="pipe-icon">🚨</span><span class="pipe-label">CISA KEV +<br>Atomic Red Team</span></div>
     <span class="pipe-arrow">→</span>
-    <div class="pipe-step"><span class="pipe-icon">📚</span><span class="pipe-label">Pentest + SOC<br>Knowledge Base</span></div>
+    <div class="pipe-step"><span class="pipe-icon">📚</span><span class="pipe-label">GHSA + 8 Specialist<br>Knowledge Bases</span></div>
     <span class="pipe-arrow">→</span>
-    <div class="pipe-step"><span class="pipe-icon">⚙️</span><span class="pipe-label">hancock_pipeline.py<br>Formatter</span></div>
+    <div class="pipe-step"><span class="pipe-icon">⚙️</span><span class="pipe-label">hancock_pipeline.py<br>Formatter v3</span></div>
     <span class="pipe-arrow">→</span>
     <div class="pipe-step"><span class="pipe-icon">📦</span><span class="pipe-label">hancock_v3.jsonl<br>5,670 samples</span></div>
     <span class="pipe-arrow">→</span>
@@ -301,7 +301,7 @@ git clone https://github.com/cyberviser/Hancock.git
 cd Hancock
 pip install -r requirements.txt
 python hancock_pipeline.py --phase 3
-<span class="t-green"># → data/hancock_v3.jsonl  (5,670 samples)</span>
+<span class="t-green"># → data/hancock_v3.jsonl  (5,670 samples — MITRE + CVE + KEV + Atomic + GHSA + KBs)</span>
 
 <span class="t-muted"># 2a. Train on Modal (recommended)</span>
 pip install modal && modal token new
@@ -309,10 +309,11 @@ modal run train_modal.py --push-hub
 <span class="t-green"># → uploads to huggingface.co/cyberviser/hancock-mistral-7b-lora</span>
 
 <span class="t-muted"># 2b. Train on Kaggle — upload Hancock_Kaggle_Finetune.ipynb</span>
-<span class="t-muted"># 2c. Train on Colab  — open Hancock_Colab_Finetune_v3.ipynb</span>
+<span class="t-muted"># 2c. Train on Colab  — open Hancock_CyberViser_Finetune.ipynb</span>
 
-<span class="t-muted"># 3. Run Hancock with fine-tuned model</span>
-<span class="t-cyan">NVIDIA_API_KEY=nvapi-xxx</span> python hancock_agent.py --server
+<span class="t-muted"># 3. Run Hancock with fine-tuned model (multiple backends)</span>
+<span class="t-cyan">HANCOCK_LLM_BACKEND=nvidia NVIDIA_API_KEY=nvapi-xxx</span> python hancock_agent.py --server
+<span class="t-cyan">HANCOCK_LLM_BACKEND=groq GROQ_API_KEY=gsk_xxx</span> python hancock_agent.py --server
 <span class="t-muted"># Or with your own weights via llama.cpp / Ollama:</span>
 ollama create hancock -f Modelfile
 ollama serve &amp;&amp; python hancock_agent.py --server --model hancock</pre>

@@ -1,12 +1,12 @@
 openapi: 3.1.0
 info:
   title: Hancock — CyberViser AI Security Agent
-  version: 0.4.0
+  version: 0.5.0
   description: |
-    Hancock is an AI-powered cybersecurity agent by CyberViser. It provides
+    Hancock is an AI-powered cybersecurity platform by CyberViser. It provides
     REST endpoints for SOC triage, penetration testing guidance, threat hunting,
     incident response, security code generation, CISO advisory, Sigma rule
-    authoring, and SIEM webhook integration.
+    authoring, YARA malware rule generation, IOC enrichment, and SIEM webhook integration.
   contact:
     name: CyberViser
     email: contact@cyberviser.ai
@@ -103,7 +103,7 @@ paths:
                       content: { type: string }
                 mode:
                   type: string
-                  enum: [pentest, soc, auto, code, ciso, sigma]
+                  enum: [pentest, soc, auto, code, ciso, sigma, yara, ioc]
                   default: auto
                 stream:
                   type: boolean
@@ -139,7 +139,7 @@ paths:
               required: [question]
               properties:
                 question: { type: string }
-                mode:     { type: string, enum: [pentest, soc, auto, code, ciso, sigma], default: auto }
+                mode:     { type: string, enum: [pentest, soc, auto, code, ciso, sigma, yara, ioc], default: auto }
       responses:
         "200":
           description: Answer
@@ -394,4 +394,39 @@ paths:
                     properties:
                       rule:      { type: string, description: Full YARA rule + explanation }
                       file_type: { type: string }
+        "400": { description: Bad request }
+
+  /v1/ioc:
+    post:
+      summary: IOC enrichment — threat intelligence for indicators of compromise
+      tags: [Threat Intel]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                indicator:
+                  type: string
+                  description: "IOC value — IP, domain, URL, SHA256, MD5, or email. Also accepts 'ioc' or 'query'."
+                type:
+                  type: string
+                  description: "Indicator type hint — ip, domain, url, sha256, md5, email, auto"
+                context:
+                  type: string
+                  description: "Additional context — e.g. 'found in ransomware incident'"
+      responses:
+        "200":
+          description: IOC enrichment report
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ModelRef"
+                  - type: object
+                    properties:
+                      indicator: { type: string }
+                      type:      { type: string }
+                      report:    { type: string, description: Full IOC enrichment report }
         "400": { description: Bad request }
