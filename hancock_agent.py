@@ -29,6 +29,7 @@ Set your key:
   or pass --api-key "nvapi-..."
 """
 import argparse
+import hmac
 import json
 import os
 import sys
@@ -418,7 +419,7 @@ def build_app(client, model: str):
         if _HANCOCK_API_KEY:
             auth = request.headers.get("Authorization", "")
             token = auth.removeprefix("Bearer ").strip()
-            if token != _HANCOCK_API_KEY:
+            if not hmac.compare_digest(token, _HANCOCK_API_KEY):
                 return False, "Unauthorized: provide Authorization: Bearer <HANCOCK_API_KEY>", 0
 
         # In-memory rate limiter (per source IP) — evicts stale entries to prevent memory leak
