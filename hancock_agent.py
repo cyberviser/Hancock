@@ -28,17 +28,19 @@ Set your key:
   export NVIDIA_API_KEY="nvapi-..."
   or pass --api-key "nvapi-..."
 """
+from __future__ import annotations
 import argparse
 import hmac
 import json
 import os
 import sys
 import readline  # noqa: F401 — enables arrow-key history in CLI
+from hancock_constants import OPENAI_IMPORT_ERROR_MSG, require_openai
 
 try:
     from openai import OpenAI
-except ImportError:
-    sys.exit("Run: .venv/bin/pip install openai flask")
+except ImportError:  # allow import without OpenAI; client factories enforce requirement at runtime
+    OpenAI = None  # type: ignore
 
 # ── Hancock identity ──────────────────────────────────────────────────────────
 PENTEST_SYSTEM = """You are Hancock, an elite penetration tester and offensive security specialist built by CyberViser.
@@ -246,21 +248,28 @@ BANNER = """
 
 def make_ollama_client() -> OpenAI:
     """Returns an OpenAI-compatible client pointed at the local Ollama server."""
+    require_openai(OpenAI)
     return OpenAI(base_url=OLLAMA_BASE_URL, api_key="ollama")
 
 
 def make_client(api_key: str) -> OpenAI:
     """Returns an OpenAI-compatible client pointed at NVIDIA NIM (legacy)."""
+    require_openai(OpenAI)
     return OpenAI(base_url=NIM_BASE_URL, api_key=api_key)
 
 
 def make_openai_client() -> OpenAI | None:
-    """Returns an OpenAI client if credentials are available, else None."""
+    """Returns an OpenAI client if credentials are available, else None.
+
+    Unlike the Ollama/NIM factories, OpenAI is a best-effort fallback, so the
+    absence of the dependency simply disables this path.
+    """
+    if OpenAI is None:
+        return None
     key = os.getenv("OPENAI_API_KEY", "")
-    org = os.getenv("OPENAI_ORG_ID", "")
     if not key or key.startswith("sk-your"):
         return None
-    return OpenAI(api_key=key, organization=org or None)
+    return OpenAI(api_key=key, organization=os.getenv("OPENAI_ORG_ID") or None)
 
 
 def chat(client: OpenAI, history: list[dict], model: str, stream: bool = True,

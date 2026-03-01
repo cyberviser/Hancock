@@ -19,7 +19,36 @@ from __future__ import annotations
 
 import os
 from typing import Optional
-from openai import OpenAI
+
+try:
+    from hancock_constants import OPENAI_IMPORT_ERROR_MSG, require_openai
+except ImportError:
+    # Fallback definitions when hancock_constants is not available (e.g., in installed package).
+    OPENAI_IMPORT_ERROR_MSG = (
+        "The 'openai' package is required to use HancockClient. "
+        "Install it with 'pip install openai' and ensure NVIDIA_API_KEY is set."
+    )
+
+    def require_openai(client_cls: Optional[object] = None) -> None:
+        """
+        Ensure that the optional 'openai' dependency is available.
+
+        This mirrors the behavior of the helper from hancock_constants: it defers
+        the ImportError until runtime (e.g., in the constructor) and provides a
+        clear error message when the dependency is missing.
+
+        The optional client_cls argument is accepted for compatibility with call
+        sites that invoke require_openai(OpenAI); if not provided, the module-level
+        OpenAI symbol is used.
+        """
+        client = client_cls if client_cls is not None else OpenAI  # type: ignore[name-defined]
+        if client is None:
+            raise ImportError(OPENAI_IMPORT_ERROR_MSG)
+
+try:
+    from openai import OpenAI
+except ImportError:  # allow import; require_openai() enforces dependency in constructor
+    OpenAI = None  # type: ignore
 
 # ── Models ──────────────────────────────────────────────────────────────────
 MODELS: dict[str, str] = {
@@ -83,6 +112,7 @@ class HancockClient:
         coder_model: str = "qwen-coder",
         base_url: str = "https://integrate.api.nvidia.com/v1",
     ):
+        require_openai(OpenAI)
         key = api_key or os.environ.get("NVIDIA_API_KEY")
         if not key:
             raise ValueError(
