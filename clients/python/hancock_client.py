@@ -19,7 +19,12 @@ from __future__ import annotations
 
 import os
 from typing import Optional
-from openai import OpenAI
+from hancock_constants import OPENAI_IMPORT_ERROR_MSG, require_openai
+
+try:
+    from openai import OpenAI
+except ImportError:  # allow import; require_openai() enforces dependency in constructor
+    OpenAI = None  # type: ignore
 
 # ── Models ──────────────────────────────────────────────────────────────────
 MODELS: dict[str, str] = {
@@ -83,6 +88,7 @@ class HancockClient:
         coder_model: str = "qwen-coder",
         base_url: str = "https://integrate.api.nvidia.com/v1",
     ):
+        require_openai(OpenAI)
         key = api_key or os.environ.get("NVIDIA_API_KEY")
         if not key:
             raise ValueError(
