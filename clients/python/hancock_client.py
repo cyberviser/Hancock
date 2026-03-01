@@ -19,7 +19,26 @@ from __future__ import annotations
 
 import os
 from typing import Optional
-from hancock_constants import OPENAI_IMPORT_ERROR_MSG, require_openai
+
+try:
+    from hancock_constants import OPENAI_IMPORT_ERROR_MSG, require_openai
+except ImportError:
+    # Fallback definitions when hancock_constants is not available (e.g., in installed package).
+    OPENAI_IMPORT_ERROR_MSG = (
+        "The 'openai' package is required to use HancockClient. "
+        "Install it with 'pip install openai' and ensure NVIDIA_API_KEY is set."
+    )
+
+    def require_openai() -> None:
+        """
+        Ensure that the optional 'openai' dependency is available.
+
+        This mirrors the behavior of the helper from hancock_constants: it defers
+        the ImportError until runtime (e.g., in the constructor) and provides a
+        clear error message when the dependency is missing.
+        """
+        if OpenAI is None:  # type: ignore[name-defined]
+            raise ImportError(OPENAI_IMPORT_ERROR_MSG)
 
 try:
     from openai import OpenAI
