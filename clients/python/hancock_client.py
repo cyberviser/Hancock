@@ -19,8 +19,29 @@ from __future__ import annotations
 
 import os
 from typing import Optional
-from openai import OpenAI
 
+try:
+    from openai import OpenAI
+except ImportError:  # allow import; require_openai() enforces dependency in constructor
+    OpenAI = None  # type: ignore
+
+
+OPENAI_IMPORT_ERROR_MSG = (
+    "The 'openai' package is required to use HancockClient but is not installed. "
+    "Install it with: pip install openai"
+)
+
+
+def require_openai():
+    """
+    Ensure the OpenAI client library is available before constructing HancockClient.
+
+    This keeps the module importable even when 'openai' is not installed, while
+    enforcing the dependency only when the client is actually used.
+    """
+    if OpenAI is None:
+        raise ImportError(OPENAI_IMPORT_ERROR_MSG)
+    return OpenAI
 # ── Models ──────────────────────────────────────────────────────────────────
 MODELS: dict[str, str] = {
     "mistral-7b":   "mistralai/mistral-7b-instruct-v0.3",
@@ -83,6 +104,7 @@ class HancockClient:
         coder_model: str = "qwen-coder",
         base_url: str = "https://integrate.api.nvidia.com/v1",
     ):
+        require_openai()
         key = api_key or os.environ.get("NVIDIA_API_KEY")
         if not key:
             raise ValueError(
