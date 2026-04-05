@@ -1,9 +1,0 @@
-[
-  {
-    "cve_id": "CVE-2024-12345",
-    "description": "A critical vulnerability in the example component allows remote code execution via crafted input to the parsing module when processing untrusted data.",
-    "cvss_score": 9.8,
-    "attack_vector": "NETWORK",
-    "cwes": ["CWE-78", "CWE-94"]
-  }
-]

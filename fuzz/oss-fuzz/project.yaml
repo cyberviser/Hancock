@@ -1,19 +1,11 @@
 homepage: "https://github.com/0ai-Cyberviser/Hancock"
 language: python
-vendor: "CyberViser"
 primary_contact: "cyberviser@proton.me"
 auto_ccs:
   - "security@cyberviser.ai"
-vendor_ccs:
-  - "cyberviser@proton.me"
 fuzzing_engines:
   - libfuzzer
 sanitizers:
   - address
   - undefined
-  - coverage
-architectures:
-  - x86_64
 main_repo: "https://github.com/0ai-Cyberviser/Hancock"
-builds_per_day: 1
-file_github_issue: true

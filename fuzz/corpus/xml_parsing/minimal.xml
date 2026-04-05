@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<nmaprun scanner="nmap">
-  <host>
-    <address addr="10.0.0.1" addrtype="ipv4"/>
-    <ports/>
-  </host>
-</nmaprun>

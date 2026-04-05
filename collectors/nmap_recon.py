@@ -14,11 +14,6 @@ logger = logging.getLogger(__name__)
 class NmapRecon:
     def __init__(self, target):
         self.target = target
-        if not _NMAP_AVAILABLE:
-            raise RuntimeError(
-                "python-nmap library is required to use NmapRecon but is not installed. "
-                "Install the 'python-nmap' package or use the run_nmap() helper instead."
-            )
         self.nm = nmap.PortScanner()
 
     def run_scan(self):
@@ -43,15 +38,12 @@ class NmapRecon:
                 ip = host.find('address').get('addr')
                 hostname = host.find('hostnames/hostname').get('name') if host.find('hostnames/hostname') is not None else 'N/A'
                 services = []
-                # Nmap XML places services under ports/port/service
-                for port in host.findall('ports/port'):
-                    service_el = port.find('service')
-                    if service_el is not None:
-                        services.append({
-                            'name': service_el.get('name'),
-                            'port': port.get('portid'),
-                            'protocol': port.get('protocol')
-                        })
+                for service in host.findall('services/service'):
+                    services.append({
+                        'name': service.get('name'),
+                        'port': service.get('port'),
+                        'protocol': service.get('protocol')
+                    })
                 
                 data['hosts'].append({
                     'ip': ip,

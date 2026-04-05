@@ -1,9 +1,6 @@
 FROM gcr.io/oss-fuzz-base/base-builder-python
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        git \
-        python3-dev && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y python3-dev
 
 # Clone the project source (OSS-Fuzz builds from the oss-fuzz repo,
 # not the project repo, so we must git-clone here).
