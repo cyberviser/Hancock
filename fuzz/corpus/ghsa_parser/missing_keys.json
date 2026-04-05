@@ -1,5 +1,0 @@
-{
-  "ghsa_id": "GHSA-aaaa-bbbb-cccc",
-  "summary": "Missing cwes and identifiers",
-  "description": "An advisory that has no cwes or identifiers arrays at all."
-}

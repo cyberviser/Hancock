@@ -3,12 +3,6 @@
 This directory contains [OSS-Fuzz](https://github.com/google/oss-fuzz) integration and
 [atheris](https://github.com/google/atheris)-based fuzz targets for the Hancock project.
 
-Hancock participates in **continuous fuzzing** via Google's
-[OSS-Fuzz](https://google.github.io/oss-fuzz/) programme, which is within scope
-for the [Google Bug Hunters](https://bughunters.google.com/) open-source rewards
-programme. Vulnerabilities found through fuzzing can be reported through Google
-Bug Hunters.
-
 ## Fuzz Targets
 
 | Target | Module Under Test | What It Fuzzes |
@@ -52,23 +46,6 @@ inputs. The fuzzer uses these as starting points to generate new interesting inp
 - **OSS-Fuzz**: Configuration in `oss-fuzz/` for continuous fuzzing via Google's
   OSS-Fuzz infrastructure.
 
-## Google Bug Hunters
-
-This project is eligible for [Google Bug Hunters](https://bughunters.google.com/)
-open-source rewards. If you discover a vulnerability through fuzzing:
-
-1. **OSS-Fuzz bugs** — Issues found by OSS-Fuzz are automatically filed and tracked.
-   Reporters can claim rewards through the Bug Hunters platform once the bug is
-   confirmed and fixed.
-2. **Manual fuzzing** — If you find a crash or vulnerability by running fuzz targets
-   locally, report it through [Google Bug Hunters](https://bughunters.google.com/)
-   for open-source projects.
-3. **Responsible disclosure** — Please allow 90 days for fixes before public
-   disclosure, per [Google's disclosure policy](https://g.co/vulnz).
-
-See also: [SECURITY.md](../SECURITY.md) for the project's vulnerability disclosure
-policy.
-
 ## OSS-Fuzz Project Config
 
 ```
@@ -97,6 +74,5 @@ fuzz/oss-fuzz/
        main()
    ```
 2. Add seed inputs to `fuzz/corpus/<name>/`
-3. The CIFuzz and continuous fuzzing workflows automatically pick up new `fuzz_*.py`
-   targets — no workflow changes needed.
+3. Add the target to `.github/workflows/cifuzz.yml` matrix
 4. Test locally: `python fuzz/fuzz_<name>.py -atheris_runs=10000 fuzz/corpus/<name>`
