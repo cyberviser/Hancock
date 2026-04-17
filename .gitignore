@@ -5,6 +5,7 @@
 .venv/
 venv/
 env/
+.pytest_cache/
 
 # Python
 __pycache__/
@@ -37,3 +38,7 @@ Thumbs.db
 
 # Benchmark results (generated, not tracked)
 benchmarks/results/
+
+# Node.js
+clients/nodejs/node_modules/
+npm-debug.log*

@@ -452,6 +452,20 @@ def build_app(client, model: str):
     _RATE_LIMIT  = int(os.getenv("HANCOCK_RATE_LIMIT", "60"))   # requests/min
     _RATE_WINDOW = 60  # seconds
 
+    def _prune_rate_counts(now: float) -> None:
+        """Drop IP buckets whose timestamps have all aged out of the current window."""
+        stale_ips = [
+            bucket_ip
+            for bucket_ip, bucket_timestamps in _rate_counts.items()
+            if (
+                not bucket_timestamps
+                or not any(now - timestamp < _RATE_WINDOW for timestamp in bucket_timestamps)
+                or now - bucket_timestamps[-1] > 3600
+            )
+        ]
+        for bucket_ip in stale_ips:
+            del _rate_counts[bucket_ip]
+
     def _check_auth_and_rate() -> "tuple[bool, str, int]":
         """Returns (ok, error_message, remaining). Empty HANCOCK_API_KEY disables auth."""
         import time
@@ -474,9 +488,7 @@ def build_app(client, model: str):
         _rate_counts[ip] = timestamps
         # Evict IPs with no recent requests (keep dict bounded)
         if len(_rate_counts) > 10_000:
-            stale = [k for k, v in _rate_counts.items() if not v or now - v[-1] > 3600]
-            for k in stale:
-                del _rate_counts[k]
+            _prune_rate_counts(now)
         return True, "", _RATE_LIMIT - len(timestamps)
 
     @app.after_request
@@ -485,6 +497,7 @@ def build_app(client, model: str):
         import time
         ip = request.remote_addr or "unknown"
         now = time.time()
+        _prune_rate_counts(now)
         recent = [t for t in _rate_counts.get(ip, []) if now - t < _RATE_WINDOW]
         remaining = max(0, _RATE_LIMIT - len(recent))
         response.headers["X-RateLimit-Limit"]     = str(_RATE_LIMIT)
