@@ -36,9 +36,13 @@ import logging
 import os
 import sys
 import readline  # noqa: F401 — enables arrow-key history in CLI
+<<<<<<< HEAD
 from hancock_constants import require_openai, OPENAI_IMPORT_ERROR_MSG
 
 logger = logging.getLogger(__name__)
+=======
+from hancock_constants import OPENAI_IMPORT_ERROR_MSG, require_openai
+>>>>>>> d26e14e (Fix missing OpenAI import error constant)
 
 try:
     from openai import OpenAI
