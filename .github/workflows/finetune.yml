@@ -28,6 +28,8 @@ jobs:
     name: Fine-Tune on Modal (${{ github.event.inputs.gpu }})
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    permissions:
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
