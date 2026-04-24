@@ -141,7 +141,15 @@ class AgenticPlan:
 
 class ScopeGuard:
     ACTIVE_TESTING_RE = re.compile(
-        r"\b(nmap|masscan|scan|sqlmap|metasploit|msfconsole|exploit|payload|reverse shell|shell|crackmapexec|impacket|hydra|bruteforce|brute force|lateral movement|persistence|pivot)\b",
+        r"\b(nmap|masscan|sqlmap|metasploit|msfconsole|crackmapexec|impacket|hydra|bruteforce|brute force|lateral movement|persistence|pivot|exploit|reverse shell|port scan|network scan|service scan|vulnerability scan|scan (?:target|host|subnet|ip|ips|ports?|cidr|network|service))\b",
+        re.IGNORECASE,
+    )
+    PAYLOAD_RE = re.compile(
+        r"\b(payload|exploit code|proof[- ]of[- ]concept|poc|reverse shell|web shell|dropper|stager|shellcode)\b",
+        re.IGNORECASE,
+    )
+    EXTERNAL_CONTACT_RE = re.compile(
+        r"\b(upload|exfiltrate|send (?:to|data)|post (?:to|data)|call (?:an? )?(?:external|webhook|api)|webhook|third[- ]party|internet[- ]facing|public internet|shodan|censys|urlscan|virustotal)\b",
         re.IGNORECASE,
     )
     DESTRUCTIVE_RE = re.compile(
@@ -151,17 +159,42 @@ class ScopeGuard:
 
     def evaluate(self, request: str, scope: AuthorizationScope) -> tuple[RiskLevel, ApprovalState, tuple[SafetyFinding, ...]]:
         findings: list[SafetyFinding] = []
+        normalized_request = request.casefold()
+
         if not scope.is_defined:
             findings.append(SafetyFinding("missing_scope", "No complete authorization scope was supplied. Hancock must stay in recommendation-only mode.", RiskLevel.HIGH))
+
+        disallowed_hits = tuple(asset for asset in scope.disallowed_assets if asset and asset.casefold() in normalized_request)
+        if disallowed_hits:
+            findings.append(SafetyFinding("disallowed_asset_referenced", f"Request references explicitly disallowed asset(s): {', '.join(disallowed_hits)}.", RiskLevel.BLOCKED))
+            return RiskLevel.BLOCKED, ApprovalState.BLOCKED, tuple(findings)
 
         if self.DESTRUCTIVE_RE.search(request):
             findings.append(SafetyFinding("destructive_or_credential_theft_intent", "Request appears to involve destructive behavior, credential theft, evasion, or exfiltration.", RiskLevel.BLOCKED))
             return RiskLevel.BLOCKED, ApprovalState.BLOCKED, tuple(findings)
 
+        payload = bool(self.PAYLOAD_RE.search(request))
+        if payload and not scope.allow_payload_generation:
+            findings.append(SafetyFinding("payload_generation_not_authorized", "The request appears to involve payload or PoC generation but scope does not permit payload generation.", RiskLevel.HIGH))
+            return RiskLevel.HIGH, ApprovalState.REQUIRED, tuple(findings)
+
+        external_contact = bool(self.EXTERNAL_CONTACT_RE.search(request))
+        if external_contact and not scope.allow_external_contact:
+            findings.append(SafetyFinding("external_contact_not_authorized", "The request appears to involve external contact, upload, webhook/API calls, or third-party services but scope does not permit external contact.", RiskLevel.HIGH))
+            return RiskLevel.HIGH, ApprovalState.REQUIRED, tuple(findings)
+
         active = bool(self.ACTIVE_TESTING_RE.search(request))
         if active and not scope.allow_active_testing:
             findings.append(SafetyFinding("active_testing_not_authorized", "The request mentions active testing but scope does not permit active testing.", RiskLevel.HIGH))
             return RiskLevel.HIGH, ApprovalState.REQUIRED, tuple(findings)
+
+        if payload:
+            findings.append(SafetyFinding("payload_generation_requires_review", "Payload or PoC generation is in scope but requires human approval and sandbox review.", RiskLevel.MEDIUM))
+            return RiskLevel.MEDIUM, ApprovalState.REQUIRED, tuple(findings)
+
+        if external_contact:
+            findings.append(SafetyFinding("external_contact_requires_review", "External contact is in scope but requires human approval and audit logging.", RiskLevel.MEDIUM))
+            return RiskLevel.MEDIUM, ApprovalState.REQUIRED, tuple(findings)
 
         if active:
             findings.append(SafetyFinding("active_testing_requires_review", "Active testing is in scope but requires human approval and sandboxed execution.", RiskLevel.MEDIUM))
@@ -243,7 +276,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     plan = SafeAgenticOrchestrator().plan(args.request, scope, mode=args.mode)
     print(plan.to_markdown() if args.format == "markdown" else plan.to_json())
-    return 0 if plan.risk_level != RiskLevel.BLOCKED else 2
+    if plan.risk_level == RiskLevel.BLOCKED:
+        return 2
+    if plan.approval_state == ApprovalState.REQUIRED or not plan.can_execute:
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
