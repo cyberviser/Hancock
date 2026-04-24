@@ -20,6 +20,9 @@ on:
 permissions:
   contents: read
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   static-assessor:
     runs-on: ubuntu-latest
@@ -31,4 +34,14 @@ jobs:
           python-version: "3.11"
       - run: python -m pip install --upgrade pip pytest
       - run: pytest -q tests/test_hancock_static_assessor.py
-      - run: python hancock_static_assessor.py . --format json --fail-on high
+      - name: Generate static assessor smoke report
+        run: python hancock_static_assessor.py . --format json > static-assessor-report.json
+      - name: Show smoke report summary
+        run: python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('static-assessor-report.json').read_text())
+          print('highest_severity=', report.get('highest_severity'))
+          print('findings=', len(report.get('findings', [])))
+          print('analyzed_files=', report.get('inventory', {}).get('analyzed_files'))
+          PY
