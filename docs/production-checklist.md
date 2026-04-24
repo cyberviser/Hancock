@@ -16,7 +16,7 @@ Use this checklist before promoting Hancock to a production environment.
 
 - [ ] All secrets stored in the platform secrets manager (AWS Secrets Manager, Kubernetes Secrets, Fly secrets) — never in environment files or source control
 - [ ] `HANCOCK_LLM_BACKEND` set explicitly (`ollama`, `nvidia`, or `openai`) and aligned with your credential configuration
-- [ ] `HANCOCK_API_KEY` set to a strong random value if the API is publicly accessible
+- [ ] `HANCOCK_API_KEYS` (preferred) or `HANCOCK_API_KEY` set to strong random value(s) if the API is publicly accessible
 - [ ] `HANCOCK_WEBHOOK_SECRET` set if webhook integrations are enabled
 - [ ] `LOG_LEVEL` set to `INFO` (not `DEBUG`) in production
 - [ ] `.env` file excluded from the Docker image and source control (confirm via `.dockerignore`)
@@ -24,7 +24,8 @@ Use this checklist before promoting Hancock to a production environment.
 ## Networking & Security
 
 - [ ] HTTPS enforced — TLS termination at load balancer or ingress
-- [ ] API authentication enabled (`HANCOCK_API_KEY`) for any publicly reachable instance
+- [ ] API authentication enabled (`HANCOCK_API_KEYS` / `HANCOCK_API_KEY`) for any publicly reachable instance
+- [ ] Agentic route rate limits tuned: `HANCOCK_RATE_LIMIT_AGENTIC_PER_MINUTE` and `HANCOCK_RATE_LIMIT_AGENTIC_PER_HOUR`
 - [ ] Firewall / security group restricts direct access to port `5000`; only the load balancer can reach it
 - [ ] Kubernetes security context applied: `readOnlyRootFilesystem: true`, `allowPrivilegeEscalation: false`, `capabilities: drop: [ALL]`
 

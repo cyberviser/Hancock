@@ -10,3 +10,8 @@ pytest
 maxminddb
 python-nmap
 atheris
+pydantic
+langgraph
+slowapi
+opentelemetry-sdk
+opentelemetry-instrumentation-flask

@@ -38,10 +38,14 @@ import sys
 import time
 import readline  # noqa: F401 — enables arrow-key history in CLI
 from hancock_constants import VERSION, require_openai, OPENAI_IMPORT_ERROR_MSG
+from langgraph.hancock_graph import HancockState, run_hancock_loop
 from monitoring.logging_config import (
     get_request_id,
     init_flask_logging,
 )
+from security.auth import require_api_key
+from security.authz import Scope
+from security.rate_limit import parse_rate_limits
 
 logger = logging.getLogger(__name__)
 
@@ -485,9 +489,14 @@ def build_app(client, model: str):
 
     # ── Auth + rate limiting ───────────────────────────────────────────────────
     _HANCOCK_API_KEY = os.getenv("HANCOCK_API_KEY", "")
+    _HANCOCK_API_KEYS = set(k.strip() for k in os.getenv("HANCOCK_API_KEYS", "").split(",") if k.strip())
     _rate_counts: dict = {}  # ip → [timestamp, ...]
+    _agentic_rate_counts_minute: dict = {}  # ip → [timestamp, ...]
+    _agentic_rate_counts_hour: dict = {}  # ip → [timestamp, ...]
     _RATE_LIMIT  = int(os.getenv("HANCOCK_RATE_LIMIT", "60"))   # requests/min
     _RATE_WINDOW = 60  # seconds
+    _AGENTIC_RATE_LIMIT_MINUTE, _AGENTIC_RATE_LIMIT_HOUR = parse_rate_limits()
+    _AGENTIC_HOUR_WINDOW = 3600
     _ENABLE_INTERNAL_DIAGNOSTICS = os.getenv(
         "HANCOCK_ENABLE_INTERNAL_DIAGNOSTICS", "false"
     ).strip().lower() in {"1", "true", "yes", "on"}
@@ -527,6 +536,23 @@ def build_app(client, model: str):
             _prune_rate_counts(now)
         return True, "", _RATE_LIMIT - len(timestamps)
 
+    def _check_agentic_rate(ip: str) -> "tuple[bool, str]":
+        import time
+
+        now = time.time()
+        per_minute = [stamp for stamp in _agentic_rate_counts_minute.get(ip, []) if now - stamp < _RATE_WINDOW]
+        if len(per_minute) >= _AGENTIC_RATE_LIMIT_MINUTE:
+            return False, f"Rate limit exceeded: {_AGENTIC_RATE_LIMIT_MINUTE} requests/min"
+        per_minute.append(now)
+        _agentic_rate_counts_minute[ip] = per_minute
+
+        per_hour = [stamp for stamp in _agentic_rate_counts_hour.get(ip, []) if now - stamp < _AGENTIC_HOUR_WINDOW]
+        if len(per_hour) >= _AGENTIC_RATE_LIMIT_HOUR:
+            return False, f"Rate limit exceeded: {_AGENTIC_RATE_LIMIT_HOUR} requests/hour"
+        per_hour.append(now)
+        _agentic_rate_counts_hour[ip] = per_hour
+        return True, ""
+
     @app.after_request
     def _add_rate_headers(response):
         """Attach X-RateLimit-* headers to every response."""
@@ -552,7 +578,7 @@ def build_app(client, model: str):
                           "/v1/hunt", "/v1/respond", "/v1/code",
                           "/v1/ciso", "/v1/sigma", "/v1/yara", "/v1/ioc",
                           "/v1/geolocate", "/v1/predict-locations", "/v1/map-infrastructure",
-                          "/v1/agents", "/v1/webhook", "/metrics", "/internal/diagnostics"],
+                          "/v1/agents", "/v1/webhook", "/v1/agentic/run", "/metrics", "/internal/diagnostics"],
         })
 
     @app.route("/metrics", methods=["GET"])
@@ -634,6 +660,71 @@ def build_app(client, model: str):
             "default_mode": DEFAULT_MODE,
             "model": model,
         })
+
+    @app.route("/v1/agentic/run", methods=["POST"])
+    def agentic_run_endpoint():
+        ip = request.remote_addr or "unknown"
+        ok_rate, rate_err = _check_agentic_rate(ip)
+        if not ok_rate:
+            _inc("errors_total")
+            return _error_response(rate_err, 429)
+
+        if not require_api_key(request.headers.get("X-API-Key", "")):
+            # Preserve backward compatibility if only HANCOCK_API_KEY is configured.
+            bearer = request.headers.get("Authorization", "")
+            token = bearer.removeprefix("Bearer ").strip()
+            if _HANCOCK_API_KEYS or os.getenv("HANCOCK_API_KEYS", "").strip():
+                _inc("errors_total")
+                return _error_response("Unauthorized: provide valid X-API-Key", 401)
+            if _HANCOCK_API_KEY and not hmac.compare_digest(token, _HANCOCK_API_KEY):
+                _inc("errors_total")
+                return _error_response("Unauthorized: provide valid API key", 401)
+
+        payload = request.get_json(silent=True) or {}
+        scopes = [Scope(name=str(scope_name)) for scope_name in payload.get("scopes", ["authorized"])]
+        mode = str(payload.get("mode", "pentest"))
+        state = HancockState(
+            user_id=str(payload.get("user_id", "anon")),
+            scopes=scopes,
+            mode=mode,
+            goal=str(payload.get("goal", "")),
+            history=payload.get("history", []),
+        )
+
+        def _agentic_generate(prompt: str, mode: str = "auto") -> str:
+            system = SYSTEMS.get(mode, AUTO_SYSTEM)
+            messages = [{"role": "system", "content": system}, {"role": "user", "content": prompt}]
+            response = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                max_tokens=512,
+                temperature=0.4,
+                top_p=0.9,
+            )
+            return _extract_content(response) or ""
+
+        try:
+            result = run_hancock_loop(state, llm_generate=_agentic_generate)
+        except PermissionError as exc:
+            _inc("errors_total")
+            return _error_response(str(exc), 403, mode=mode)
+        except Exception as exc:
+            _inc("errors_total")
+            return _error_response(f"agentic run failed: {exc}", 500, mode=mode)
+
+        _inc("requests_total")
+        _inc("requests_by_endpoint", "/v1/agentic/run")
+        _inc("requests_by_mode", mode)
+        return jsonify(
+            {
+                "report": result.report,
+                "risk": result.risk,
+                "plan": result.plan,
+                "actions": result.actions,
+                "findings": result.findings,
+                "mode": result.mode,
+            }
+        )
 
     @app.route("/v1/chat", methods=["POST"])
     def chat_endpoint():

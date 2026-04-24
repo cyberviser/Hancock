@@ -19,12 +19,15 @@ config:
   ollamaCoderModel: "qwen2.5-coder:7b"
   port: 5000
   rateLimit: 60
+  agenticRateLimitPerMinute: 30
+  agenticRateLimitPerHour: 2000
   logLevel: "INFO"
   logFormat: "json"
 
 # ── Secrets (set at install time — never commit real values) ──────────────────
 secrets:
   hancockApiKey: ""
+  hancockApiKeys: ""
   nvidiaApiKey: ""
   openaiApiKey: ""
   webhookSecret: ""

@@ -14,6 +14,10 @@ COPY hancock_agent.py .
 COPY hancock_constants.py .
 COPY input_validator.py .
 COPY orchestration_controller.py .
+COPY langgraph/ langgraph/
+COPY security/ security/
+COPY sandbox/ sandbox/
+COPY tools/ tools/
 COPY collectors/ collectors/
 COPY formatter/ formatter/
 COPY monitoring/ monitoring/

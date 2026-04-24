@@ -352,8 +352,15 @@ python hancock_agent.py
 | `POST` | `/v1/geolocate` | Geolocate a list of IP/domain indicators |
 | `POST` | `/v1/predict-locations` | Predict future threat infrastructure locations |
 | `POST` | `/v1/map-infrastructure` | Map and cluster indicators geographically |
+| `POST` | `/v1/agentic/run` | Secured agentic orchestration loop (Planner→Recon→Executor→Critic→Reporter) |
 
 > 📖 Full guide: [`docs/osint-geolocation.md`](docs/osint-geolocation.md)
+
+#### Secured Agentic Endpoint Notes
+
+- Requires `X-API-Key` header when `HANCOCK_API_KEYS` or `HANCOCK_API_KEY` is configured.
+- Route-level limits can be tuned with `HANCOCK_RATE_LIMIT_AGENTIC_PER_MINUTE` and `HANCOCK_RATE_LIMIT_AGENTIC_PER_HOUR`.
+- Execution remains gated by default (`execute=false`) for recommendation-only operation.
 
 ---
 
