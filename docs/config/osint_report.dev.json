@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "defaults": {
+    "author": "0AI OSINT Desk",
+    "organization": "CyberViser",
+    "tlp": "AMBER"
+  },
+  "guardrails": {
+    "authorized_scope_only": true,
+    "evidence_required": true,
+    "allow_private_indicators": false,
+    "max_indicators": 25,
+    "max_findings": 10,
+    "max_recommendations": 12
+  }
+}

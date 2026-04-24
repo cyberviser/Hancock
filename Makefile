@@ -2,8 +2,9 @@
 .DEFAULT_GOAL := help
 PYTHON        := .venv/bin/python
 PIP           := .venv/bin/pip
+OSINT_REPORT_INPUT ?= docs/examples/osint_report.sample.json
 
-.PHONY: help setup install dev-install finetune-install run server pipeline pipeline-v3 finetune lint test test-cov fuzz fuzz-target clean docker docker-up fly-deploy client-python client-node
+.PHONY: help setup install dev-install finetune-install run run-0ai run-0ai-verify run-0ai-logs run-0ai-debug osint-report osint-report-json server pipeline pipeline-v3 finetune lint test test-cov fuzz fuzz-target clean docker docker-up fly-deploy client-python client-node
 
 help:
 	@echo ""
@@ -25,10 +26,18 @@ help:
 	@echo ""
 	@echo "  Run:"
 	@echo "    run            Start Hancock CLI (interactive)"
+	@echo "    run-0ai        Start the local 0AI defensive CLI (Ollama-backed)"
+	@echo "    run-0ai-verify Validate the local 0AI scaffold and probe Ollama when available"
+	@echo "    osint-report   Validate/render an OSINT report payload (INPUT defaults to sample)"
+	@echo "    osint-report-json Validate an OSINT report payload and emit normalized JSON"
 	@echo "    server         Start Hancock REST API server (port 5000)"
 	@echo "    pipeline       Run data collection pipeline (all phases)"
 	@echo "    pipeline-v3    Run v3 data collection only (KEV + Atomic + GHSA)"
 	@echo "    finetune       Run LoRA fine-tuning on Mistral 7B"
+	@echo "    run-0ai        Start the local 0AI CLI via script/build_and_run.sh"
+	@echo "    run-0ai-verify Verify Python, Ollama, and model preflight for 0AI"
+	@echo "    run-0ai-logs   Start 0AI with tee'd log capture"
+	@echo "    run-0ai-debug  Start 0AI under pdb"
 	@echo ""
 	@echo "  Clients:"
 	@echo "    client-python  Run Python SDK CLI (interactive)"
@@ -72,6 +81,18 @@ finetune-install:
 run:
 	$(PYTHON) hancock_agent.py
 
+run-0ai:
+	$(PYTHON) ai_agent.py
+
+run-0ai-verify:
+	$(PYTHON) ai_agent.py --verify
+
+osint-report:
+	$(PYTHON) osint_report_cli.py $(OSINT_REPORT_INPUT) $(if $(OUTPUT),--output $(OUTPUT),)
+
+osint-report-json:
+	$(PYTHON) osint_report_cli.py $(OSINT_REPORT_INPUT) --json $(if $(OUTPUT),--output $(OUTPUT),)
+
 server:
 	$(PYTHON) hancock_agent.py --server --port 5000
 
@@ -83,6 +104,18 @@ pipeline-v3:
 
 finetune:
 	$(PYTHON) hancock_finetune.py
+
+run-0ai:
+	./script/build_and_run.sh
+
+run-0ai-verify:
+	./script/build_and_run.sh --verify
+
+run-0ai-logs:
+	./script/build_and_run.sh --logs
+
+run-0ai-debug:
+	./script/build_and_run.sh --debug
 
 # ─── Dev ─────────────────────────────────────────────────────
 lint:

@@ -117,6 +117,69 @@ def scan_for_secrets() -> list[dict]:
     return findings
 
 
+# ── Sandbox escape pattern detector ──────────────────────────────────────────
+SANDBOX_ESCAPE_PATTERNS: list[tuple[re.Pattern, str]] = [
+    # Host filesystem / volume mount access
+    (re.compile(r'(?i)(/proc/self/root|/host|/hostfs|/rootfs)'),           "host-fs escape attempt"),
+    # Docker socket abuse
+    (re.compile(r'(?i)(docker\.sock|/var/run/docker)'),                    "docker socket escape"),
+    # Privileged flag or --pid=host / --net=host in subprocess calls
+    (re.compile(r'(?i)(--privileged|--pid=host|--net=host|--cap-add)'),    "privileged container flag"),
+    # nsenter / unshare / chroot breakouts
+    (re.compile(r'(?i)\b(nsenter|unshare|chroot)\b'),                      "namespace escape tool"),
+    # cgroups release_agent write (CVE-2022-0492 style)
+    (re.compile(r'(?i)release_agent'),                                      "cgroup release_agent write"),
+    # /proc/sysrq-trigger abuse
+    (re.compile(r'(?i)/proc/sysrq'),                                        "sysrq trigger abuse"),
+    # Kernel module load
+    (re.compile(r'(?i)\b(insmod|modprobe|rmmod)\b'),                        "kernel module manipulation"),
+    # runc/containerd CVE patterns
+    (re.compile(r'(?i)(runc|containerd).*exec'),                            "container runtime exec escape"),
+    # Python __builtins__ / __import__ sandbox bypass
+    (re.compile(r'__builtins__|__import__\s*\('),                           "python sandbox bypass via __builtins__"),
+    # os.system / subprocess with shell=True inside sandboxed code
+    (re.compile(r'subprocess\.(?:call|run|Popen)\s*\([^)]*shell\s*=\s*True'), "shell=True in sandboxed exec"),
+    # eval/exec on untrusted data
+    (re.compile(r'\beval\s*\(|\bexec\s*\('),                               "eval/exec in sandbox"),
+    # Pickle deserialization
+    (re.compile(r'\bpickle\.loads?\s*\('),                                  "pickle deserialization (RCE risk)"),
+    # Template injection probes
+    (re.compile(r'\{\{.*?7\s*\*\s*7.*?\}\}|\$\{7\s*\*\s*7\}'),            "SSTI probe pattern"),
+    # Path traversal
+    (re.compile(r'\.\.\/\.\.\/|\.\.\\\.\.\\'),                             "path traversal sequence"),
+    # LD_PRELOAD / LD_LIBRARY_PATH injection
+    (re.compile(r'(?i)(LD_PRELOAD|LD_LIBRARY_PATH)\s*='),                  "LD_PRELOAD/LD_LIBRARY_PATH injection"),
+    # ptrace attach
+    (re.compile(r'(?i)\bptrace\b'),                                         "ptrace syscall (sandbox escape)"),
+]
+
+
+def scan_for_sandbox_escapes() -> list[dict]:
+    """Scan Python and shell files for sandbox escape patterns.
+
+    Returns a list of findings with only safe metadata (file, line, category).
+    Source lines are never stored.
+    """
+    findings: list[dict] = []
+    ESCAPE_EXCLUDE = EXCLUDE + ["tests/test_sandbox_escape.py", "qa/security_audit.py"]
+    for pattern, label in SANDBOX_ESCAPE_PATTERNS:
+        for src_file in list(Path(".").rglob("*.py")) + list(Path(".").rglob("*.sh")):
+            if any(excl in str(src_file) for excl in ESCAPE_EXCLUDE):
+                continue
+            try:
+                content = src_file.read_text(encoding="utf-8", errors="ignore")
+            except OSError:
+                continue
+            for i, line in enumerate(content.splitlines(), 1):
+                if pattern.search(line):
+                    findings.append({
+                        "file":  str(src_file),
+                        "line":  i,
+                        "type":  label,
+                    })
+    return findings
+
+
 def run_bandit() -> dict:
     rc, output = _run([
         sys.executable, "-m", "bandit",
@@ -193,12 +256,14 @@ def check_env_config() -> list[dict]:
 def generate_report() -> dict:
     timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     secret_findings = scan_for_secrets()
+    escape_findings = scan_for_sandbox_escapes()
     env_findings = check_env_config()
 
     report: dict = {
-        "timestamp":       timestamp,
-        "secret_scan":     secret_findings,
-        "env_config":      env_findings,
+        "timestamp":            timestamp,
+        "secret_scan":          secret_findings,
+        "sandbox_escape_scan":  escape_findings,
+        "env_config":           env_findings,
     }
 
     # Optional tools — skip gracefully if not installed
@@ -216,6 +281,7 @@ def generate_report() -> dict:
 
     # Summary
     secret_count = len(secret_findings)
+    escape_count = len(escape_findings)
     env_issue_count = len(env_findings)
     env_highs = sum(
         1 for f in env_findings if f.get("severity") == "HIGH"
@@ -238,13 +304,15 @@ def generate_report() -> dict:
             dependency_passed = False
 
     report["summary"] = {
-        "secrets_found":     secret_count,
-        "env_issues":        env_issue_count,
-        "env_high":          env_highs,
-        "bandit_passed":     bandit_passed,
-        "dependency_passed": dependency_passed,
+        "secrets_found":          secret_count,
+        "sandbox_escapes_found":  escape_count,
+        "env_issues":             env_issue_count,
+        "env_high":               env_highs,
+        "bandit_passed":          bandit_passed,
+        "dependency_passed":      dependency_passed,
         "passed": (
             secret_count == 0
+            and escape_count == 0
             and env_highs == 0
             and bandit_passed
             and dependency_passed

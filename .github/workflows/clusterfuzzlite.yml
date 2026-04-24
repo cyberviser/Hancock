@@ -1,3 +1,35 @@
+name: ClusterFuzzLite Continuous Fuzzing
+on:
+  push:
+    branches: [ main, feat/* ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install ClusterFuzzLite + Atheris
+        run: |
+          pip install clusterfuzzlite atheris
+          python -m clusterfuzzlite build --engine=atheris --language=python
+      - name: Run fuzz targets (inference + parsers + LangGraph)
+        run: |
+          python -m clusterfuzzlite run \
+            --fuzz-targets=fuzz/optimized_inference_fuzz.py,fuzz/osint_parser_fuzz.py,fuzz/langgraph_fuzz.py \
+            --timeout=300 \
+            --jobs=4
+      - name: Upload crash artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crashes
+          path: artifacts/
 name: ClusterFuzzLite
 on:
   pull_request:

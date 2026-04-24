@@ -1,0 +1,214 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/0ai-Cyberviser/Hancock/docs/schemas/osint_report.schema.json",
+  "title": "Hancock Defensive OSINT Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subject",
+    "objective",
+    "authorized_scope",
+    "summary",
+    "indicators",
+    "findings",
+    "next_steps"
+  ],
+  "properties": {
+    "report_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "subject": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160
+    },
+    "objective": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 240
+    },
+    "author": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "organization": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "tlp": {
+      "type": "string",
+      "enum": ["CLEAR", "GREEN", "AMBER", "AMBER+STRICT", "RED"]
+    },
+    "authorized_scope": {
+      "type": "boolean"
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1200
+    },
+    "guardrails": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "authorized_scope_only": {
+          "type": "boolean"
+        },
+        "evidence_required": {
+          "type": "boolean"
+        },
+        "allow_private_indicators": {
+          "type": "boolean"
+        },
+        "max_indicators": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_findings": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_recommendations": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "indicators": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "value"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["domain", "email", "hash", "ip", "url"]
+          },
+          "value": {
+            "type": "string",
+            "minLength": 1
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "title",
+          "summary",
+          "severity",
+          "confidence",
+          "indicator_refs",
+          "evidence",
+          "recommendations"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1200
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["informational", "low", "medium", "high", "critical"]
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "indicator_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["source_name", "source_url", "collected_at", "detail"],
+              "properties": {
+                "source_name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                },
+                "source_url": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "collected_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "detail": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1000
+                }
+              }
+            }
+          },
+          "recommendations": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "next_steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

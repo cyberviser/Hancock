@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 Orchestration Controller for Hancock — Tool Integration & Execution Engine.
 
@@ -26,8 +28,6 @@ Usage
     ))
     result = controller.execute("nmap", {"target": "192.168.1.0/24"})
 """
-
-from __future__ import annotations
 
 import importlib
 import logging
@@ -226,6 +226,7 @@ class OrchestrationController:
         execution_id = str(uuid.uuid4())
         started_at = time.monotonic()
 
+<<<<<<< HEAD
         if "model" in params:
             verify_hf_model(params["model"])
 
@@ -239,6 +240,8 @@ class OrchestrationController:
         check_authorization({"mode": tool_name, "confidence": 0.95, "authorized": True})
 
 
+=======
+>>>>>>> origin/main
         # Access control
         if not self.is_tool_allowed(tool_name):
             record = self._make_record(
@@ -296,7 +299,10 @@ class OrchestrationController:
         for attempt in range(1 + config.max_retries):
             try:
                 result = self._execute_with_timeout(config, params)
+<<<<<<< HEAD
                 result = validate_output(result)
+=======
+>>>>>>> origin/main
                 duration_ms = (time.monotonic() - started_at) * 1000
 
                 # Cache the successful result
@@ -622,10 +628,6 @@ def _choose_process_start_method() -> str:
     """Prefer non-fork start methods when the current process can be re-imported."""
     available = multiprocessing.get_all_start_methods()
     if _main_module_is_file_backed():
-        # ``forkserver`` is attractive in theory, but some restricted runtimes
-        # block the listener socket it needs to bootstrap child processes.
-        # ``spawn`` keeps the same isolation guarantees while working reliably
-        # in CI and sandboxed environments.
         for method in ("spawn", "forkserver", "fork"):
             if method in available:
                 return method

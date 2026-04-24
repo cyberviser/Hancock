@@ -1,18 +1,20 @@
-# Secrets
-.env
-
-# Virtual environments
+# Hancock .gitignore - keep repo lean and GitHub-clean
+hancock-cpu-adapter/checkpoint-*/
+hancock-cpu-adapter/*.safetensors
+hancock-cpu-adapter/adapter_model.safetensors
 .venv/
-venv/
-env/
-
-# Python
+.env
 __pycache__/
 *.pyc
 *.pyo
-*.pyd
-*.egg-info/
+*.log
+.bandit
+.dockerignore
+projects/
+tests/__pycache__/
+data/
 dist/
+<<<<<<< HEAD
 build/
 
 # Jupyter
@@ -49,3 +51,7 @@ npm-debug.log*
 benchmarks/results/
 sandbox/orchestrator_state/
 sandbox/reports/
+=======
+clients/nodejs/node_modules/
+clients/python/hancock_client.egg-info/
+>>>>>>> origin/main

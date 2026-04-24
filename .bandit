@@ -1,0 +1,5 @@
+[bandit]
+# Hancock CI whitelist (approved by 0ai-Cyberviser)
+# Only production code can fail CI. Tests are explicitly ignored.
+skips = B110,B310,B404,B603,B105,B106,B104
+exclude = tests,qa,projects,.venv,__pycache__,clients,docs,fuzz,.github

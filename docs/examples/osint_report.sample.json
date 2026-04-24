@@ -1,0 +1,63 @@
+{
+  "report_id": "osint-sample-001",
+  "generated_at": "2026-04-18T12:00:00+00:00",
+  "subject": "Suspicious phishing infrastructure cluster",
+  "objective": "Summarize public indicators and recommend defensive containment steps.",
+  "authorized_scope": true,
+  "summary": "Public infrastructure overlaps suggest an active credential harvesting cluster that should be blocked and monitored.",
+  "indicators": [
+    {
+      "type": "domain",
+      "value": "phish-login-support.com",
+      "confidence": 0.92,
+      "tags": ["phishing", "credential-harvest"]
+    },
+    {
+      "type": "ip",
+      "value": "93.184.216.34",
+      "confidence": 0.81,
+      "tags": ["hosting"]
+    },
+    {
+      "type": "url",
+      "value": "https://phish-login-support.com/login",
+      "confidence": 0.88,
+      "tags": ["landing-page"]
+    }
+  ],
+  "findings": [
+    {
+      "title": "Landing page overlaps with recent phishing lure pattern",
+      "summary": "The hostname and URL structure match a recent credential harvesting naming convention and were first observed within the last 24 hours.",
+      "severity": "high",
+      "confidence": 0.86,
+      "indicator_refs": [
+        "phish-login-support.com",
+        "https://phish-login-support.com/login"
+      ],
+      "evidence": [
+        {
+          "source_name": "Passive DNS",
+          "source_url": "https://intel.example/pdns/phish-login-support",
+          "collected_at": "2026-04-18T11:30:00+00:00",
+          "detail": "Observed first resolution within the last 24 hours."
+        },
+        {
+          "source_name": "Certificate Transparency",
+          "source_url": "https://intel.example/ct/phish-login-support",
+          "collected_at": "2026-04-18T11:45:00+00:00",
+          "detail": "A new certificate was issued for the same hostname."
+        }
+      ],
+      "recommendations": [
+        "Block the domain and landing URL at secure web gateways.",
+        "Review mailbox telemetry for matching lure text."
+      ],
+      "tags": ["phishing", "triage"]
+    }
+  ],
+  "next_steps": [
+    "Add the domain and IP to monitoring and block lists.",
+    "Review inbound email telemetry for matching lure themes."
+  ]
+}

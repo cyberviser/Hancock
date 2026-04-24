@@ -1,0 +1,264 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberviser.ai/schemas/osint_report.schema.json",
+  "title": "Hancock OSINT Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "report_metadata",
+    "engagement",
+    "scope",
+    "assets",
+    "findings",
+    "evidence",
+    "recommendations"
+  ],
+  "properties": {
+    "report_metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "target",
+        "classification",
+        "generated_at",
+        "analyst",
+        "report_profile",
+        "tool_version"
+      ],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "target": { "type": "string", "minLength": 1 },
+        "classification": { "type": "string", "minLength": 1 },
+        "generated_at": { "type": "string", "format": "date-time" },
+        "analyst": { "type": "string", "minLength": 1 },
+        "report_profile": {
+          "type": "string",
+          "enum": ["ciso", "soc", "joint"]
+        },
+        "tool_version": { "type": "string", "minLength": 1 },
+        "authorized_use_only": { "type": "boolean", "default": true }
+      }
+    },
+    "engagement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requester",
+        "business_owner",
+        "authorization_reference",
+        "objective",
+        "report_profile"
+      ],
+      "properties": {
+        "requester": { "type": "string", "minLength": 1 },
+        "business_owner": { "type": "string", "minLength": 1 },
+        "authorization_reference": { "type": "string", "minLength": 1 },
+        "objective": { "type": "string", "minLength": 1 },
+        "report_profile": {
+          "type": "string",
+          "enum": ["ciso", "soc", "joint"]
+        }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "in_scope",
+        "out_of_scope",
+        "collection_constraints",
+        "source_policy"
+      ],
+      "properties": {
+        "in_scope": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "out_of_scope": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "collection_constraints": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "source_policy": {
+          "type": "string",
+          "enum": ["approved-only", "internal-plus-approved", "lab-only"]
+        }
+      }
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "asset_id",
+          "asset_type",
+          "value",
+          "owner",
+          "criticality"
+        ],
+        "properties": {
+          "asset_id": { "type": "string", "minLength": 1 },
+          "asset_type": {
+            "type": "string",
+            "enum": ["domain", "subdomain", "host", "ip", "repo", "brand", "social", "person", "other"]
+          },
+          "value": { "type": "string", "minLength": 1 },
+          "owner": { "type": "string", "minLength": 1 },
+          "criticality": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low"]
+          }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "title",
+          "severity",
+          "summary",
+          "asset_refs",
+          "evidence_refs",
+          "confidence",
+          "risk_score",
+          "status"
+        ],
+        "properties": {
+          "id": { "type": "string", "pattern": "^F-[0-9]{3}$" },
+          "title": { "type": "string", "minLength": 1 },
+          "severity": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low", "informational"]
+          },
+          "summary": { "type": "string", "minLength": 1 },
+          "asset_refs": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^EVID-[0-9]{3}$" }
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "risk_score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "mitre_attack": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "nist_controls": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "status": {
+            "type": "string",
+            "enum": ["open", "accepted-risk", "mitigated", "monitoring"]
+          }
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "type",
+          "source_name",
+          "source_url",
+          "retrieved_at",
+          "claim",
+          "sensitivity"
+        ],
+        "properties": {
+          "id": { "type": "string", "pattern": "^EVID-[0-9]{3}$" },
+          "type": {
+            "type": "string",
+            "enum": ["web", "screenshot", "ticket", "repo", "whois", "dns", "note", "other"]
+          },
+          "source_name": { "type": "string", "minLength": 1 },
+          "source_url": { "type": "string", "format": "uri" },
+          "retrieved_at": { "type": "string", "format": "date-time" },
+          "claim": { "type": "string", "minLength": 1 },
+          "sensitivity": {
+            "type": "string",
+            "enum": ["public", "internal", "sensitive"]
+          },
+          "raw_artifact_path": { "type": "string" },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "recommendations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["immediate", "thirty_day", "long_term"],
+      "properties": {
+        "immediate": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/recommendation" }
+        },
+        "thirty_day": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/recommendation" }
+        },
+        "long_term": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/recommendation" }
+        }
+      }
+    },
+    "diagrams": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "diagram_type", "description"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1 },
+          "diagram_type": {
+            "type": "string",
+            "enum": ["mermaid", "plantuml", "table", "other"]
+          },
+          "description": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "recommendation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "owner", "priority"],
+      "properties": {
+        "action": { "type": "string", "minLength": 1 },
+        "owner": { "type": "string", "minLength": 1 },
+        "priority": {
+          "type": "string",
+          "enum": ["P0", "P1", "P2", "P3"]
+        },
+        "due_in_days": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

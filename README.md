@@ -134,6 +134,27 @@ python hancock_pipeline.py --phase 3
 python hancock_finetune.py
 ```
 
+### 7. Run the local `0AI` CLI
+
+`ai_agent.py` is a separate local Ollama-backed CLI. It now has a stable run loop through [`script/build_and_run.sh`](script/build_and_run.sh).
+
+```bash
+# preflight only: Python + openai + Ollama endpoint + required 0ai model
+make run-0ai-verify
+
+# launch the local 0AI CLI
+make run-0ai
+```
+
+Useful modes:
+
+```bash
+make run-0ai-logs
+make run-0ai-debug
+```
+
+If you use the Codex app locally, the Run button is wired to `./script/build_and_run.sh` through `.codex/environments/environment.toml`.
+
 ---
 
 ## 🌐 API Reference
@@ -279,6 +300,20 @@ curl -X POST http://localhost:5000/v1/respond \
 /exit           — quit
 ```
 
+### Local 0AI CLI
+
+The repo also includes a local `0AI` runner for Ollama-backed defensive workflows:
+
+```bash
+make run-0ai-verify
+make run-0ai
+```
+
+Notes:
+- `make run-0ai-verify` validates the local scaffold and attempts a live Ollama probe when available.
+- `make run-0ai` launches [`ai_agent.py`](ai_agent.py) against `OLLAMA_BASE_URL`.
+- Override the model with `ZEROAI_MODEL=0ai make run-0ai` or any other local Ollama tag.
+
 ---
 
 ## 🔧 Environment Variables
@@ -295,6 +330,8 @@ cp .env.example .env
 | `OLLAMA_BASE_URL` | Ollama server URL | `http://localhost:11434` |
 | `OLLAMA_MODEL` | Ollama chat model | `llama3.1:8b` |
 | `OLLAMA_CODER_MODEL` | Ollama code generation model | `qwen2.5-coder:7b` |
+| `ZEROAI_MODEL` | Optional model override for the local `0AI` CLI | `0ai` |
+| `ZEROAI_DEFAULT_MODE` | Default mode for the local `0AI` CLI | `osint` |
 | `NVIDIA_API_KEY` | NVIDIA NIM API key ([get free](https://build.nvidia.com)) | — |
 | `OPENAI_API_KEY` | OpenAI API key (fallback) | — |
 | `OPENAI_ORG_ID` | OpenAI organization ID | — |
@@ -358,6 +395,47 @@ python hancock_agent.py
 | `POST` | `/v1/map-infrastructure` | Map and cluster indicators geographically |
 
 > 📖 Full guide: [`docs/osint-geolocation.md`](docs/osint-geolocation.md)
+>
+> 📄 Reporting assets:
+> [`templates/osint_report_template.md`](templates/osint_report_template.md) ·
+> [`docs/osint-reporting-spec.md`](docs/osint-reporting-spec.md) ·
+> [`schemas/osint_report.schema.json`](schemas/osint_report.schema.json) ·
+> [`examples/osint_report.dev.json`](examples/osint_report.dev.json)
+>
+> 🔧 Prototype builder: `python -m collectors.osint_report_builder --help`
+
+### Reporting Scaffold
+
+For defensive reporting workflows, the repo now includes:
+- Typed report models and a guarded builder in [`collectors/osint_report_builder.py`](collectors/osint_report_builder.py)
+- Published schema in [`docs/schemas/osint_report.schema.json`](docs/schemas/osint_report.schema.json)
+- Markdown template in [`docs/templates/osint_report.md.tmpl`](docs/templates/osint_report.md.tmpl)
+- Dev defaults in [`docs/config/osint_report.dev.json`](docs/config/osint_report.dev.json)
+- Sample payload in [`docs/examples/osint_report.sample.json`](docs/examples/osint_report.sample.json)
+
+Render the sample report scaffold:
+
+```bash
+make osint-report
+```
+
+Render a specific payload to a file:
+
+```bash
+make osint-report OSINT_REPORT_INPUT=path/to/report.json OUTPUT=report.md
+```
+
+Emit normalized validated JSON:
+
+```bash
+make osint-report-json
+```
+
+Run the focused scaffold tests with:
+
+```bash
+pytest -q tests/test_osint_report_builder.py tests/test_osint_report_cli.py
+```
 
 ---
 

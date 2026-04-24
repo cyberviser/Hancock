@@ -1,0 +1,10 @@
+chroma_db/
+clients/nodejs/node_modules/
+projects/
+__pycache__/
+*.pyc
+*.bak
+.git
+.gitignore
+*.log
+test_code/

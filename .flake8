@@ -1,22 +1,13 @@
 [flake8]
-# Only flag critical errors that break execution:
-#   E9xx: Runtime errors (SyntaxError, IndentationError)
-#   F63: Invalid syntax in assertions
-#   F7x: Syntax errors
-#   F82: Undefined names
-select = E9,F63,F7,F82
-max-line-length = 120
-
+max-line-length = 127
+max-complexity = 10
 exclude =
     .venv,
-    venv,
-    env,
     .git,
     __pycache__,
-    data,
+    node_modules,
     build,
-    dist,
-    *.egg-info,
-    hancock-adapter,
+    data,
     hancock-cpu-adapter,
-    .ipynb_checkpoints
+    fuzz/corpus,
+    adapter
