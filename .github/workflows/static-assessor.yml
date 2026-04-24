@@ -36,12 +36,8 @@ jobs:
       - run: pytest -q tests/test_hancock_static_assessor.py
       - name: Generate static assessor smoke report
         run: python hancock_static_assessor.py . --format json > static-assessor-report.json
-      - name: Show smoke report summary
-        run: python - <<'PY'
-          import json
-          from pathlib import Path
-          report = json.loads(Path('static-assessor-report.json').read_text())
-          print('highest_severity=', report.get('highest_severity'))
-          print('findings=', len(report.get('findings', [])))
-          print('analyzed_files=', report.get('inventory', {}).get('analyzed_files'))
-          PY
+      - name: Verify smoke report exists
+        run: |
+          test -s static-assessor-report.json
+          grep -q '"highest_severity"' static-assessor-report.json
+          grep -q '"does_not_execute_project_code": true' static-assessor-report.json
