@@ -53,6 +53,69 @@ def test_active_testing_without_permission_high_risk():
     assert not plan.can_execute
 
 
+def test_defensive_log_scan_is_not_active_testing():
+    plan = SafeAgenticOrchestrator().plan(
+        "Scan the logs for IOCs and summarize suspicious entries.",
+        scope(),
+        mode="soc",
+    )
+    assert plan.risk_level == RiskLevel.LOW
+    assert plan.approval_state == ApprovalState.NOT_REQUIRED
+
+
+def test_disallowed_asset_is_blocked():
+    plan = SafeAgenticOrchestrator().plan(
+        "Create a report about prod.acme.com exposure.",
+        scope(disallowed_assets=("prod.acme.com",)),
+        mode="osint",
+    )
+    assert plan.risk_level == RiskLevel.BLOCKED
+    assert plan.approval_state == ApprovalState.BLOCKED
+    assert any(finding.code == "disallowed_asset_referenced" for finding in plan.findings)
+
+
+def test_payload_generation_requires_scope_flag():
+    plan = SafeAgenticOrchestrator().plan(
+        "Generate a proof-of-concept payload for the lab finding.",
+        scope(),
+        mode="pentest",
+    )
+    assert plan.risk_level == RiskLevel.HIGH
+    assert plan.approval_state == ApprovalState.REQUIRED
+    assert any(finding.code == "payload_generation_not_authorized" for finding in plan.findings)
+
+
+def test_payload_generation_allowed_still_requires_review():
+    plan = SafeAgenticOrchestrator().plan(
+        "Generate a proof-of-concept payload for the lab finding.",
+        scope(allow_payload_generation=True),
+        mode="pentest",
+    )
+    assert plan.risk_level == RiskLevel.MEDIUM
+    assert plan.approval_state == ApprovalState.REQUIRED
+
+
+def test_external_contact_requires_scope_flag():
+    plan = SafeAgenticOrchestrator().plan(
+        "Upload the suspicious sample to VirusTotal and summarize results.",
+        scope(),
+        mode="soc",
+    )
+    assert plan.risk_level == RiskLevel.HIGH
+    assert plan.approval_state == ApprovalState.REQUIRED
+    assert any(finding.code == "external_contact_not_authorized" for finding in plan.findings)
+
+
+def test_external_contact_allowed_still_requires_review():
+    plan = SafeAgenticOrchestrator().plan(
+        "Upload the suspicious sample to VirusTotal and summarize results.",
+        scope(allow_external_contact=True),
+        mode="soc",
+    )
+    assert plan.risk_level == RiskLevel.MEDIUM
+    assert plan.approval_state == ApprovalState.REQUIRED
+
+
 def test_missing_scope_forces_approval():
     plan = SafeAgenticOrchestrator().plan(
         "Summarize likely risks in this architecture.",
@@ -90,6 +153,17 @@ def test_cli_json_success(capsys):
     ])
     assert rc == 0
     assert '"risk_level": "low"' in capsys.readouterr().out
+
+
+def test_cli_approval_required_returns_one(capsys):
+    rc = main([
+        "Run sqlmap against the web app.",
+        "--client", "ACME",
+        "--engagement", "Review",
+        "--allowed-assets", "lab",
+    ])
+    assert rc == 1
+    assert '"approval_state": "required"' in capsys.readouterr().out
 
 
 def test_cli_blocks_unsafe(capsys):
