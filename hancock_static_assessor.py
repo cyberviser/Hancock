@@ -8,7 +8,7 @@ Safety contract:
 - Does not run shell commands.
 - Does not scan networks.
 - Does not contact external services.
-- Does not upload files or secrets.
+- Does not upload files.
 - Produces inventory, pattern findings, and review guidance only.
 """
 from __future__ import annotations
