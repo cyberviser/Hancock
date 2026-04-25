@@ -206,7 +206,7 @@ class LocalStaticAssessor:
         ("wide_bind", FindingCategory.CONFIG, Severity.LOW, "0.0.0.0", "Service binds to all interfaces; confirm this is intended."),
         ("permissive_chmod", FindingCategory.CONFIG, Severity.MEDIUM, "chmod 777", "World-writable permissions are risky."),
         ("docker_root", FindingCategory.CONTAINER, Severity.LOW, "USER root", "Container appears to run as root; prefer least privilege."),
-        ("github_action_unpinned", FindingCategory.CI, Severity.MEDIUM, "uses:", "Review GitHub Actions pins; prefer full-length commit SHAs under restricted policies."),
+        ("github_action_unpinned", FindingCategory.CI, Severity.MEDIUM, r"uses:\s*[^#\n]+@(?!(?:[0-9a-fA-F]{40})(?:\s|$|#))[^\s#]+", "GitHub Action uses a non-SHA ref; prefer full-length commit SHAs under restricted policies."),
     )
 
     def __init__(self, root: str | Path, extra_excludes: Iterable[str] = ()) -> None:
