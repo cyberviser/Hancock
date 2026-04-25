@@ -198,7 +198,7 @@ class LocalStaticAssessor:
     }
     RULES: tuple[tuple[str, FindingCategory, Severity, str, str], ...] = (
         ("secret_literal", FindingCategory.SECRET, Severity.HIGH, "password=|password:|api_key|apikey|secret_key|client_secret|private_key", "Potential secret material or credential key reference."),
-        ("unsafe_python_execution", FindingCategory.EXECUTION, Severity.HIGH, "eval(|exec(|os.system(|subprocess", "Potential command/code execution sink. Review input control and shell usage."),
+        ("unsafe_python_execution", FindingCategory.EXECUTION, Severity.HIGH, "eval(|exec(|os.system(|subprocess.Popen(|subprocess.run(|subprocess.call(|subprocess.check_call(|subprocess.check_output(", "Potential command/code execution sink. Review input control and shell usage."),
         ("shell_true", FindingCategory.EXECUTION, Severity.HIGH, "shell=True", "subprocess shell=True can expand attacker-controlled shell metacharacters."),
         ("unsafe_yaml_load", FindingCategory.EXECUTION, Severity.MEDIUM, "yaml.load(", "yaml.load can deserialize unsafe objects; prefer safe_load."),
         ("pickle_load", FindingCategory.EXECUTION, Severity.MEDIUM, "pickle.load|pickle.loads", "Pickle deserialization is unsafe for untrusted data."),
