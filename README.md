@@ -135,6 +135,27 @@ python hancock_pipeline.py --phase 3
 python hancock_finetune.py
 ```
 
+### 7. Run the local `0AI` CLI
+
+`0ai_agent.py` is a separate local Ollama-backed CLI. It now has a stable run loop through [`script/build_and_run.sh`](script/build_and_run.sh).
+
+```bash
+# preflight only: Python + openai + Ollama endpoint + required 0ai model
+make run-0ai-verify
+
+# launch the local 0AI CLI
+make run-0ai
+```
+
+Useful modes:
+
+```bash
+make run-0ai-logs
+make run-0ai-debug
+```
+
+If you use the Codex app locally, the Run button is wired to `./script/build_and_run.sh` through `.codex/environments/environment.toml`.
+
 ---
 
 ## 🌐 API Reference
@@ -359,6 +380,14 @@ python hancock_agent.py
 | `POST` | `/v1/map-infrastructure` | Map and cluster indicators geographically |
 
 > 📖 Full guide: [`docs/osint-geolocation.md`](docs/osint-geolocation.md)
+>
+> 📄 Reporting assets:
+> [`templates/osint_report_template.md`](templates/osint_report_template.md) ·
+> [`docs/osint-reporting-spec.md`](docs/osint-reporting-spec.md) ·
+> [`schemas/osint_report.schema.json`](schemas/osint_report.schema.json) ·
+> [`examples/osint_report.dev.json`](examples/osint_report.dev.json)
+>
+> 🔧 Prototype builder: `python -m collectors.osint_report_builder --help`
 
 ---
 

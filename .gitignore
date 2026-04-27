@@ -25,7 +25,9 @@ hancock-cpu-adapter/checkpoint-*/
 *.safetensors
 
 # Local agent metadata
-.codex
+.codex/*
+!.codex/environments/
+!.codex/environments/environment.toml
 
 # Crash artifacts
 crash-*

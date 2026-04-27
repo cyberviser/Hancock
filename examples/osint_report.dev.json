@@ -1,0 +1,74 @@
+{
+  "profile": "joint",
+  "target": "Example Corp",
+  "scope": {
+    "authorized_assets": [
+      "example.com",
+      "*.example.com",
+      "github.com/example"
+    ],
+    "notes": "Owned assets only. No unapproved third-party targeting."
+  },
+  "inputs": {
+    "asset_inventory": "data/osint/assets.json",
+    "evidence_bundle": "data/osint/evidence.json"
+  },
+  "engagement_defaults": {
+    "requester": "Security Engineering",
+    "business_owner": "Example Corp Security",
+    "authorization_reference": "DEV-LAB-001",
+    "objective": "Generate a defensive exposure assessment report.",
+    "report_profile": "joint"
+  },
+  "scope_defaults": {
+    "in_scope": [
+      "example.com",
+      "*.example.com",
+      "github.com/example"
+    ],
+    "out_of_scope": [
+      "Third-party suppliers",
+      "Personal accounts"
+    ],
+    "collection_constraints": [
+      "Passive evidence only",
+      "Authorized defensive use only"
+    ],
+    "source_policy": "approved-only"
+  },
+  "outputs": {
+    "markdown": "reports/example-osint.md",
+    "json": "reports/example-osint.json",
+    "html": null
+  },
+  "render": {
+    "classification": "UNCLASSIFIED // OSINT",
+    "redact_pii": true,
+    "include_social_summary": true,
+    "include_appendix": true
+  },
+  "enrichment": {
+    "geoip": true,
+    "threat_intel": true,
+    "historical_dns": false,
+    "brand_monitoring": true
+  },
+  "guardrails": {
+    "authorization_required": true,
+    "allow_active_collection": false,
+    "forbid_dark_web_collection": true,
+    "allowed_source_hosts": [
+      "example.com"
+    ],
+    "min_confidence": 60,
+    "pii_policy": "mask-low-value"
+  },
+  "dev": {
+    "lab_mode": false,
+    "strict_schema_validation": true,
+    "save_intermediates": true,
+    "fail_on_missing_citation": true,
+    "sample_limit": 100,
+    "debug": false
+  }
+}
