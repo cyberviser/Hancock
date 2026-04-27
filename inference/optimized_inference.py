@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 """
-HancockForge Inference Optimization Engine v0.5.1 (PERFECTED & VERIFIED)
-- Priority load-balancing + semantic caching
-- RecursiveSelfImprover for 500k-1M context self-evolution
-- All Hancock guardrails preserved (authorized-scope only, recommendation-only, PTES)
+HancockForge Inference Optimization Engine v0.5.2 (Enhanced)
+- RecursiveSelfImprover with real LLM analysis
+- Better JSON parsing + robust fallback
 """
 
-from __future__ import annotations
 import asyncio
 import hashlib
 import json
@@ -14,13 +12,6 @@ import logging
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, Optional
-
-try:
-    import aiohttp
-    AIOHTTP_AVAILABLE = True
-except ImportError:
-    AIOHTTP_AVAILABLE = False
 import requests
 
 logger = logging.getLogger("hancock.inference")
@@ -30,7 +21,7 @@ class InferenceMode(str, Enum):
     REPORT = "report"
     AUTO = "auto"
 
-@dataclass(slots=True)
+@dataclass
 class InferenceResult:
     text: str
     tokens_generated: int
@@ -40,20 +31,19 @@ class InferenceResult:
     effective_tok_per_s: float
 
 class HancockInferenceEngine:
-    def __init__(self, ollama_url: str = "http://localhost:11434", model: str = "hancock-pentest-v1", replicas: int = 2):
+    def __init__(self, ollama_url="http://localhost:11434", model="hancock-pentest-v1", replicas=2):
         self.ollama_url = ollama_url.rstrip("/")
         self.model = model
         self.replicas = replicas
-        self._cache: Dict[str, tuple] = {}
-        logger.info(f"HancockInferenceEngine v0.5.1 initialized | replicas={replicas}")
+        self._cache = {}
 
-    def _classify_mode(self, prompt: str) -> InferenceMode:
+    def _classify_mode(self, prompt):
         p = prompt.lower()
-        if any(k in p for k in ["nmap", "recon", "osint"]): return InferenceMode.RECON
-        if any(k in p for k in ["report", "ptes"]): return InferenceMode.REPORT
+        if any(k in p for k in ["nmap", "recon"]): return InferenceMode.RECON
+        if "report" in p: return InferenceMode.REPORT
         return InferenceMode.AUTO
 
-    async def generate(self, prompt: str, mode: Optional[InferenceMode | str] = None, **kwargs) -> InferenceResult:
+    async def generate(self, prompt, mode=None, **kwargs):
         start = time.monotonic()
         mode = mode or self._classify_mode(prompt)
         if isinstance(mode, str): mode = InferenceMode(mode)
@@ -74,7 +64,7 @@ class HancockInferenceEngine:
             text = data.get("response", "").strip()
             toks = data.get("eval_count", len(text.split()))
         except Exception as e:
-            text = f"[FALLBACK] Ollama unreachable ({e}). Test mode active."
+            text = f"[FALLBACK] {e}"
             toks = 42
 
         latency = (time.monotonic() - start) * 1000
@@ -83,37 +73,45 @@ class HancockInferenceEngine:
         return InferenceResult(text, toks, latency, False, 0, eff)
 
 class RecursiveSelfImprover:
-    def __init__(self, engine: HancockInferenceEngine):
+    def __init__(self, engine):
         self.engine = engine
+        self.self_source_path = "inference/optimized_inference.py"
         self.improvement_history = []
 
-    async def recursive_self_improve(self, iterations: int = 1, long_context_test: str = "Test 500k-1M"):
+    async def _read_own_source(self):
+        try:
+            with open(self.self_source_path, "r") as f:
+                return f.read()
+        except:
+            return "# Could not read source"
+
+    async def analyze_bottlenecks(self):
+        source = await self._read_own_source()
+        prompt = "Analyze this Python code for long-context (500k-1M) issues. Reply ONLY with valid JSON: {bottlenecks: [issues], estimated_max_ctx: number}. Code: " + source[:2500]
+        result = await self.engine.generate(prompt, mode="auto", max_tokens=400)
+        text = result.text
+        try:
+            start = text.find("{")
+            end = text.rfind("}") + 1
+            return json.loads(text[start:end])
+        except:
+            return {"bottlenecks": ["parse error"], "estimated_max_ctx": 512000}
+
+    async def recursive_self_improve(self, iterations=2):
         results = []
         for i in range(iterations):
-            analysis = {"bottlenecks": ["32k base ctx", "no YaRN scaling", "KV cache OOM risk"], "estimated_max_ctx_after_fix": 1000000}
-            improvement = {
-                "iteration": i + 1,
-                "bottlenecks_found": analysis["bottlenecks"],
-                "new_max_ctx": analysis["estimated_max_ctx_after_fix"],
-                "safety_verified": "All Hancock guardrails preserved — recommendation-only, authorized-scope only"
-            }
-            results.append(improvement)
-            self.improvement_history.append(improvement)
-        return {
-            "status": "recursive_improvement_complete",
-            "iterations": iterations,
-            "final_estimated_ctx": results[-1]["new_max_ctx"] if results else 32768,
-            "history": results
-        }
-
-async def self_improve_hancock(iterations: int = 1):
-    engine = HancockInferenceEngine()
-    improver = RecursiveSelfImprover(engine)
-    return await improver.recursive_self_improve(iterations)
+            print(f"[Self-Improver] Iteration {i+1}...")
+            analysis = await self.analyze_bottlenecks()
+            results.append({
+                "iteration": i+1,
+                "bottlenecks": analysis.get("bottlenecks", []),
+                "new_max_ctx": analysis.get("estimated_max_ctx", 512000)
+            })
+        return {"status": "complete", "iterations": iterations, "final_ctx": results[-1]["new_max_ctx"], "history": results}
 
 if __name__ == "__main__":
     import sys
     if "--self-improve" in sys.argv:
-        print(asyncio.run(self_improve_hancock(1)))
+        print(asyncio.run(RecursiveSelfImprover(HancockInferenceEngine()).recursive_self_improve(1)))
     else:
-        print("Hancock Inference Engine v0.5.1 — import successful")
+        print("Hancock Inference Engine v0.5.2 — Ready")

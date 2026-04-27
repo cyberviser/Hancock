@@ -1,0 +1,25 @@
+name: ClusterFuzzLite
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  Fuzzing:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Build Fuzzers
+      id: build
+      uses: google/clusterfuzzlite/actions/build_fuzzers@1
+      with:
+        language: python
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Run Fuzzers
+      id: run
+      uses: google/clusterfuzzlite/actions/run_fuzzers@1
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        fuzz-seconds: 300
+        report-unreproducible-crashes: true
