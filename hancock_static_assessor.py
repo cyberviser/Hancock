@@ -304,12 +304,29 @@ class LocalStaticAssessor:
         except OSError:
             return None
 
+    def _compiled_rules(
+        self,
+    ) -> tuple[tuple[str, FindingCategory, Severity, tuple[str, ...], str], ...]:
+        compiled = getattr(type(self), "_COMPILED_RULES", None)
+        if compiled is None:
+            compiled = tuple(
+                (
+                    rule_id,
+                    category,
+                    severity,
+                    tuple(token.lower() for token in pattern.split("|") if token),
+                    message,
+                )
+                for rule_id, category, severity, pattern, message in self.RULES
+            )
+            setattr(type(self), "_COMPILED_RULES", compiled)
+        return compiled
+
     def _findings_for(self, rel: str, text: str) -> list[StaticFinding]:
         lowered = text.lower()
         findings: list[StaticFinding] = []
-        for rule_id, category, severity, pattern, message in self.RULES:
-            tokens = [token.lower() for token in pattern.split("|")]
-            hit = next((token for token in tokens if token and token in lowered), "")
+        for rule_id, category, severity, tokens, message in self._compiled_rules():
+            hit = next((token for token in tokens if token in lowered), "")
             if not hit:
                 continue
             if rule_id == "github_action_unpinned" and not rel.startswith(".github/workflows/"):
